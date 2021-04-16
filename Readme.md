@@ -1,6 +1,6 @@
 <!-- badges: start -->
 [![Travis build status](https://travis-ci.com/dlill/petab.svg?branch=main)](https://travis-ci.com/dlill/petab)
-[![Codecov test coverage](https://codecov.io/gh/dlill/petab/branch/master/graph/badge.svg)](https://codecov.io/gh/dlill/petab?branch=master)
+[![codecov](https://codecov.io/gh/dlill/petab/branch/main/graph/badge.svg?token=HBQ0ERVEOK)](https://codecov.io/gh/dlill/petab)
 <!-- badges: end -->
   
 # petab
