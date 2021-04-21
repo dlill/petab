@@ -19,7 +19,9 @@ Imports:
   ggforce,
   libSBML,
   dplyr,
-  cOde
+  reticulate,
+  cOde,
+  tools
 Suggests: 
     testthat,
     covr
