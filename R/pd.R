@@ -1,0 +1,212 @@
+# -------------------------------------------------------------------------#
+# Files ----
+# -------------------------------------------------------------------------#
+
+# [ ] pd should be its own "class"
+# pd <- function()
+
+#' Read a pd and load dlls
+#'
+#' @param filename
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @importFrom dMod loadDLL
+#' @importFrom conveniencefunctions dMod_readProfiles dMod_readMstrust
+#' @examples
+readPd <- function(filename) {
+  # 0 wd wrangling
+  wd <- getwd()
+  on.exit({setwd(wd)})
+  # 1 Read RDS
+  pd <- readRDS(filename)
+  # 2 Load DLLs
+  setwd(dirname(filename))
+  dMod::loadDLL(pd$obj_data)
+  setwd(wd)
+
+  # 3 Read potential results if not yet in pd
+  # If in pd already, some other variable might have been derived from them,
+  #   so it would be dangerous to reload them if they were postprocessed
+  path <- dirname(dirname(filename))
+  if (is.null(pd$results$fits) && dir.exists(file.path(path, "Results", "mstrust")))
+    pd$results$fits <- conveniencefunctions::dMod_readMstrust(path)
+  if (is.null(pd$results$profile) && dir.exists(file.path(path, "Results", "profile")))
+    pd$results$profile <- conveniencefunctions::dMod_readProfiles(path)
+
+  pd
+}
+
+#' Title
+#'
+#' @param modelname
+#' @param .compiledFolder
+#' @param type
+#'
+#' @return
+#' @export
+#'
+#' @examples
+pd_file <- function(modelname, .compiledFolder, type = c("indiv", "classic")[1]) {
+  file.path(.compiledFolder, paste0(modelname, "_", type, ".rds"))
+}
+
+
+# -------------------------------------------------------------------------#
+# Manipulating fns ----
+# -------------------------------------------------------------------------#
+
+#' Quickly set "controls" amd update all high-level functions
+#'
+#' @param pd
+#' @param rtol
+#' @param atol
+#' @param maxsteps
+#' @param objtimes
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @importFrom dMod "controls<-"
+#'
+#' @examples
+#' optionsOde <- list(method = "lsoda", rtol = rtol, atol = atol, maxsteps = maxsteps)
+#' optionsSens <- list(method = "lsodes", rtol = rtol, atol = atol, maxsteps = maxsteps)
+pdIndiv_updateControls <- function(pd,
+                                   optionsOde = NULL,
+                                   optionsSens = NULL,
+                                   objtimes = NULL) {
+
+  # Set integrator controls
+  if (!is.null(optionsOde))  dMod::controls(pd$dModAtoms$fns$x, name = "optionsOde") <- optionsOde
+  if (!is.null(optionsSens)) dMod::controls(pd$dModAtoms$fns$x, name = "optionsSens") <- optionsSens
+  if (!is.null(objtimes))    dMod::controls(pd$obj_data, "times") <- objtimes
+
+  pdIndiv_rebuildPrdObj(pd)
+
+}
+
+#' Rebuild the high-level prediction and objective function
+#'
+#' @param pd pd_indiv
+#'
+#' @return pd with updated p, prd and obj_data
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @importFrom dMod P_indiv PRD_indiv normL2_indiv objtimes controls
+#'
+#' @examples
+pdIndiv_rebuildPrdObj <- function(pd, Nobjtimes = 100) {
+
+  # Rebuild p
+  p <- dMod::P_indiv(pd$dModAtoms$fns$p0, pd$dModAtoms$gridlist$est.grid, pd$dModAtoms$gridlist$fix.grid)
+
+  # Rebuild high-level prediction function
+  prd0 <- Reduce("*", pd$dModAtoms$fns)
+  prd <- PRD_indiv(prd0, pd$dModAtoms$gridlist$est.grid, pd$dModAtoms$gridlist$fix.grid)
+
+  # Rebuild obj_data
+  tobj <- if (!is.null(pd$obj_data)) dMod::controls(pd$obj_data, name = "times") else dMod::objtimes(pd$pe$measurementData$time, Nobjtimes = Nobjtimes)
+  obj_data <- normL2_indiv(pd$dModAtoms$data, prd0,
+                           pd$dModAtoms$e,
+                           est.grid = pd$dModAtoms$gridlist$est.grid,
+                           fix.grid = pd$dModAtoms$gridlist$fix.grid,
+                           times = tobj)
+
+  # Update p, prd and obj_data
+  pd$p <- p
+  pd$prd <- prd
+  pd$obj_data <- obj_data
+
+  pd
+}
+
+
+# -------------------------------------------------------------------------#
+# Helpers ----
+# -------------------------------------------------------------------------#
+
+#' Wrapper around predtimes
+#'
+#' @param pd
+#' @param N
+#'
+#' @return
+#' @export
+#'
+#' @examples
+pd_predtimes <- function(pd, N = 100) {
+  datatimes <- unique(sort(pd$pe$measurementData$time))
+  eventtimes <- NULL
+  dMod::predtimes(datatimes,eventtimes,N)
+}
+
+#' Wrapper around predtimes
+#'
+#' @param pd
+#' @param N
+#'
+#' @return
+#' @export
+#'
+#' @examples
+pd_objtimes <- function(pd, N = 100) {
+  datatimes <- unique(sort(pd$pe$measurementData$time))
+  eventtimes <- NULL
+  dMod::objtimes(datatimes,eventtimes,N)
+}
+
+
+# -------------------------------------------------------------------------#
+# Test model ----
+# -------------------------------------------------------------------------#
+
+
+#' Some tests
+#'
+#' @param pd
+#' @param page
+#' @param cn
+#'
+#' @return
+#' @export
+#'
+#' @importFrom dMod getDerivs plotPrediction
+#' @importFrom ggforce facet_wrap_paginate
+#'
+#' @examples
+pd_tests <- function(pd, page = 1, cn = 1) {
+
+  # .. Test prediction without derivs -----
+  prediction <- pd$prd(objtimes(pd$pe$measurementData$time, 200), pd$pars)
+  pl <- dMod::plotPrediction(prediction, name %in% pd$pe$observables$observableId) +
+    ggforce::facet_wrap_paginate(~name, nrow = 4, ncol = 4, scales = "free", page = page)
+  cat("\n===================================================", "\n")
+  cat("Plotting prediction page ", page, " / ", n_pages(pl), "\n")
+  cat("===================================================", "\n")
+  print(pl)
+
+  # .. Test obj -----
+  objval <- pd$obj_data(pd$pars)
+  cat("\n===================================================\n")
+  cat("Objective function\n")
+  cat("===================================================\n")
+  print(objval)
+
+  # .. Test x for one condition  -----
+  pars <- pd$p(pd$pars)
+  pars <- pars[[cn]]
+  pred <- pd$dModAtoms$fns$x(objtimes(pd$pe$measurementData$time), pars)
+  # Look at derivs
+  derivs <- dMod::getDerivs(pred)
+  cat("\n===================================================\n")
+  cat("Derivs of x[", cn, "]\n")
+  cat("===================================================\n")
+  print(derivs[[1]][1:10, 1:10])
+}
+
+

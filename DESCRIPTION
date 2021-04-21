@@ -12,9 +12,14 @@ LazyData: true
 RoxygenNote: 7.1.1
 Depends:
   data.table,
-  ggplot2
+  ggplot2,
+  dMod, 
+  conveniencefunctions
 Imports:
-  dMod
+  ggforce,
+  libSBML,
+  dplyr,
+  cOde
 Suggests: 
     testthat,
     covr
