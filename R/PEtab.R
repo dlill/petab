@@ -531,6 +531,7 @@ petab_files <- function(filename, FLAGTestCase = FALSE, FLAGreturnList = FALSE) 
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @export
+#' @importFrom data.table fread
 #'
 #' @examples
 readPetab <- function(filename, FLAGTestCase = FALSE) {
@@ -539,7 +540,7 @@ readPetab <- function(filename, FLAGTestCase = FALSE) {
   files <- files[file.exists(files)]
   # tables
   files_tsv <- grep("tsv", files, value = TRUE)
-  files_tsv <- lapply(files_tsv, fread)
+  files_tsv <- lapply(files_tsv, data.table::fread)
   # model
   files_model <- grep("xml", files, value = TRUE) # Do nothing, read rds
 
@@ -558,6 +559,7 @@ readPetab <- function(filename, FLAGTestCase = FALSE) {
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @export
+#' @importFrom data.table fwrite
 #'
 #' @examples
 writePetab <- function(petab, filename = "petab/model") {
@@ -589,7 +591,7 @@ writePetab <- function(petab, filename = "petab/model") {
   files_tsv <- grep("tsv", files, value = TRUE)
   if (length(files_tsv))
     lapply(names(files_tsv), function(nm) {
-      fwrite(petab[[nm]], files[[nm]], sep = "\t")})
+      data.table::fwrite(petab[[nm]], files[[nm]], sep = "\t")})
 
   # Write model rds
   files_model <- grep("rds", files, value = TRUE)
@@ -1109,6 +1111,34 @@ petab_overviewObsPerCond <- function(pe, Ntruncate = Inf, ...) {
 # -------------------------------------------------------------------------#
 
 # Might delete some of them again
+
+
+#' Get a mapping of parameter types
+#'
+#' @param pe [petab()] (with parameters defined)
+#'
+#' @return data.table(parameterId, parameterType)
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @importFrom cOde getSymbols
+#'
+#' @examples
+petab_getParameterType <- function(pe) {
+
+  # Parameter types
+  observableParameters <- cOde::getSymbols(pe$measurementData$observableParameters)
+  noiseParameters      <- cOde::getSymbols(pe$measurementData$noiseParameters)
+
+  parameters <- data.table(parameterId = pe$parameters$parameterId)
+  parameters[,`:=`(parameterType = "other")]
+  parameters[parameterId %in% observableParameters,`:=`(parameterType = "observableParameters")]
+  parameters[parameterId %in% noiseParameters     ,`:=`(parameterType = "noiseParameters")]
+
+  parameters
+}
+
+
 
 #' Title
 #'

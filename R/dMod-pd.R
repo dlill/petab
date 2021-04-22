@@ -1,9 +1,13 @@
 # -------------------------------------------------------------------------#
+# pd-"Class" ----
+# -------------------------------------------------------------------------#
+# [ ] pd should be its own "class" with clearly defined names
+# pd <- function()
+
+
+# -------------------------------------------------------------------------#
 # Files ----
 # -------------------------------------------------------------------------#
-
-# [ ] pd should be its own "class"
-# pd <- function()
 
 #' Read a pd and load dlls
 #'
@@ -162,6 +166,16 @@ pd_objtimes <- function(pd, N = 100) {
 
 
 # -------------------------------------------------------------------------#
+# Parameter handling ----
+# -------------------------------------------------------------------------#
+
+
+# -------------------------------------------------------------------------#
+# Simulate model ----
+# -------------------------------------------------------------------------#
+
+
+# -------------------------------------------------------------------------#
 # Test model ----
 # -------------------------------------------------------------------------#
 
@@ -181,7 +195,7 @@ pd_objtimes <- function(pd, N = 100) {
 #' @examples
 pd_tests <- function(pd, page = 1, cn = 1) {
 
-  # .. Test prediction without derivs -----
+  # Test prediction without derivs
   prediction <- pd$prd(objtimes(pd$pe$measurementData$time, 200), pd$pars)
   pl <- dMod::plotPrediction(prediction, name %in% pd$pe$observables$observableId) +
     ggforce::facet_wrap_paginate(~name, nrow = 4, ncol = 4, scales = "free", page = page)
@@ -190,14 +204,14 @@ pd_tests <- function(pd, page = 1, cn = 1) {
   cat("===================================================", "\n")
   print(pl)
 
-  # .. Test obj -----
+  # Test obj
   objval <- pd$obj_data(pd$pars)
   cat("\n===================================================\n")
   cat("Objective function\n")
   cat("===================================================\n")
   print(objval)
 
-  # .. Test x for one condition  -----
+  # Test x for one condition
   pars <- pd$p(pd$pars)
   pars <- pars[[cn]]
   pred <- pd$dModAtoms$fns$x(objtimes(pd$pe$measurementData$time), pars)

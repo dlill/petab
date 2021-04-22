@@ -10,7 +10,7 @@
 petab_exampleList <- function() {
   # files <- list.files(system.file("petabExamples", package = "petab"), recursive = TRUE)
   # unique(dirname(files))
-
+  list.files(system.file("petabExamples", package = "petab"))
 }
 
 #' Get paths of an example
