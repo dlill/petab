@@ -21,7 +21,8 @@ Imports:
   dplyr,
   reticulate,
   cOde,
-  tools
+  tools,
+  stringr
 Suggests: 
     testthat,
     covr

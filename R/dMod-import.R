@@ -617,6 +617,7 @@ testPEtabSBML <- function(models = c(
 #' @export
 #'
 #' @importFrom dplyr inner_join filter mutate
+#' @importFrom stringr str_detect
 getConditionsSBML <- function(conditions,data, observables_file, FLAGnormalImport = TRUE){
   condition.grid_orig <- read.csv(file = conditions, sep = "\t")
   mydata <- read.csv(file = data, sep = "\t")
@@ -655,7 +656,7 @@ getConditionsSBML <- function(conditions,data, observables_file, FLAGnormalImpor
           if(length(obs_par)==1){
             if(!is.na(obs_par)){
               # one or more observable parameters?
-              if(str_detect(obs_par,";")){
+              if(stringr::str_detect(obs_par,";")){
                 myobspars <- strsplit(obs_par,";")[[1]]
                 for(i in 1:length(myobspars)) {
                   row_pars <- c(row_pars, myobspars[i])
@@ -713,7 +714,7 @@ getConditionsSBML <- function(conditions,data, observables_file, FLAGnormalImpor
           noise_par <- subset(data_obs, simulationConditionId == condition)$noiseParameters %>% unique() %>% as.character()
           if(!is.na(noise_par)){
             # one or more observable parameters?
-            if(str_detect(noise_par,";")){
+            if(stringr::str_detect(noise_par,";")){
               myobspars <- strsplit(noise_par,";")[[1]]
               for(i in 1:length(myobspars)) {
                 row_pars <- c(row_pars, myobspars[i])
@@ -1059,13 +1060,13 @@ getReactionsSBML <- function(model, conditions){
                               paste0(eq$getProduct(s)$getStoichiometry(), "*", eq$getProduct(s)$getSpecies()))
     }
     formula <- eq$getKineticLaw()$getFormula()
-    if(str_detect(formula, "Function"))
+    if(stringr::str_detect(formula, "Function"))
       rate <- formula # to be double checked  # works for Borghans now
     else
       rate <- gsub("pow", "", gsub(", ", "**", formula))
     #rate <- replaceOperation("pow", "**", eq$getKineticLaw()$getFormula())
     if(!is.null(compartments)){
-      if(Reduce("|", str_detect(rate, unique(compartments)))){
+      if(Reduce("|", stringr::str_detect(rate, unique(compartments)))){
         rate <- cOde::replaceSymbols(unique(compartments), rep("1", length(unique(compartments))), rate)
         # pos <- which(strsplit(rate, "")[[1]]=="*")[1]                   # Fixed by DanielL: compartment is not always at beginning
         # rate <- substr(rate,pos+1,length(strsplit(rate, "")[[1]]=="*")) # Fixed by DanielL: compartment is not always at beginning
@@ -1109,8 +1110,8 @@ getReactionsSBML <- function(model, conditions){
   # replace function based inputs by events (done in reactions)
   for(fun in c("piecewise")){
     for(reaction in reactions$rates){
-      if(str_detect(reaction, fun)){
-        split <- str_split(reaction, fun)[[1]][2]
+      if(stringr::str_detect(reaction, fun)){
+        split <- stringr::str_split(reaction, fun)[[1]][2]
         count_bracket <- 0
         done <- F
         for(z in 1:nchar(split)){
@@ -1141,12 +1142,12 @@ getReactionsSBML <- function(model, conditions){
     if(!is.null(events)){
       do.call(rbind, lapply(1:length(events), function(i){
         myevent <- events[i]
-        if(str_detect(myevent, "piecewise") & (str_detect(myevent, "leq") | str_detect(myevent, "lt"))){
+        if(stringr::str_detect(myevent, "piecewise") & (stringr::str_detect(myevent, "leq") | stringr::str_detect(myevent, "lt"))){
           expr1 <- strsplit(myevent, ",")[[1]][2]
           expr1 <- gsub(paste0(strsplit(expr1, "\\(")[[1]][1],"\\("), "", expr1)
           expr2 <- strsplit(strsplit(myevent, ",")[[1]][3], ")")[[1]][1]
           if(expr1=="time") timepoint <- expr2 else
-            if(str_detect(expr1, "time-")) timepoint <- gsub("time-", "", expr1) else cat("Warning: Event not yet supported.")
+            if(stringr::str_detect(expr1, "time-")) timepoint <- gsub("time-", "", expr1) else cat("Warning: Event not yet supported.")
           first <- strsplit(strsplit(myevent, "\\(")[[1]][2], ",")[[1]][1]
           second <- strsplit(strsplit(myevent, ",")[[1]][4], ")")[[1]][1]
           if(!is.na(suppressWarnings(as.numeric(timepoint)))) timepoint <- as.numeric(timepoint) # avoid warning if variable is not numeric
@@ -1189,7 +1190,7 @@ getReactionsSBML <- function(model, conditions){
 
   # for(i in 1:length(reactions$rates)){
   #   reaction <- reactions$rates[i]
-  #   if(str_detect(reaction, "pow")){
+  #   if(stringr::str_detect(reaction, "pow")){
   #     reaction_new <- gsub("pow", "", reaction)
   #     # reaction_new <- gsub(", ", "**", reaction_new)
   #     reaction_new <- gsub(",", "**", reaction_new)
