@@ -1469,6 +1469,7 @@ getTrafoType <- function(trafo_string) {
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de) building on the original function of Marcus and Svenja
 #' @md
 #' @importFrom dMod repar
+#' @importFrom cOde getSymbols
 #'
 #' @export
 importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.petab",
@@ -1663,7 +1664,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
               optionsSens = list(method = "lsodes", lrw=200000, rtol = 1e-7, atol = 1e-7))
 
     cat("Compiling errormodel\n")
-    if(length(dMod::getSymbols(myerrors)))
+    if(length(cOde::getSymbols(myerrors)))
       myerr <- dMod::Y(myerrors, f = c(as.eqnvec(myreactions), myobservables), states = names(myobservables),
                  attach.input = FALSE, compile = TRUE, modelname = paste0("errfn_", modelname))
 
