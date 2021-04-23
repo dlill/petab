@@ -69,8 +69,12 @@ writePd <- function(pd) {
 #' @examples
 pd_files <- function(filenameParts) {
   if (is.null(filenameParts$type)) filenameParts$type <- "indiv"
-  list(rdsfile = file.path(filenameParts$.currentFolder, filenameParts$.compiledFolder, paste0(filenameParts$modelname, "_", filenameParts$type, ".rds"),
-       obsParsFitted = file.path(filenameParts$.currentFolder, filenameParts$.compiledFolder, paste0(".obsparsfitted"))
+  list(rdsfile = file.path(filenameParts$.currentFolder,
+                           filenameParts$.compiledFolder,
+                           paste0(filenameParts$modelname, "_", filenameParts$type, ".rds")),
+       obsParsFitted = file.path(filenameParts$.currentFolder,
+                                 filenameParts$.compiledFolder,
+                                 paste0(".obsparsfitted")))
 }
 
 
@@ -203,6 +207,43 @@ pd_updateEstPars <- function(pd, parsEst, FLAGupdatePE = TRUE, FLAGsavePd = FALS
   pd
 }
 
+
+
+# -------------------------------------------------------------------------#
+# Fitting functions ----
+# -------------------------------------------------------------------------#
+
+#' Run a fit only for observation parameters
+#'
+#' @param pd
+#' @param FLAGsavePd
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#'
+#' @examples
+pd_fitObsPars <- function(pd, FLAGsavePd = TRUE) {
+  obspars <- petab_getParameterType(pd$pe)
+  obspars <- obspars[parameterType %in% c("observableParameters", "noiseParameters"), parameterId]
+
+  fit_par <- pd$pars[obspars]
+  fit_fix <- pd$pars[setdiff(names(pd$pars), obspars)]
+
+  parlower <- petab_getParameterBoundaries(pd$pe, "lower")[obspars]
+  parupper <- petab_getParameterBoundaries(pd$pe, "upper")[obspars]
+
+  fit <- trust(pd$obj_data, fit_par, 1,10, iterlim = 1000, fixed = fit_fix, parlower = parlower, parupper = parupper)
+
+  pd <- pd_updateEstPars(pd, parsEst = fit$argument, FLAGupdatePE = TRUE, FLAGsavePd = FLAGsavePd)
+  if (FLAGsavePd) writeLines("obsPars fitted", pd_files(pd$filenameParts)$obsParsFitted)
+  pd
+}
+
+
+# idea: fit_hierarchical
+# could be implemented as objective function which automatically fits observable parameters
 
 # -------------------------------------------------------------------------#
 # Simulate model ----

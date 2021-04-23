@@ -1489,7 +1489,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   path      <- petab_modelname_path(filename)$path
   modelname <- petab_modelname_path(filename)$modelname
   files     <- petab_files(filename, FLAGTestCase = testCases, FLAGreturnList = TRUE)
-  filenameParts = list(modelname = modelname,currentFolder = mywd,.compiledFolder = .compiledFolder,type = "indiv")
+  filenameParts = list(modelname = modelname,.currentFolder = mywd,.compiledFolder = .compiledFolder,type = "indiv")
   rdsfile   <- pd_files(filenameParts)$rdsfile
 
   # .. Read previously imported files -----
