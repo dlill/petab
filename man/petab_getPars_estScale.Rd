@@ -15,6 +15,19 @@ petab_getPars_estScale(pe)
 \description{
 Get parameters on outer scale
 }
+\examples{
+pe <- petab_exampleRead("01")
+parsEst <- petab_getPars_estScale(pe)
+}
+\seealso{
+Other Parameter wrangling: 
+\code{\link{petab_getPars_linScale}()},
+\code{\link{petab_setPars_estScale}()},
+\code{\link{petab_setPars_linScale}()},
+\code{\link{petab_transformPars_est2Lin}()},
+\code{\link{petab_transformPars_lin2Est}()}
+}
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }
+\concept{Parameter wrangling}

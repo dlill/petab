@@ -10,7 +10,7 @@ petab_getParametersToEstimate(pe)
 \item{pe}{}
 }
 \value{
-
+character vector
 }
 \description{
 Title

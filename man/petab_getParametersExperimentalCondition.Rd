@@ -10,7 +10,7 @@ petab_getParametersExperimentalCondition(experimentalCondition)
 \item{experimentalCondition}{}
 }
 \value{
-
+character vector
 }
 \description{
 Get parameter names from pe$experimentalCondition

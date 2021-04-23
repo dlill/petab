@@ -17,7 +17,7 @@ Identity
 }
 \seealso{
 Other scales: 
-\code{\link{scale_inverse}()}
+\code{\link{inverse_scale}()}
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)

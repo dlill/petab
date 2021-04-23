@@ -4,7 +4,7 @@
 \alias{petab_createObjPrior}
 \title{Create the prior function specified in parameters_df}
 \usage{
-petab_createObjPrior(pe, FLAGuseNominalCenter)
+petab_createObjPrior(pe, FLAGuseNominalValueAsCenter)
 }
 \arguments{
 \item{FLAGuseNominalCenter}{}

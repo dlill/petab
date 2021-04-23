@@ -916,7 +916,7 @@ petab_getMeasurementParsMapping <- function(pe, column = c("observableParameters
 #' @md
 #'
 #' @examples
-petab_createObjPrior <- function(pe, FLAGuseNominalCenter) {
+petab_createObjPrior <- function(pe, FLAGuseNominalValueAsCenter) {
   # [ ] Todo: Move this function to dMod-*.R file
 
   p <- copy(pe$parameters)
@@ -928,14 +928,13 @@ petab_createObjPrior <- function(pe, FLAGuseNominalCenter) {
     stop("objectivePriorType not implemented: ", paste0(unique(p$objectivePriorType[notImplemented]),collapse = ","))
 
   p[,`:=`(mu = as.numeric(gsub(";.*", "", objectivePriorParameters)))]
-  if (FLAGuseNominalCenter) {
+  if (FLAGuseNominalValueAsCenter) {
     # Apply transformation before using as center
-    lin <- function(x) x
-    p[,`:=`(pouter =
+    p[,`:=`(estValue =
               eval(parse(
                 text = paste0(parameterScale, "(", nominalValue, ")")))),
       by = 1:nrow(p)]
-    p[,`:=`(mu = pouter)]
+    p[,`:=`(mu = estValue)]
   }
   p[,`:=`(sd = as.numeric(gsub(".*;", "", objectivePriorParameters)))]
 
@@ -1117,7 +1116,6 @@ petab_overviewObsPerCond <- function(pe, Ntruncate = Inf, ...) {
 
 # Might delete some of them again
 
-
 #' Get a mapping of parameter types
 #'
 #' @param pe [petab()] (with parameters defined)
@@ -1149,7 +1147,7 @@ petab_getParameterType <- function(pe) {
 #'
 #' @param pe
 #'
-#' @return
+#' @return character vector
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
@@ -1160,44 +1158,12 @@ petab_getParametersToEstimate <- function(pe) {
 }
 
 
-#' Get parameters on outer scale
-#'
-#' @param pe
-#'
-#' @return
-#' @export
-#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
-#' @md
-#'
-#' @examples
-petab_getPars_estScale <- function(pe) {
-  p <- copy(pe$parameters)
-  p[,`:=`(pouter = eval(parse(text = paste0(parameterScale, "(", nominalValue, ")")))),by = 1:nrow(p)]
-  setNames(p$pouter, p$parameterId)
-}
-
-#' Get parameters on nominal scale
-#'
-#' @param pe
-#'
-#' @return
-#' @export
-#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
-#' @md
-#'
-#' @examples
-petab_getPars_linScale <- function(pe) {
-  p <- copy(pe$parameters)
-  setNames(p$nominalValue, p$parameterId)
-}
-
-
 
 #' Get parameter names from pe$experimentalCondition
 #'
 #' @param experimentalCondition
 #'
-#' @return
+#' @return character vector
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
@@ -1211,6 +1177,149 @@ petab_getParametersExperimentalCondition <- function(experimentalCondition) {
   ec <- unique(ec)
   ec
 }
+
+
+# -------------------------------------------------------------------------#
+# Pars ----
+# -------------------------------------------------------------------------#
+
+#' Get parameters on outer scale
+#'
+#' @param pe
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family Parameter wrangling
+#'
+#' @examples
+#' pe <- petab_exampleRead("01")
+#' parsEst <- petab_getPars_estScale(pe)
+petab_getPars_estScale <- function(pe) {
+  p <- copy(pe$parameters)
+  p[,`:=`(estValue = eval(parse(text = paste0(parameterScale, "(", nominalValue, ")")))),by = 1:nrow(p)]
+  setNames(p$estValue, p$parameterId)
+}
+
+#' Get parameters on nominal scale
+#'
+#' @param pe
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family Parameter wrangling
+#'
+#' @examples
+#' pe <- petab_exampleRead("01")
+#' parsLin <- petab_getPars_linScale(pe)
+petab_getPars_linScale <- function(pe) {
+  p <- copy(pe$parameters)
+  setNames(p$nominalValue, p$parameterId)
+}
+
+
+
+#' Title
+#'
+#' @param pe
+#' @param parsLin
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family Parameter wrangling
+#'
+#' @examples
+#' pe <- petab_exampleRead("01")
+#' parsEst <- petab_getPars_estScale(pe)
+#' parsLin <- petab_getPars_linScale(pe)
+#' parsLin <- parsLin[sample(1:length(parsLin), 5)] + rnorm(5)
+petab_setPars_linScale <- function(pe, parsLin) {
+  # Careful: This is technically a set* function in data.table parlance
+  parsLin <- parsLin[order(names(parsLin))]
+  pe$parameters[parameterId %in% names(parsLin),`:=`(nominalValue = parsLin)]
+  invisible(pe)
+}
+
+#' Title
+#'
+#' @param pe
+#' @param parsEst
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family Parameter wrangling
+#'
+#' @examples
+#' pe <- petab_exampleRead("01")
+#' parsEst <- petab_getPars_estScale(pe)
+#' parsLin <- petab_getPars_linScale(pe)
+#' parsLin <- parsLin[sample(1:length(parsLin), 5)] + rnorm(5)
+petab_setPars_estScale <- function(pe, parsEst) {
+  petab_setPars_linScale(pe, petab_transformPars_est2Lin(pe, parsEst))
+}
+
+#' Title
+#'
+#' @param pe
+#' @param parsLin
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family Parameter wrangling
+#'
+#' @examples
+#' pe <- petab_exampleRead("01")
+#' parsEst <- petab_getPars_estScale(pe)
+#' parsLin <- petab_getPars_linScale(pe)
+#' parsLin <- parsLin[sample(1:length(parsLin), 5)] + rnorm(5)
+petab_transformPars_lin2Est <- function(pe, parsLin) {
+  parsLinMerge <- parsLin[order(names(parsLin))]
+  p <- copy(pe$parameters)
+  p <- p[parameterId %in% names(parsLinMerge)]
+  p[,`:=`(nominalValue = parsLinMerge)]
+  p[,`:=`(estValue = eval(parse(text = paste0(parameterScale, "(", nominalValue, ")")))),by = 1:nrow(p)]
+  parsEst <- setNames(p$estValue, p$parameterId)
+  parsEst <- parsEst[names(parsLin)]
+  parsEst
+}
+
+#' Title
+#'
+#' @param pe
+#' @param parsEst
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family Parameter wrangling
+#'
+#' @examples
+#' pe <- petab_exampleRead("01")
+#' parsEst <- petab_getPars_estScale(pe)
+#' parsLin <- petab_getPars_linScale(pe)
+#' parsLin <- parsLin[sample(1:length(parsLin), 5)] + rnorm(5)
+petab_transformPars_est2Lin <- function(pe, parsEst) {
+  parsEstMerge <- parsEst[order(names(parsEst))]
+  p <- copy(pe$parameters)
+  p <- p[parameterId %in% names(parsEstMerge)]
+  p[,`:=`(estValue = parsEstMerge)]
+  p[,`:=`(nominalValue = eval(parse(text = paste0(inverse_scale(parameterScale), "(", estValue, ")")))),by = 1:nrow(p)]
+  parsLin <- setNames(p$nominalValue, p$parameterId)
+  parsLin <- parsLin[names(parsEst)]
+  parsLin
+}
+
+
 
 # -------------------------------------------------------------------------#
 # Scales ----
@@ -1226,7 +1335,7 @@ petab_getParametersExperimentalCondition <- function(experimentalCondition) {
 #' @md
 #' @family scales
 #' @examples
-scale_inverse <- function(parameterScale) {
+inverse_scale <- function(parameterScale) {
   parameterScale[parameterScale == "log"] <- "exp"
   parameterScale[parameterScale == "log10"] <- "10^"
   parameterScale
