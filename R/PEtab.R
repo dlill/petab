@@ -1167,9 +1167,7 @@ petab_getParametersToEstimate <- function(pe) {
 #' @examples
 petab_getParsOuterScale <- function(pe) {
   p <- copy(pe$parameters)
-  p[,`:=`(pouter =
-            eval(parse(
-              text = paste0(parameterScale, "(", nominalValue, ")")))),
+  p[,`:=`(pouter = eval(parse(text = paste0(parameterScale, "(", nominalValue, ")")))),
     by = 1:nrow(p)]
   setNames(p$pouter, p$parameterId)
 }
@@ -1195,16 +1193,36 @@ petab_getParametersExperimentalCondition <- function(experimentalCondition) {
   ec
 }
 
+# -------------------------------------------------------------------------#
+# Scales ----
+# -------------------------------------------------------------------------#
 
-#' Identity
+#' Title
 #'
-#' @param x
+#' @param parameterScale vector with entries "lin", "log", "log10"
 #'
 #' @return
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
+#' @family scales
+#' @examples
+scale_inverse <- function(parameterScale) {
+  parameterScale[parameterScale == "log"] <- "exp"
+  parameterScale[parameterScale == "log10"] <- "10^"
+  parameterScale
+}
+
+
+#' Identity
 #'
+#' @param x
+#'
+#' @return x
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family scales
 #' @examples
 lin <- function(x) {
   x

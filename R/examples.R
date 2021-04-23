@@ -15,7 +15,7 @@ petab_exampleList <- function() {
 
 #' Get paths of an example
 #'
-#' @param exampleName
+#' @param exampleName (partial match of) example name
 #' @param object
 #'
 #' @return
@@ -25,15 +25,20 @@ petab_exampleList <- function() {
 #' @family Example functions
 #'
 #' @examples
-#' petab_examplePath("01-EnzymeKinetics")
+#' exampleName <- "01"
+#' petab_examplePath(exampleName)
 #' petab_examplePath("01-EnzymeKinetics", "pd)
 petab_examplePath <- function(exampleName, object = c("pe", "pd", "dir")[1]) {
+  cat("Reading ", object, "...\n")
   fileEnding <- if (object == "pe") {"petab"
   } else if (object == "pd") {file.path("Compiled", "petab_indiv.rds")
-  } else if (object =="dir") {NULL
-  }
+  } else if (object =="dir") {NULL}
 
-  system.file(file.path("petabExamples", exampleName, fileEnding), package = "petab")
+  exampleFile <- system.file(file.path("petabExamples", petab_exampleList()), package = "petab")
+  exampleFile <- exampleFile[grep(exampleName, exampleFile, fixed = TRUE)]
+  if (length(exampleFile) > 1) stop("Ambiguous specification. Choose one of \n* ", paste0(exampleFile, collapse = "\n* "))
+  exampleFile <- file.path(exampleFile, fileEnding)
+  exampleFile
 }
 
 #' Read an example
