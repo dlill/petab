@@ -204,6 +204,7 @@ pd_updateEstPars <- function(pd, parsEst, FLAGupdatePE = TRUE, FLAGsavePd = FALS
   if (FLAGupdatePE) {
     cat("pd$pe pars have been *set*")
     petab_setPars_estScale(pd$pe, parsEst)}
+  if (FLAGsavePd) writePd(pd)
   pd
 }
 
@@ -216,7 +217,7 @@ pd_updateEstPars <- function(pd, parsEst, FLAGupdatePE = TRUE, FLAGsavePd = FALS
 #' Run a fit only for observation parameters
 #'
 #' @param pd
-#' @param FLAGsavePd
+#' @param NFLAGsavePd as in pd_importIndiv: 0: don't save, 1: save, but redo everything, 3: if it was done before and pd didn't change, just return the pd
 #'
 #' @return
 #' @export
@@ -242,7 +243,7 @@ pd_fitObsPars <- function(pd, NFLAGsavePd = 3) {
 
   fit <- trust(pd$obj_data, fit_par, 1,10, iterlim = 1000, fixed = fit_fix, parlower = parlower, parupper = parupper)
 
-  pd <- pd_updateEstPars(pd, parsEst = fit$argument, FLAGupdatePE = TRUE, FLAGsavePd = FLAGsavePd)
+  pd <- pd_updateEstPars(pd, parsEst = fit$argument, FLAGupdatePE = TRUE, FLAGsavePd = NFLAGsavePd > 0)
   if (NFLAGsavePd > 0) writeLines("obsPars fitted", logfile)
   pd
 }
