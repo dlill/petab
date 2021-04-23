@@ -431,6 +431,38 @@ pd_predictAndPlot <- function(pd, i, opt.base = pd_parf_opt.base(), opt.mstrust 
 }
 
 
+#' Title
+#'
+#' @param pd
+#' @param parf
+#'
+#' @return
+#' @export
+#'
+#' @examples
+pd_plot_compareParameters <- function(pd, parf,
+                                      nrow = 1, ncol = 3, scales = "free", page = 1,
+                                      filename = NULL, width = 29.7, height = 21, scale = 1, units = "cm"
+                                      ) {
+  parameters <- attr(parf, "parameters")
+  p <- data.table(parf)
+  p <- melt(p, id.vars = "parameterSetId", measure.vars = parameters, variable.name = "parameterId", variable.factor = FALSE, value.name = "parameterValueEstScale")
+
+  pt <- petab_getParameterType(pd$pe)
+  p <- pt[p, on = "parameterId"]
+
+  pl <- conveniencefunctions::cfggplot(p, aes(parameterId, parameterValueEstScale)) +
+    conveniencefunctions::facet_wrap_paginate(~parameterType, nrow = nrow, ncol = ncol, scales = scales, page = page) +
+    geom_col(aes(fill = parameterSetId), position = position_dodge2()) +
+    conveniencefunctions::scale_color_cf(aesthetics = c("fill", "color")) +
+    theme(axis.text.x = element_text(angle = 90))
+
+  cf_outputFigure(pl, filename = filename, width = width, height = height, scale = scale, units = units)
+
+}
+
+
+
 # -------------------------------------------------------------------------#
 # Simulate model ----
 # -------------------------------------------------------------------------#
