@@ -10,7 +10,7 @@ petab_getPars_linScale(pe)
 \item{pe}{}
 }
 \value{
-
+parameter vector
 }
 \description{
 Get parameters on nominal scale

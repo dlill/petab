@@ -17,6 +17,11 @@ petab_examplePath(exampleName, object = c("pe", "pd", "dir")[1])
 \description{
 Get paths of an example
 }
+\examples{
+exampleName <- "01"
+petab_examplePath(exampleName)
+petab_examplePath("01-EnzymeKinetics", "pd")
+}
 \seealso{
 Other Example functions: 
 \code{\link{petab_exampleList}()},

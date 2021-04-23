@@ -1206,7 +1206,7 @@ petab_getPars_estScale <- function(pe) {
 #'
 #' @param pe
 #'
-#' @return
+#' @return parameter vector
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md

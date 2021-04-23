@@ -4,10 +4,10 @@
 \alias{pd_fitObsPars}
 \title{Run a fit only for observation parameters}
 \usage{
-pd_fitObsPars(pd, FLAGsavePd = TRUE)
+pd_fitObsPars(pd, NFLAGsavePd = 3)
 }
 \arguments{
-\item{FLAGsavePd}{}
+\item{NFLAGsavePd}{as in pd_importIndiv: 0: don't save, 1: save, but redo everything, 3: if it was done before and pd didn't change, just return the pd}
 }
 \value{
 

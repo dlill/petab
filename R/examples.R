@@ -27,7 +27,7 @@ petab_exampleList <- function() {
 #' @examples
 #' exampleName <- "01"
 #' petab_examplePath(exampleName)
-#' petab_examplePath("01-EnzymeKinetics", "pd)
+#' petab_examplePath("01-EnzymeKinetics", "pd")
 petab_examplePath <- function(exampleName, object = c("pe", "pd", "dir")[1]) {
   cat("Reading ", object, "...\n")
   fileEnding <- if (object == "pe") {"petab"
