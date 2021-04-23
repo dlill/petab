@@ -224,7 +224,13 @@ pd_updateEstPars <- function(pd, parsEst, FLAGupdatePE = TRUE, FLAGsavePd = FALS
 #' @md
 #'
 #' @examples
-pd_fitObsPars <- function(pd, FLAGsavePd = TRUE) {
+pd_fitObsPars <- function(pd, NFLAGsavePd = 3) {
+  logfile <- pd_files(pd$filenameParts)$obsParsFitted
+  if (file.exists(logfile) &&
+      !inputFileChanged(pd_files(pd$filenameParts)$rdsfile, logfile) &&
+      NFLAGsavePd == 3)
+    return(pd)
+
   obspars <- petab_getParameterType(pd$pe)
   obspars <- obspars[parameterType %in% c("observableParameters", "noiseParameters"), parameterId]
 
@@ -237,7 +243,7 @@ pd_fitObsPars <- function(pd, FLAGsavePd = TRUE) {
   fit <- trust(pd$obj_data, fit_par, 1,10, iterlim = 1000, fixed = fit_fix, parlower = parlower, parupper = parupper)
 
   pd <- pd_updateEstPars(pd, parsEst = fit$argument, FLAGupdatePE = TRUE, FLAGsavePd = FLAGsavePd)
-  if (FLAGsavePd) writeLines("obsPars fitted", pd_files(pd$filenameParts)$obsParsFitted)
+  if (NFLAGsavePd > 0) writeLines("obsPars fitted", logfile)
   pd
 }
 
