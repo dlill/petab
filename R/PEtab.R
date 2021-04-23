@@ -253,9 +253,10 @@ petab_experimentalCondition <- function(
   conditionId,
   conditionName = NA,
   ...) {
-  data.table(conditionId =   as.character(conditionId),
-             conditionName = as.character(conditionName),
-             as.data.table(list(...)))
+  d <- data.table(conditionId =   as.character(conditionId),
+                  conditionName = as.character(conditionName),
+                  as.data.table(list(...)))
+  setkey(d, conditionId)
 }
 
 
@@ -286,7 +287,7 @@ petab_measurementData <- function(
   replicateId                 = NA,
   preequilibrationConditionId = NA
 ) {
-  data.table(
+  d <- data.table(
     observableId                = as.character(observableId),
     preequilibrationConditionId = as.character(preequilibrationConditionId),
     simulationConditionId       = as.character(simulationConditionId),
@@ -297,6 +298,7 @@ petab_measurementData <- function(
     datasetId                   = as.character(datasetId),
     replicateId                 = as.character(replicateId)
   )
+  setkey(d, simulationConditionId, observableId, time)
 }
 
 #' Constructor for Observables
@@ -320,7 +322,7 @@ petab_observables <- function(
   observableTransformation = c("lin", "log", "log10")[[1]],
   noiseFormula             = c(1, "noiseParameter${n}_${observableId} + noiseParameter${n}_${observableId}*${observableId}")[[1]], # aka errormodel
   noiseDistribution        = c("normal", "laplace")[[1]]) {
-  data.table(
+  d <- data.table(
     observableId             = as.character(observableId),
     observableName           = as.character(observableName),
     observableFormula        = as.character(observableFormula),
@@ -328,6 +330,7 @@ petab_observables <- function(
     noiseFormula             = as.character(noiseFormula),
     noiseDistribution        = as.character(noiseDistribution)
   )
+  setkey(d, observableId)
 }
 
 #' Constructor for Parameters
@@ -362,7 +365,7 @@ petab_parameters <- function(
   objectivePriorType            = c("parameterScaleNormal","parameterScaleUniform","uniform","normal","laplace","logNormal","logLaplace","parameterScaleLaplace")[[1]],
   objectivePriorParameters      = "0;2") {
 
-  data.table(
+  d <- data.table(
     parameterId                   = as.character(parameterId),
     parameterName                 = as.character(parameterName),
     parameterScale                = as.character(parameterScale),
@@ -375,6 +378,7 @@ petab_parameters <- function(
     objectivePriorType            = as.character(objectivePriorType),
     objectivePriorParameters      = as.character(objectivePriorParameters)
   )
+  setkey(d, parameterId)
 }
 
 #' PEtab structural model without sbml
