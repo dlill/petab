@@ -256,7 +256,7 @@ petab_experimentalCondition <- function(
   d <- data.table(conditionId =   as.character(conditionId),
                   conditionName = as.character(conditionName),
                   as.data.table(list(...)))
-  setkey(d, conditionId)
+  d[base::order(conditionId)]
 }
 
 
@@ -298,7 +298,7 @@ petab_measurementData <- function(
     datasetId                   = as.character(datasetId),
     replicateId                 = as.character(replicateId)
   )
-  setkey(d, simulationConditionId, observableId, time)
+  d[base::order(simulationConditionId, observableId, time)]
 }
 
 #' Constructor for Observables
@@ -330,7 +330,7 @@ petab_observables <- function(
     noiseFormula             = as.character(noiseFormula),
     noiseDistribution        = as.character(noiseDistribution)
   )
-  setkey(d, observableId)
+  d[base::order(observableId)]
 }
 
 #' Constructor for Parameters
@@ -378,7 +378,7 @@ petab_parameters <- function(
     objectivePriorType            = as.character(objectivePriorType),
     objectivePriorParameters      = as.character(objectivePriorParameters)
   )
-  setkey(d, parameterId)
+  d[base::order(parameterId)]
 }
 
 #' PEtab structural model without sbml
@@ -430,6 +430,7 @@ petab <- function(
   parameters = NULL,
   ...
 ) {
+  cat("Sorting tables with base::order()\n")
   # Do type coercion and initialize list
   if(!is.null(model))                 model                 = do.call(petab_model, model)
   if(!is.null(experimentalCondition)) experimentalCondition = do.call(petab_experimentalCondition, experimentalCondition)
