@@ -7,6 +7,8 @@
 petab_examplePath(exampleName, object = c("pe", "pd", "dir")[1])
 }
 \arguments{
+\item{exampleName}{(partial match of) example name}
+
 \item{object}{}
 }
 \value{

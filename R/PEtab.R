@@ -1165,11 +1165,25 @@ petab_getParametersToEstimate <- function(pe) {
 #' @md
 #'
 #' @examples
-petab_getParsOuterScale <- function(pe) {
+petab_getPars_estScale <- function(pe) {
   p <- copy(pe$parameters)
-  p[,`:=`(pouter = eval(parse(text = paste0(parameterScale, "(", nominalValue, ")")))),
-    by = 1:nrow(p)]
+  p[,`:=`(pouter = eval(parse(text = paste0(parameterScale, "(", nominalValue, ")")))),by = 1:nrow(p)]
   setNames(p$pouter, p$parameterId)
+}
+
+#' Get parameters on nominal scale
+#'
+#' @param pe
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#'
+#' @examples
+petab_getPars_linScale <- function(pe) {
+  p <- copy(pe$parameters)
+  setNames(p$nominalValue, p$parameterId)
 }
 
 
