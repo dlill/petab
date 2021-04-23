@@ -13,8 +13,8 @@ petab_plotData(
     "free")),
   filename = NULL,
   FLAGfuture = TRUE,
-  width = 21,
-  height = 29.7,
+  width = 29.7,
+  height = 21,
   scale = 1,
   units = "cm"
 )

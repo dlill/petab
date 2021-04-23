@@ -1038,7 +1038,7 @@ petab_plotData <- function(petab,
                              facet_wrap_paginate(~observableId, nrow = 4, ncol = 4, scales = "free")),
                            filename = NULL,
                            FLAGfuture = TRUE,
-                           width = 21, height = 29.7, scale = 1, units = "cm"
+                           width = 29.7, height = 21, scale = 1, units = "cm"
 ) {
 
   # create plotting data.table
@@ -1076,14 +1076,7 @@ petab_plotData <- function(petab,
   message("Plot has ", ggforce::n_pages(pl), " pages\n")
 
   # output
-  if (!is.null(filename)){
-    cf_outputFigure(pl = pl, filename = filename,
-                    width = width, height = height,
-                    scale = scale, units = units,
-                    FLAGFuture = FLAGfuture)
-    return(invisible())
-  }
-  pl
+  cf_outputFigure(pl = pl, filename = filename, width = width, height = height, scale = scale, units = units, FLAGFuture = FLAGfuture)
 }
 
 # -------------------------------------------------------------------------#

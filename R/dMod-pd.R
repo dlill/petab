@@ -208,8 +208,84 @@ pd_updateEstPars <- function(pd, parsEst, FLAGupdatePE = TRUE, FLAGsavePd = FALS
   pd
 }
 
+#' Title
+#'
+#' @param pd
+#' @param fitrankRange
+#'
+#' @return [dMod::parframe()]
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#'
+#' @examples
+pd_parf_collectMstrust <- function(pd, fitrankRange = 1:15, tol = 1) {
+  fitidxs = cf_parf_getStepRepresentatives(pd$result$fits[fitrankRange], tol = tol)
+  pars <- pd$result$fits[fitidxs]
+  pars <- data.table::as.data.table(pars)
+  pars[,`:=`(parameterSetId = paste0("step", step, ",", "rank", fitrank))]
+  pars <- dMod::parframe(pars, parameters = names(pd$pars), metanames = setdiff(names(pars), names(pd$pars)))
+  pars
+}
 
 
+#' Title
+#'
+#' @param conveniencefunctions
+#' @param pars2parframe
+#' @param pd
+#'
+#' @return
+#' @export
+#'
+#' @examples
+pd_parf_collectPars <- function(pd, parameterSetId = "Base") {
+  conveniencefunctions::pars2parframe(pd$pars,parameterSetId = parameterSetId, pd$obj_data)
+}
+
+
+#' Collect parameters for simultaneous prediction or plotting
+#'
+#' @param pd
+#' @param opt.base
+#' @param opt.fit
+#' @param opt.profile
+#'
+#' @return pd with pd$parf
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+pd_parf_collect <- function(pd,
+                            opt.base = pd_parf_opt.base(include = TRUE, parameterSetId = "Base"),
+                            opt.mstrust = pd_parf_opt.mstrust(include = TRUE, fitrankRange = 1:20, tol = 1),
+                            opt.profile = list(include = FALSE, rows = "profile_endpoints", parameters = NULL)) {
+
+  # [ ] refactor: each opt.* should get its own collector function: collect_opt.base(include, parameterSetId), collect_opt.fit(...)
+  # [ ] refactor: each collect step should get individual function
+
+  if (opt.base$include) {
+    args <- c(list(pd = pd), opt.base[setdiff(names(opt.base), "include")])
+    parf_opt <- do.call(pd_parf_collectPars, args)}
+
+  if (opt.mstrust$include && !is.null(pd$result$fits)) {
+    args <- c(list(pd = pd), opt.mstrust[setdiff(names(opt.mstrust), "include")])
+    parf_fit <- do.call(pd_parf_collectMstrust, args)}
+
+  if (opt.profile$include) cat("collect profiles is not implemented yet")
+
+  parf <- cf_parf_rbindlist(list(parf_opt, parf_fit))
+
+  parf
+}
+
+#' @export
+pd_parf_opt.base <- function(include = TRUE, parameterSetId = "Base") {
+  list(include = include, parameterSetId = parameterSetId)
+}
+#' @export
+pd_parf_opt.mstrust <- function(include = TRUE, fitrankRange = 1:20, tol = 1) {
+  list(include = include, fitrankRange = fitrankRange, tol = tol)
+}
 # -------------------------------------------------------------------------#
 # Fitting functions ----
 # -------------------------------------------------------------------------#
@@ -278,8 +354,80 @@ pd_plot <- function(pd, ..., page = 1, nrow = 3, ncol = 4, filename = NULL, widt
     facet_wrap_paginate(~name, nrow = nrow, ncol = ncol, scales = "free", page = page) +
     theme_cf() +
     scale_color_cf()
-  if (!is.null(filename)) cf_outputFigure(pl, filename, width = width, height = height, scale = scale, units = units)
-  pl
+  cf_outputFigure(pl, filename, width = width, height = height, scale = scale, units = units)
+}
+
+
+
+
+#' Title
+#'
+#' @param pd
+#' @param opt.base
+#' @param opt.mstrust
+#' @param FLAGsubsetPredictionToData
+#' @param page
+#' @param filename
+#' @param width
+#' @param height
+#' @param scale
+#' @param units
+#' @param i "data.table i" to subset data and predictions
+#' @param FLAGsummarizeProfilePredictions
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#'
+#' @examples
+pd_predictAndPlot <- function(pd, i, opt.base = pd_parf_opt.base(), opt.mstrust = pd_parf_opt.mstrust(),
+                              FLAGsubsetPredictionToData = TRUE,
+                              FLAGsummarizeProfilePredictions = TRUE,
+                              nrow = 3, ncol = 4, scales = "free", page = 1,
+                              filename = NULL, width = 29.7, height = 21, scale = 1, units = "cm") {
+  # Catch i (see petab_mutateDCO for more ideas)
+  mi <- missing(i)
+  si <- substitute(i)
+
+  # .. Collect parameters and predict -----
+  parf <- pd_parf_collect(pd, opt.base = opt.base, opt.mstrust = opt.mstrust)
+  if (nrow(parf) > 5) cat("Predicting for more than 5 parameter sets. Are you sure?")
+  predictions <- conveniencefunctions::cf_predict(prd = pd$prd, times = pd$times, pars = parf)
+
+  # .. Prepare data and prediction -----
+  pplot <- copy(predictions)
+  setnames(pplot,
+           c("condition"  , "name"        , "value"),
+           c("conditionId", "observableId", "measurement"))
+  pplot[,`:=`(fitrank = as.factor(fitrank))]
+
+  # Apply observableScale to data
+  dplot <- petab_joinDCO(pd$pe)
+  dplot[,`:=`(measurement = eval(parse(text = paste0(observableTransformation, "(", measurement, ")")))), by = 1:nrow(dplot)]
+
+  # set Order: Put pure predictions to end of plot
+  pplot[,`:=`(hasData = observableId %in% unique(dplot$observableId))]
+  pplot <- pplot[order(-hasData)]
+  pplot[,`:=`(observableId=factor(observableId, unique(observableId)))]
+  dplot[,`:=`(observableId=factor(observableId, levels(pplot$observableId)))]
+
+  # subset conditions and observables of predictions: mutually exclusive with previous...
+  if (FLAGsubsetPredictionToData) pplot <- subsetPredictionToData(pplot, dplot)
+
+  # [ ] Idea for plotting predictions along a profile: Summarize by min and max?
+
+  # Handle i
+  if (!mi) {dplot <- dplot[eval(si)]; pplot <- pplot(eval(si))}
+
+  # .. Plot -----
+  pl <- conveniencefunctions::cfggplot() +
+    ggforce::facet_wrap_paginate(~observableId, nrow = nrow, ncol = ncol, scales = scales, page = page) +
+    geom_line(aes(time, measurement, color = conditionId, linetype = parameterSetId), data = pplot) +
+    geom_point(aes(time, measurement, color = conditionId), data = dplot) +
+    conveniencefunctions::scale_color_cf()
+
+  cf_outputFigure(pl, filename = filename, width = width, height = height, scale = scale, units = units)
 }
 
 
@@ -287,6 +435,21 @@ pd_plot <- function(pd, ..., page = 1, nrow = 3, ncol = 4, filename = NULL, widt
 # Simulate model ----
 # -------------------------------------------------------------------------#
 
+#' Subset predictions to observables and conditions observed in data
+#'
+#' @param pplot
+#' @param dplot
+#'
+#' @return
+#' @export
+#'
+#' @examples
+subsetPredictionToData <- function(pplot, dplot) {
+  dplot_lookup <- copy(dplot)
+  dplot_lookup <- dplot_lookup[,list(observableId, conditionId)]
+  dplot_lookup <- unique(dplot_lookup)
+  pplot <- pplot[dplot_lookup, on = c("observableId", "conditionId")]
+}
 
 # -------------------------------------------------------------------------#
 # Test model ----
