@@ -91,8 +91,8 @@ indiv2Classic <- function(pd,
                           NFLAGcompile = c(Recompile = 0, LoadPrevious = 1)[3],
                           Nobjtimes = 50) {
 
-  .compiledFolder <- file.path(pd$other$currentFolder, pd$other$.compiledFolder)
-  rdsfile <- pd_file(modelname = pd$other$modelname, .compiledFolder = .compiledFolder, "classic")
+  pd$filenameParts$type                        <- "classic"
+  rdsfile <- pd_files(pd$filenameParts)$rdsfile
 
   if (NFLAGcompile > 0 && file.exists(rdsfile))
     return(readPd(rdsfile))

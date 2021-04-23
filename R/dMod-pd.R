@@ -32,7 +32,7 @@ readPd <- function(filename) {
   setwd(wd)
 
   # 3 Read potential results if not yet in pd
-  # If in pd already, some other variable might have been derived from them,
+  # If in pd already, some filenameParts variable might have been derived from them,
   #   so it would be dangerous to reload them if they were postprocessed
   path <- dirname(dirname(filename))
   if (is.null(pd$results$fits) && dir.exists(file.path(path, "Results", "mstrust")))
@@ -45,6 +45,20 @@ readPd <- function(filename) {
 
 #' Title
 #'
+#' @param pd
+#'
+#' @return
+#' @export
+#'
+#' @examples
+writePd <- function(pd) {
+  rdsfile <- pd_files(pd$filenameParts)$rdsfile
+  saveRDS(pd, rdsfile)
+}
+
+
+#' Title
+#'
 #' @param modelname
 #' @param .compiledFolder
 #' @param type
@@ -53,8 +67,10 @@ readPd <- function(filename) {
 #' @export
 #'
 #' @examples
-pd_file <- function(modelname, .compiledFolder, type = c("indiv", "classic")[1]) {
-  file.path(.compiledFolder, paste0(modelname, "_", type, ".rds"))
+pd_files <- function(filenameParts) {
+  if (is.null(filenameParts$type)) filenameParts$type <- "indiv"
+  list(rdsfile = file.path(filenameParts$.currentFolder, filenameParts$.compiledFolder, paste0(filenameParts$modelname, "_", filenameParts$type, ".rds"),
+       obsParsFitted = file.path(filenameParts$.currentFolder, filenameParts$.compiledFolder, paste0(".obsparsfitted"))
 }
 
 
@@ -168,6 +184,24 @@ pd_objtimes <- function(pd, N = 100) {
 # -------------------------------------------------------------------------#
 # Parameter handling ----
 # -------------------------------------------------------------------------#
+
+#' Update parameters
+#'
+#' @param pd
+#' @param parsEst
+#' @param FLAGupdatePE
+#'
+#' @return
+#' @export
+#'
+#' @examples
+pd_updateEstPars <- function(pd, parsEst, FLAGupdatePE = TRUE, FLAGsavePd = FALSE) {
+  pd$pars[names(parsEst)] <- parsEst
+  if (FLAGupdatePE) {
+    cat("pd$pe pars have been *set*")
+    petab_setPars_estScale(pd$pe, parsEst)}
+  pd
+}
 
 
 # -------------------------------------------------------------------------#

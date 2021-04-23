@@ -1489,7 +1489,8 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   path      <- petab_modelname_path(filename)$path
   modelname <- petab_modelname_path(filename)$modelname
   files     <- petab_files(filename, FLAGTestCase = testCases, FLAGreturnList = TRUE)
-  rdsfile   <- pd_file(modelname = modelname, .compiledFolder = .compiledFolder, type = "indiv")
+  filenameParts = list(modelname = modelname,currentFolder = mywd,.compiledFolder = .compiledFolder,type = "indiv")
+  rdsfile   <- pd_files(filenameParts)$rdsfile
 
   # .. Read previously imported files -----
   dir.create(.compiledFolder, showWarnings = FALSE)
@@ -1714,11 +1715,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
       fns                = fns
     ),
     # other components: Dump your stuff here
-    other = list(
-      modelname       = modelname,
-      currentFolder   = mywd,
-      .compiledFolder = .compiledFolder
-    ),
+    filenameParts = filenameParts,
     # Parameters + Time
     pars               = dMod::unclass_parvec(myfit_values),
     times              = predtimes(pe$measurementData$time, Nobjtimes = 200)
