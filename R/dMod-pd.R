@@ -246,6 +246,37 @@ pd_fitObsPars <- function(pd, FLAGsavePd = TRUE) {
 # could be implemented as objective function which automatically fits observable parameters
 
 # -------------------------------------------------------------------------#
+# Plotting ----
+# -------------------------------------------------------------------------#
+#' First version of plotting a pd
+#'
+#' Predicts with "pars" and "times"
+#'
+#' @param pd A pd
+#' @param ... Going to [dMod::plotCombined()]
+#' @param page,nrow,ncol Going to [ggforce::facet_wrap_paginate()]
+#' @param filename,width,height,scale,units Going to [conveniencefunctions::cf_outputFigure()]
+#'
+#' @return ggplot
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#'
+#' @examples
+#' pdx <- petab_exampleRead("01", "pd")
+#' pd_plot(pdx)
+pd_plot <- function(pd, ..., page = 1, nrow = 3, ncol = 4, filename = NULL, width = 29.7, height = 21, scale = 1, units = "cm"){
+  pred <- pd$prd(pd$times, pd$pars)
+  pl <- plotCombined(pred, pd$dModAtoms$data, ...) +
+    facet_wrap_paginate(~name, nrow = nrow, ncol = ncol, scales = "free", page = page) +
+    theme_cf() +
+    scale_color_cf()
+  if (!is.null(filename)) cf_outputFigure(pl, filename, width = width, height = height, scale = scale, units = units)
+  pl
+}
+
+
+# -------------------------------------------------------------------------#
 # Simulate model ----
 # -------------------------------------------------------------------------#
 
