@@ -766,7 +766,8 @@ getConditionsSBML <- function(conditions,data, observables_file, FLAGnormalImpor
 getInitialsSBML <- function(model, conditions){
 
   condition.grid <- read.csv(file = conditions, sep = "\t")
-  model = libSBML::readSBML(model)$getModel()
+  model = readSBML(model)$getModel()
+  # model = libSBML::readSBML(model)$getModel()
   initials <- NULL
   species <- NULL
 
@@ -785,14 +786,16 @@ getInitialsSBML <- function(model, conditions){
       # ok there is a rule for this species so lets figure out what its type
       # is as that determines whether it applies at t0
       rule_type <- rule$getTypeCode()
-      type_name <- libSBML::SBMLTypeCode_toString(rule_type, 'core')
+      type_name <- SBMLTypeCode_toString(rule_type, 'core')
+      # type_name <- libSBML::SBMLTypeCode_toString(rule_type, 'core')
       if (type_name == "AssignmentRule")
       {
         # the initial value is determined by the formula
         math <- rule$getMath()
         if (!is.null(math))
         {
-          formula <- libSBML::formulaToL3String(math)
+          formula <- formulaToL3String(math)
+          # formula <- libSBML::formulaToL3String(math)
           # print(paste('Species: ', current$getId(), ' is determined at all times by formula: ', formula))
           initials <- c(initials,formula)
           species <- c(species,current$getId())
@@ -807,7 +810,8 @@ getInitialsSBML <- function(model, conditions){
         math <- rule$getMath()
         if (!is.null(math))
         {
-          formula <- libSBML::formulaToL3String(math)
+          formula <- formulaToL3String(math)
+          # formula <- libSBML::formulaToL3String(math)
           # print(paste('Species: ', current$getId(), ' has an ode rule with formula: ', formula))
           initials <- c(initials,formula)
           species <- c(species,current$getId())
@@ -825,7 +829,8 @@ getInitialsSBML <- function(model, conditions){
       math <- ia$getMath()
       if (!is.null(math))
       {
-        formula <- libSBML::formulaToL3String(math)
+        formula <- formulaToL3String(math)
+        # formula <- libSBML::formulaToL3String(math)
         # print(paste("Species: ", current$getId(), " has an initial assignment with formula: ", formula))
         initials <- c(initials,formula)
         species <- c(species,current$getId())
@@ -1020,13 +1025,14 @@ getParametersSBML <- function(parameters, model){
 #' @return Eqnlist of reactions.
 #'
 #' @author Marcus Rosenblatt and Svenja Kemmer
-#' @importFrom libSBML readSBML
+#' importFrom libSBML readSBML
 #' @importFrom cOde replaceSymbols
 #' @importFrom dMod addReaction
 #' @export
 #'
 getReactionsSBML <- function(model, conditions){
-  m = libSBML::readSBML(model)$getModel()
+  # m = libSBML::readSBML(model)$getModel()
+  m = readSBML(model)$getModel()
 
   # Initialization
   reactions <- NULL
@@ -1206,7 +1212,7 @@ getReactionsSBML <- function(model, conditions){
 
 
 # function from Frank
-#' @importFrom libSBML formulaToL3String
+#' importFrom libSBML formulaToL3String
 function_def_to_string <- function(fun)
 {
   if (is.null(fun)) return;
@@ -1228,14 +1234,16 @@ function_def_to_string <- function(fun)
   result <- paste(id, '(', sep="")
   for (i in 1:(num_children-1) ) # this leaves out the last one
   {
-    result <- paste(result, libSBML::formulaToL3String(math$getChild(i-1)), sep="")
+    # result <- paste(result, libSBML::formulaToL3String(math$getChild(i-1)), sep="")
+    result <- paste(result, formulaToL3String(math$getChild(i-1)), sep="")
 
     if (i < (num_children-1))
       result <- paste(result, ', ', sep="")
 
   }
 
-  result <- paste(result, ') = ', libSBML::formulaToL3String(math$getChild(num_children - 1)), sep="")
+  # result <- paste(result, ') = ', libSBML::formulaToL3String(math$getChild(num_children - 1)), sep="")
+  result <- paste(result, ') = ', formulaToL3String(math$getChild(num_children - 1)), sep="")
 
   return (result)
 

@@ -17,7 +17,6 @@ Depends:
   conveniencefunctions
 Imports:
   ggforce,
-  libSBML,
   dplyr,
   reticulate,
   cOde,

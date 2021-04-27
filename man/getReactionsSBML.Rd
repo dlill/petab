@@ -18,4 +18,5 @@ Assignment rules for input functions are substituted in the rate column. Time is
 }
 \author{
 Marcus Rosenblatt and Svenja Kemmer
+importFrom libSBML readSBML
 }
