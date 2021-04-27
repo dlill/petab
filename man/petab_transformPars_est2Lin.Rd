@@ -10,7 +10,7 @@ petab_transformPars_est2Lin(pe, parsEst)
 \item{parsEst}{}
 }
 \value{
-
+vector
 }
 \description{
 Title
@@ -25,6 +25,7 @@ parsLin <- parsLin[sample(1:length(parsLin), 5)] + rnorm(5)
 Other Parameter wrangling: 
 \code{\link{petab_getPars_estScale}()},
 \code{\link{petab_getPars_linScale}()},
+\code{\link{petab_mergeParameterValues}()},
 \code{\link{petab_setPars_estScale}()},
 \code{\link{petab_setPars_linScale}()},
 \code{\link{petab_transformPars_lin2Est}()}

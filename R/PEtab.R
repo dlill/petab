@@ -1290,7 +1290,7 @@ petab_transformPars_lin2Est <- function(pe, parsLin) {
 #' @param pe
 #' @param parsEst
 #'
-#' @return
+#' @return vector
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
@@ -1312,6 +1312,34 @@ petab_transformPars_est2Lin <- function(pe, parsEst) {
   parsLin
 }
 
+#' Merge parameter values from one petab into another petab
+#'
+#' @param pe1 parameters from pe1
+#' @param pe2 parameters from pe2
+#' @param mergeCols columns to merge into pe_pa1
+#'
+#' @return updated pe_pa1
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family Parameter wrangling
+#'
+#' @examples
+petab_mergeParameterValues <- function(pe1,pe2, mergeCols = c("nominalValue", "parameterScale")) {
+  # Get values
+  pe_pa1 <- pe1$parameters
+  pe_pa2 <- pe2$parameters
+  mergeColsPA2 <- paste0(mergeCols, "PA2")
+
+  # Merge, update, clean
+  pe_pa <- merge(pe_pa1, pe_pa2[,c("parameterId", ..mergeCols)], by = "parameterId", all.x = TRUE, all.y = FALSE, suffixes = c("", "PA2"))
+  pe_pa[!is.na(nominalValuePA2),(mergeCols) := lapply(.SD, function(x) x), .SDcols = mergeColsPA2]
+  pe_pa[,(mergeColsPA2) := NULL]
+
+  # Update pe1
+  pe1$parameters <- pe_pa
+  pe1
+}
 
 
 # -------------------------------------------------------------------------#
