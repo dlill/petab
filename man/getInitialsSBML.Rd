@@ -17,4 +17,5 @@ This function imports initial values or equations describing the same from SBML 
 }
 \author{
 Marcus Rosenblatt, Svenja Kemmer and Frank Bergmann
+importFrom libSBML readSBML formulaToL3String
 }

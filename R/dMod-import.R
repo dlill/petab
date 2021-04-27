@@ -760,7 +760,7 @@ getConditionsSBML <- function(conditions,data, observables_file, FLAGnormalImpor
 #' @return Named vector of initials.
 #'
 #' @author Marcus Rosenblatt, Svenja Kemmer and Frank Bergmann
-#' @importFrom libSBML readSBML formulaToL3String
+#' importFrom libSBML readSBML formulaToL3String
 #' @export
 #'
 getInitialsSBML <- function(model, conditions){
