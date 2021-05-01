@@ -443,7 +443,7 @@ pd_predictAndPlot <- function(pd, i, opt.base = pd_parf_opt.base(), opt.mstrust 
 pd_plot_compareParameters <- function(pd, parf,
                                       nrow = 1, ncol = 3, scales = "free", page = 1,
                                       filename = NULL, width = 29.7, height = 21, scale = 1, units = "cm"
-                                      ) {
+) {
   parameters <- attr(parf, "parameters")
   p <- data.table(parf)
   p <- melt(p, id.vars = "parameterSetId", measure.vars = parameters, variable.name = "parameterId", variable.factor = FALSE, value.name = "parameterValueEstScale")
@@ -501,34 +501,40 @@ subsetPredictionToData <- function(pplot, dplot) {
 #' @importFrom ggforce facet_wrap_paginate
 #'
 #' @examples
-pd_tests <- function(pd, page = 1, cn = 1) {
+pd_tests <- function(pd, page = 1, cn = 1, whichTests = c("01-plot", "02-objData", "03-derivs")[1:2]) {
+
+  cat("The following tests are implemented: \n", 'c("01-plot", "02-objData", "03-derivs")')
 
   # Test prediction without derivs
-  prediction <- pd$prd(objtimes(pd$pe$measurementData$time, 200), pd$pars)
-  pl <- dMod::plotPrediction(prediction, name %in% pd$pe$observables$observableId) +
-    ggforce::facet_wrap_paginate(~name, nrow = 4, ncol = 4, scales = "free", page = page)
-  cat("\n===================================================", "\n")
-  cat("Plotting prediction page ", page, " / ", n_pages(pl), "\n")
-  cat("===================================================", "\n")
-  print(pl)
-
+  if ("01-plot" %in% whichTests){
+    prediction <- pd$prd(objtimes(pd$pe$measurementData$time, 200), pd$pars)
+    pl <- dMod::plotPrediction(prediction, name %in% pd$pe$observables$observableId) +
+      ggforce::facet_wrap_paginate(~name, nrow = 4, ncol = 4, scales = "free", page = page)
+    cat("\n===================================================", "\n")
+    cat("01-plot: Plotting prediction page ", page, " / ", n_pages(pl), "\n")
+    cat("===================================================", "\n")
+    print(pl)
+  }
   # Test obj
+  if ("02-objData" %in% whichTests){
   objval <- pd$obj_data(pd$pars)
   cat("\n===================================================\n")
-  cat("Objective function\n")
+  cat("02-objData: Objective function\n")
   cat("===================================================\n")
   print(objval)
-
+  }
   # Test x for one condition
+  if ("03-derivs" %in% whichTests){
   pars <- pd$p(pd$pars)
   pars <- pars[[cn]]
   pred <- pd$dModAtoms$fns$x(objtimes(pd$pe$measurementData$time), pars)
   # Look at derivs
   derivs <- dMod::getDerivs(pred)
   cat("\n===================================================\n")
-  cat("Derivs of x[", cn, "]\n")
+  cat("03-derivs: Derivs of x[", cn, "]\n")
   cat("===================================================\n")
   print(derivs[[1]][1:10, 1:10])
+  }
 }
 
 

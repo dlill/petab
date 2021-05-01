@@ -4,7 +4,12 @@
 \alias{pd_tests}
 \title{Some tests}
 \usage{
-pd_tests(pd, page = 1, cn = 1)
+pd_tests(
+  pd,
+  page = 1,
+  cn = 1,
+  whichTests = c("01-plot", "02-objData", "03-derivs")[1:2]
+)
 }
 \arguments{
 \item{cn}{}
