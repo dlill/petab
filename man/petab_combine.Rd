@@ -4,10 +4,14 @@
 \alias{petab_combine}
 \title{Title}
 \usage{
-petab_combine(pe1, pe2)
+petab_combine(
+  pe1,
+  pe2,
+  NFLAGconflict = c(stop = 0, use_pe1 = 1, use_pe2 = 2)[2]
+)
 }
 \arguments{
-\item{pe2}{}
+\item{NFLAGconflict}{one of c("stop" = 0, "use_pe1" = 1, "use_pe2" = 2)}
 }
 \value{
 

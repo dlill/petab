@@ -4,7 +4,11 @@
 \alias{petab_combine_experimentalCondition}
 \title{Title}
 \usage{
-petab_combine_experimentalCondition(ec1, ec2)
+petab_combine_experimentalCondition(
+  ec1,
+  ec2,
+  NFLAGconflict = c(stop = 0, use_pe1 = 1, use_pe2 = 2)[2]
+)
 }
 \arguments{
 \item{ec2}{}

@@ -70,7 +70,7 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
 
     # Append par_ec
     par <- rbindlist(list(par, par_ec))
-    }
+  }
 
   par
 }
@@ -631,7 +631,7 @@ writePetab <- function(petab, filename = "petab/model") {
 #' @export
 #'
 #' @examples
-petab_combine_experimentalCondition <- function(ec1, ec2) {
+petab_combine_experimentalCondition <- function(ec1, ec2, NFLAGconflict = c("stop" = 0, "use_pe1" = 1, "use_pe2" = 2)[2]) {
   s12 <- setdiff(names(ec1), names(ec2))
   if (length(s12)) stop("The following names are in experimentalCondition 1, but not in 2:\n",
                         paste0(s12, collapse = ", "), "\n",
@@ -640,13 +640,22 @@ petab_combine_experimentalCondition <- function(ec1, ec2) {
   if (length(s21)) stop("The following names are in experimentalCondition 1, but not in 2:\n",
                         paste0(s21, collapse = ", "), "\n",
                         "Please fix manually before combining.\n")
+
   i12 <- intersect(ec1$conditionId,ec2$conditionId)
   if (length(i12)) {
-    warning("The following conditionId is in both petabs. Using the experimentalCondition from pe1 ", paste0(i12, collapse = ","))
+    cat("Overlapping conditionIds =================\n-----------------pe1----------------------\n")
     print(ec1[conditionId %in% i12])
+    cat("-----------------pe2----------------------\n")
     print(ec2[conditionId %in% i12])
+    if (NFLAGconflict == 0) {
+      stop("The following conditionId is in both petabs: ", paste0(i12, collapse = ","))
+    } else if (NFLAGconflict == 1) {
+      ec2 <- ec2[!conditionId %in% i12]
+    } else if (NFLAGconflict == 2) {
+      ec1 <- ec1[!conditionId %in% i12]
     }
-  ec2 <- ec2[!conditionId %in% ec1$conditionId]
+  }
+
   rbindlist(list(ec1,ec2), use.names = TRUE)
 }
 
@@ -672,11 +681,25 @@ petab_combine_measurementData <- function(md1, md2) {
 #' @export
 #'
 #' @examples
-petab_combine_observables <- function(o1,o2) {
+petab_combine_observables <- function(o1,o2, NFLAGconflict = c("stop" = 0, "use_pe1" = 1, "use_pe2" = 2)[2]) {
   i12 <- intersect(o1$observableId,o2$observableId)
-  if (length(i12)) stop("The following observableId is in both petabs: ", paste0(i12, collapse = ","))
+  if (length(i12)) {
+    cat("Overlapping observables =================\n-----------------pe1----------------------\n")
+    print(o1[observableId %in% i12])
+    cat("-----------------pe2----------------------\n")
+    print(o2[observableId %in% i12])
+    if (NFLAGconflict == 0) {
+      stop("The following observableId is in both petabs: ", paste0(i12, collapse = ","))
+    } else if (NFLAGconflict == 1) {
+      o2 <- o2[!observableId %in% i12]
+    } else if (NFLAGconflict == 2) {
+      o1 <- o1[!observableId %in% i12]
+    }
+  }
   rbindlist(list(o1,o2), use.names = TRUE)
 }
+
+
 
 #' Title
 #'
@@ -688,12 +711,14 @@ petab_combine_observables <- function(o1,o2) {
 #'
 #' @examples
 petab_combine_parameters <- function(p1,p2) {
+
+  if (is.null(p1)) return(p2)
+  if (is.null(p2)) return(p1)
+
   i12 <- intersect(p2$parameterId,p1$parameterId)
   if (length(i12)) {
     message("The following parameterId are in both petabs. Using parameters from pe1. \n",
-                        paste0(i12, collapse = ","))
-    # print(p1[parameterId %in% i12])
-    # print(p2[parameterId %in% i12])
+            paste0(i12, collapse = ","))
   }
   p2 <- p2[!parameterId %in% p1$parameterId]
   rbindlist(list(p1,p2), use.names = TRUE)
@@ -703,19 +728,20 @@ petab_combine_parameters <- function(p1,p2) {
 #'
 #' @param pe1
 #' @param pe2
+#' @param NFLAGconflict one of c("stop" = 0, "use_pe1" = 1, "use_pe2" = 2)
 #'
 #' @return
 #' @export
 #'
 #' @examples
-petab_combine <- function(pe1,pe2) {
-  message("Using model from pe1\n")
+petab_combine <- function(pe1,pe2, NFLAGconflict = c("stop" = 0, "use_pe1" = 1, "use_pe2" = 2)[2]) {
+  if (NFLAGconflict>0) cat("Preferring pe", NFLAGconflict, "\n")
 
   petab(
     model                 = pe1$model,
     experimentalCondition = petab_combine_experimentalCondition(pe1$experimentalCondition, pe2$experimentalCondition),
     measurementData       = petab_combine_measurementData(      pe1$measurementData      , pe2$measurementData),
-    observables           = petab_combine_observables(          pe1$observables          , pe2$observables),
+    observables           = petab_combine_observables(          pe1$observables          , pe2$observables, NFLAGconflict = NFLAGconflict),
     parameters            = petab_combine_parameters(           pe1$parameters           , pe2$parameters)
   )
 
@@ -940,7 +966,7 @@ petab_createObjPrior <- function(pe, FLAGuseNominalValueAsCenter) {
 
 
   dMod::constraintL2(mu = setNames(p$mu, p$parameterId),
-               sigma = setNames(p$sd, p$parameterId))
+                     sigma = setNames(p$sd, p$parameterId))
 
 }
 
@@ -1375,7 +1401,7 @@ inverse_scale <- function(parameterScale) {
 #' @examples
 lin <- function(x) {
   x
-  }
+}
 
 # -------------------------------------------------------------------------#
 # Todolist/Wishlist ----

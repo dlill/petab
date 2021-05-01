@@ -1643,6 +1643,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
 
   # 2 Adjust fix.grid
   fg <- gl$fix.grid
+nm <- (intersect(names(fg), names(parscales)))[[1]]
   for (nm in intersect(names(fg), names(parscales))) {
     scale <- parscales[nm]
     if (scale == "log10") fg[[nm]] <- log10(fg[[nm]])

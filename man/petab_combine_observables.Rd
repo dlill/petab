@@ -4,7 +4,11 @@
 \alias{petab_combine_observables}
 \title{Title}
 \usage{
-petab_combine_observables(o1, o2)
+petab_combine_observables(
+  o1,
+  o2,
+  NFLAGconflict = c(stop = 0, use_pe1 = 1, use_pe2 = 2)[2]
+)
 }
 \arguments{
 \item{o2}{}
