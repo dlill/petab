@@ -764,28 +764,28 @@ petab_combine <- function(pe1,pe2, NFLAGconflict = c("stop" = 0, "use_pe1" = 1, 
 #' @export
 #'
 #' @examples
-petab_lint <- function(petab) {
+petab_lint <- function(pe) {
 
   # [ ] Implement access to petab.lint
   errlist <- list()
 
   # Some quick own checks
-  dupes <- which(duplicated(petab$measurementData))
+  dupes <- which(duplicated(pe$measurementData))
   if(length(dupes)) {
     warning("These rows are duplicates in measurementData: ", paste0(head(dupes,10), collapse = ","), "...")
     errlist <- c(errlist, measurementDataDupes = dupes)}
 
-  dupes <- which(duplicated(petab$observables$observableID))
+  dupes <- which(duplicated(pe$observables$observableID))
   if(length(dupes)) {
     warning("These rows are duplicates in observableId: ", paste0(head(dupes,10), collapse = ","), "...")
     errlist <- c(errlist, observableIdDupes = dupes)}
 
-  dupes <- which(duplicated(petab$experimentalCondition$conditionId))
+  dupes <- which(duplicated(pe$experimentalCondition$conditionId))
   if(length(dupes)) {
     warning("These rows are duplicates in conditionId :", paste0(head(dupes,10), collapse = ","), "...")
     errlist <- c(errlist, list(conditionIdDupes = dupes))}
 
-  if (is.null(pe$parameters)) {
+  if (!is.null(pe$parameters)) {
     pars_NA <- pe$parameters[is.na(nominalValue), parameterId]
     if (length(pars_NA)) warning("These parameters have no correct nominal value: ", paste0(pars_NA, collapse = ","))
   }
