@@ -276,6 +276,7 @@ pd_parf_collect <- function(pd,
   if (opt.profile$include) cat("collect profiles is not implemented yet")
 
   parf <- cf_parf_rbindlist(list(parf_base, parf_fit))
+  parf <- parf[order(parf$value)]
 
   parf
 }
