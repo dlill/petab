@@ -220,8 +220,9 @@ pd_updateEstPars <- function(pd, parsEst, FLAGupdatePE = TRUE, FLAGsavePd = FALS
 #'
 #' @examples
 pd_parf_collectMstrust <- function(pd, fitrankRange = 1:15, tol = 1) {
-  fitidxs = cf_parf_getStepRepresentatives(pd$result$fits[fitrankRange], tol = tol)
-  pars <- pd$result$fits[fitidxs]
+  parf0 <- pd$result$fits[fitrankRange]
+  fitidxs = cf_parf_getStepRepresentatives(parf0, tol = tol)
+  pars <- parf0[fitidxs]
   pars <- data.table::as.data.table(pars)
   pars[,`:=`(parameterSetId = paste0("step", step, ",", "rank", fitrank))]
   pars <- dMod::parframe(pars, parameters = names(pd$pars), metanames = setdiff(names(pars), names(pd$pars)))
@@ -262,10 +263,11 @@ pd_parf_collect <- function(pd,
 
   # [ ] refactor: each opt.* should get its own collector function: collect_opt.base(include, parameterSetId), collect_opt.fit(...)
   # [ ] refactor: each collect step should get individual function
+  parf_base <- parf_fit <- NULL
 
   if (opt.base$include) {
     args <- c(list(pd = pd), opt.base[setdiff(names(opt.base), "include")])
-    parf_opt <- do.call(pd_parf_collectPars, args)}
+    parf_base <- do.call(pd_parf_collectPars, args)}
 
   if (opt.mstrust$include && !is.null(pd$result$fits)) {
     args <- c(list(pd = pd), opt.mstrust[setdiff(names(opt.mstrust), "include")])
@@ -273,7 +275,7 @@ pd_parf_collect <- function(pd,
 
   if (opt.profile$include) cat("collect profiles is not implemented yet")
 
-  parf <- cf_parf_rbindlist(list(parf_opt, parf_fit))
+  parf <- cf_parf_rbindlist(list(parf_base, parf_fit))
 
   parf
 }
@@ -385,6 +387,7 @@ pd_predictAndPlot <- function(pd, i, opt.base = pd_parf_opt.base(), opt.mstrust 
                               FLAGsubsetPredictionToData = TRUE,
                               FLAGsummarizeProfilePredictions = TRUE,
                               nrow = 3, ncol = 4, scales = "free", page = 1,
+                              n.breaks = 5,
                               filename = NULL, width = 29.7, height = 21, scale = 1, units = "cm") {
   # Catch i (see petab_mutateDCO for more ideas)
   mi <- missing(i)
@@ -418,13 +421,14 @@ pd_predictAndPlot <- function(pd, i, opt.base = pd_parf_opt.base(), opt.mstrust 
   # [ ] Idea for plotting predictions along a profile: Summarize by min and max?
 
   # Handle i
-  if (!mi) {dplot <- dplot[eval(si)]; pplot <- pplot(eval(si))}
+  if (!mi) {dplot <- dplot[eval(si)]; pplot <- pplot[eval(si)]}
 
   # .. Plot -----
   pl <- conveniencefunctions::cfggplot() +
     ggforce::facet_wrap_paginate(~observableId, nrow = nrow, ncol = ncol, scales = scales, page = page) +
     geom_line(aes(time, measurement, color = conditionId, linetype = parameterSetId), data = pplot) +
     geom_point(aes(time, measurement, color = conditionId), data = dplot) +
+    scale_y_continuous(n.breaks = n.breaks) +
     conveniencefunctions::scale_color_cf()
 
   cf_outputFigure(pl, filename = filename, width = width, height = height, scale = scale, units = units)
