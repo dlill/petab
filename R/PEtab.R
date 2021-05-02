@@ -785,6 +785,12 @@ petab_lint <- function(petab) {
     warning("These rows are duplicates in conditionId :", paste0(head(dupes,10), collapse = ","), "...")
     errlist <- c(errlist, list(conditionIdDupes = dupes))}
 
+  if (is.null(pe$parameters)) {
+    pars_NA <- pe$parameters[is.na(nominalValue), parameterId]
+    if (length(pars_NA)) warning("These parameters have no correct nominal value: ", paste0(pars_NA, collapse = ","))
+  }
+
+
   errlist
 }
 
