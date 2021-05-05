@@ -497,7 +497,7 @@ pd_plot <- function(pd, ..., page = 1, nrow = 3, ncol = 4, filename = NULL, widt
 #'
 #' @examples
 pd_predictAndPlot <- function(pd, i, opt.base = pd_parf_opt.base(), opt.mstrust = pd_parf_opt.mstrust(),
-                              FLAGsubsetPredictionToData = TRUE,
+                              NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2)[2],
                               FLAGsummarizeProfilePredictions = TRUE,
                               nrow = 3, ncol = 4, scales = "free", page = 1,
                               n.breaks = 5,
@@ -529,7 +529,7 @@ pd_predictAndPlot <- function(pd, i, opt.base = pd_parf_opt.base(), opt.mstrust 
   dplot[,`:=`(observableId=factor(observableId, levels(pplot$observableId)))]
 
   # subset conditions and observables of predictions: mutually exclusive with previous...
-  if (FLAGsubsetPredictionToData) pplot <- subsetPredictionToData(pplot, dplot)
+  pplot <- subsetPredictionToData(pplot, dplot, NFLAGsubsetType = NFLAGsubsetType)
 
   # [ ] Idea for plotting predictions along a profile: Summarize by min and max?
 
@@ -588,16 +588,28 @@ pd_plot_compareParameters <- function(pd, parf,
 #'
 #' @param pplot
 #' @param dplot
+#' @param NFLAGsubsetType
 #'
 #' @return
 #' @export
 #'
 #' @examples
-subsetPredictionToData <- function(pplot, dplot) {
+subsetPredictionToData <- function(pplot, dplot, NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2)[2]) {
+  if (NFLAGsubsetType == 0) return(pplot)
+
+  # strict: Only combinations of observables and conditions which are present in data
   dplot_lookup <- copy(dplot)
   dplot_lookup <- dplot_lookup[,list(observableId, conditionId)]
   dplot_lookup <- unique(dplot_lookup)
-  pplot <- pplot[dplot_lookup, on = c("observableId", "conditionId")]
+  pplot_out <- pplot[dplot_lookup, on = c("observableId", "conditionId")]
+
+  # keepInternal: Additionally keep ALL conditions of ALL internal states (with no data)
+  if (NFLAGsubsetType == 2) {
+  pplot_keepInt <- pplot[!observableId %in% dplot$observableId]
+  pplot_out <- rbindlist(list(pplot_out, pplot_keepInt))
+  }
+
+  pplot_out
 }
 
 # -------------------------------------------------------------------------#
