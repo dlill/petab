@@ -13,7 +13,7 @@
 #' @export
 #'
 #' @examples
-petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
+petab_create_parameter_df <- function(pe, observableParameterScale = "log10", parameterFormulaInjection = NULL) {
 
   model                 <- pe$model
   measurementData       <- pe$measurementData
@@ -231,6 +231,8 @@ petab_mutateDCO <- function(pe, i, j) {
   pe_out <- petab_unjoinDCO(dco, pe)
   pe_out
 }
+
+
 
 # -------------------------------------------------------------------------#
 # Initializers of core objects ----

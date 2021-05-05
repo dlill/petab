@@ -3,7 +3,7 @@ try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 
 .outputFolder <- paste0("Outputs")
 for(folder in c(.outputFolder))
-if(!dir.exists(folder)) dir.create(folder)
+  if(!dir.exists(folder)) dir.create(folder)
 # -------------------------------------------------------------------------#
 # Create enzyme kinetics model and data ----
 # -------------------------------------------------------------------------#
@@ -32,17 +32,6 @@ el <- eqnlist_addDefaultCompartment(el, "cytoplasm") # Need compartment informat
 events <- eventlist()
 events <- addEvent(events, var = "E", time = 0, value = "Eadd", method = "replace")
 
-# .. SteadyStates  -----
-
-# # Trafos
-# # est -> beforeSS -> SS -> x -> g
-#
-# # condition noE
-# # noE
-# trafoSS <- c(S = "kproS / kdegS", E = 0, C = 0, P = 0)
-# # E
-# trafoSS <- c(S = 0,...)
-
 # .. Infos -----
 
 parInfo <- data.table(tibble::tribble(
@@ -53,7 +42,7 @@ parInfo <- data.table(tibble::tribble(
   "kproS" , 2        ,  "mole_per_litre_per_second" ,
   "kdegS" , 0.1      ,  "per_second",
   "Eadd"  , 1        ,  "mole_per_litre"
-  ))
+))
 
 speciesInfo <- data.table(tibble::tribble(
   ~speciesName, ~compName, ~initialAmount,
@@ -64,6 +53,9 @@ speciesInfo <- data.table(tibble::tribble(
 
 # compartmentInfo is left as the default getCompartmentInfo(el)
 # unitInfo is left as the default getUnitInfo(): If you need other units, you need to add them
+
+
+
 
 # .. Compile and plot model -----
 compiled <- odemodel(f = el,modelname = modelname, events = events)
@@ -90,7 +82,7 @@ ggsave(file.path(.outputFolder, "02-Data.png"), pl, width = 15.5, height = 10, s
 # Export Petab ----
 # -------------------------------------------------------------------------#
 # .. Create petab tables -----
-pe_ex <- petab_experimentalCondition(conditionId = c("NoEnzyme", "Enzyme"), conditionName = c("NoEnzyme", "Enzyme"), E = c(0,"Eadd"))
+pe_ex <- petab_experimentalCondition(conditionId = c("Enzyme"), conditionName = c("Enzyme"))
 pe_ob <- petab_observables(observableId = c("obsE","obsS","obsES","obsP"),
                            observableName = c("obsE","obsS","obsES","obsP"),
                            observableFormula = c("E","S","ES","P"),
@@ -106,12 +98,30 @@ pe_me <- petab_measurementData(observableId = pred$name,
                                noiseParameters = pred$sigma,
                                datasetId = "data1",
                                replicateId = rep(1:3, each = nrow(pred)/3),
-                               preequilibrationConditionId = "NoEnzyme")
+                               preequilibrationConditionId = NA_character_)
 pe_me[,`:=`(noiseParameters = paste0("sigma_", observableId))]
 pe_me[observableId == "obsE",`:=`(observableParameters = "offset_E")]
 
 
-pe_mo <- petab_model(el,events = events,parInfo = parInfo, speciesInfo = speciesInfo)
+pe_mo <- petab_model(el,events = events,parInfo = parInfo, speciesInfo = speciesInfo, trafoInjection = trafoInjection)
+
+
+# .. Parameter Trafo Injection -----
+#' Create a parameterFormulaInjection
+#'
+#' @param parameterId
+#' @param parameterFormula
+#'
+#' @return
+#' @export
+#'
+#' @examples
+petab_parameters_parameterFormulaInjection = function(parameterId, parameterFormula) {
+  data.table(
+    parameterId      = as.character(parameterId),
+    parameterFormula = as.character(parameterFormula)
+  )
+}
 
 
 # .. Create petab -----
