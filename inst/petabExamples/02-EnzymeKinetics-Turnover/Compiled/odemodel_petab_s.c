@@ -2,7 +2,7 @@
 #include <R.h> 
  #include <math.h> 
 
-static double parms[37];
+static double parms[41];
 static double forc[0];
 static double cons[0];
 static double range[2];
@@ -48,12 +48,16 @@ static double range[2];
  #define y29_0 parms[34] 
  #define y30_0 parms[35] 
  #define y31_0 parms[36] 
+ #define y32_0 parms[37] 
+ #define y33_0 parms[38] 
+ #define y34_0 parms[39] 
+ #define y35_0 parms[40] 
 #define tmin range[0]
 #define tmax range[1]
 
 
 void odemodel_petab_s_initmod(void (* odeparms)(int *, double *)) {
-	 int N=37;
+	 int N=41;
 	 odeparms(&N, parms);
 }
 
@@ -79,26 +83,30 @@ void odemodel_petab_s_derivs (int *n, double *t, double *y, double *ydot, double
  	 ydot[9] = (-(kon*y[1]))*(y[8])+(-(kon*y[0]))*(y[9])+(koff+kcat)*(y[10]);
  	 ydot[10] = (kon*y[1])*(y[8])+(kon*y[0])*(y[9])+(-(koff+kcat))*(y[10]);
  	 ydot[11] = (kcat)*(y[10]);
- 	 ydot[12] = (-(kdegS+kon*y[1]))*(y[12])+(-(kon*y[0]))*(y[13])+(koff)*(y[14])+1.0;
+ 	 ydot[12] = (-(kdegS+kon*y[1]))*(y[12])+(-(kon*y[0]))*(y[13])+(koff)*(y[14]);
  	 ydot[13] = (-(kon*y[1]))*(y[12])+(-(kon*y[0]))*(y[13])+(koff+kcat)*(y[14]);
  	 ydot[14] = (kon*y[1])*(y[12])+(kon*y[0])*(y[13])+(-(koff+kcat))*(y[14]);
  	 ydot[15] = (kcat)*(y[14]);
- 	 ydot[16] = (-(kdegS+kon*y[1]))*(y[16])+(-(kon*y[0]))*(y[17])+(koff)*(y[18])-y[0];
+ 	 ydot[16] = (-(kdegS+kon*y[1]))*(y[16])+(-(kon*y[0]))*(y[17])+(koff)*(y[18])+1.0;
  	 ydot[17] = (-(kon*y[1]))*(y[16])+(-(kon*y[0]))*(y[17])+(koff+kcat)*(y[18]);
  	 ydot[18] = (kon*y[1])*(y[16])+(kon*y[0])*(y[17])+(-(koff+kcat))*(y[18]);
  	 ydot[19] = (kcat)*(y[18]);
- 	 ydot[20] = (-(kdegS+kon*y[1]))*(y[20])+(-(kon*y[0]))*(y[21])+(koff)*(y[22])-(y[1]*y[0]);
- 	 ydot[21] = (-(kon*y[1]))*(y[20])+(-(kon*y[0]))*(y[21])+(koff+kcat)*(y[22])-(y[1]*y[0]);
- 	 ydot[22] = (kon*y[1])*(y[20])+(kon*y[0])*(y[21])+(-(koff+kcat))*(y[22])+y[1]*y[0];
+ 	 ydot[20] = (-(kdegS+kon*y[1]))*(y[20])+(-(kon*y[0]))*(y[21])+(koff)*(y[22])-y[0];
+ 	 ydot[21] = (-(kon*y[1]))*(y[20])+(-(kon*y[0]))*(y[21])+(koff+kcat)*(y[22]);
+ 	 ydot[22] = (kon*y[1])*(y[20])+(kon*y[0])*(y[21])+(-(koff+kcat))*(y[22]);
  	 ydot[23] = (kcat)*(y[22]);
- 	 ydot[24] = (-(kdegS+kon*y[1]))*(y[24])+(-(kon*y[0]))*(y[25])+(koff)*(y[26])+y[2];
- 	 ydot[25] = (-(kon*y[1]))*(y[24])+(-(kon*y[0]))*(y[25])+(koff+kcat)*(y[26])+y[2];
- 	 ydot[26] = (kon*y[1])*(y[24])+(kon*y[0])*(y[25])+(-(koff+kcat))*(y[26])-y[2];
+ 	 ydot[24] = (-(kdegS+kon*y[1]))*(y[24])+(-(kon*y[0]))*(y[25])+(koff)*(y[26])-(y[1]*y[0]);
+ 	 ydot[25] = (-(kon*y[1]))*(y[24])+(-(kon*y[0]))*(y[25])+(koff+kcat)*(y[26])-(y[1]*y[0]);
+ 	 ydot[26] = (kon*y[1])*(y[24])+(kon*y[0])*(y[25])+(-(koff+kcat))*(y[26])+y[1]*y[0];
  	 ydot[27] = (kcat)*(y[26]);
- 	 ydot[28] = (-(kdegS+kon*y[1]))*(y[28])+(-(kon*y[0]))*(y[29])+(koff)*(y[30]);
+ 	 ydot[28] = (-(kdegS+kon*y[1]))*(y[28])+(-(kon*y[0]))*(y[29])+(koff)*(y[30])+y[2];
  	 ydot[29] = (-(kon*y[1]))*(y[28])+(-(kon*y[0]))*(y[29])+(koff+kcat)*(y[30])+y[2];
  	 ydot[30] = (kon*y[1])*(y[28])+(kon*y[0])*(y[29])+(-(koff+kcat))*(y[30])-y[2];
- 	 ydot[31] = (kcat)*(y[30])+y[2];
+ 	 ydot[31] = (kcat)*(y[30]);
+ 	 ydot[32] = (-(kdegS+kon*y[1]))*(y[32])+(-(kon*y[0]))*(y[33])+(koff)*(y[34]);
+ 	 ydot[33] = (-(kon*y[1]))*(y[32])+(-(kon*y[0]))*(y[33])+(koff+kcat)*(y[34])+y[2];
+ 	 ydot[34] = (kon*y[1])*(y[32])+(kon*y[0])*(y[33])+(-(koff+kcat))*(y[34])-y[2];
+ 	 ydot[35] = (kcat)*(y[34])+y[2];
 
 }
 

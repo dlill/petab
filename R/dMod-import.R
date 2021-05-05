@@ -91,7 +91,7 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
   reactions <<- myreactions
 
 
-  ## Model Definition - Observables --------------------
+  ## g - Model Definition - Observables --------------------
 
   cat("Reading observables ...\n")
   myobservables <- getObservablesSBML(observable_file)
@@ -107,7 +107,7 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
   g <<- myg
 
 
-  ## Get Data ------------
+  ## data - Get Data ------------
 
   cat("Reading data file ...\n")
   mydataSBML <- getDataPEtabSBML(data_file, observable_file)
@@ -115,7 +115,7 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
   mydata <<- mydata
 
 
-  ## Model Generation ---------------------
+  ## x - Model Generation ---------------------
 
   cat("Compiling ODE model ...\n")
 
@@ -127,7 +127,7 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
   ODEmodel <<- myodemodel
 
 
-  ## Check and define error model ------------
+  ## err -  Check and define error model ------------
 
   cat("Check and compile error model ...\n")
   myerrors <- mydataSBML$errors
@@ -154,7 +154,7 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
   mycompartments <- myinitialsSBML$compartments
   myinitials <- myinitialsSBML$initials
 
-  ## Parameter transformations -----------
+  ## p - Parameter transformations -----------
 
   # Generate condition.grid
   grid <- getConditionsSBML(conditions = condition_file, data = data_file, observables_file = observable_file)
@@ -292,10 +292,11 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
 
   # .. Collect list -----
   symbolicEquations <- list(
-    reactions = myreactions,
+    reactions   = myreactions,
+    events      = myevents,
     observables = myobservables,
-    errors  = myerrors,
-    trafo = trafoL)
+    errors      = myerrors,
+    trafo       = trafoL)
   fns <- list(
     g = myg,
     x = myx,
@@ -307,11 +308,11 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
 
   filenameParts = list(modelname = modelname, .currentFolder = mywd,
                        .compiledFolder = "CompiledObjects",type = "classic")
-
+  pe <- readPetab(filename = file.path(path2model, modelname))
   # .. Collect final list -----
   pd <- list(
     # petab
-    pe                 = readPetab(filename = file.path(path2model, modelname)),
+    pe                 = pe,
     # Basic dMod elements
     dModAtoms          = list(
       # [ ] add events!
@@ -326,7 +327,10 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
     filenameParts = filenameParts,
     # Parameters + Time
     pars               = dMod::unclass_parvec(myfit_values),
-    times              = dMod::predtimes(pe$measurementData$time, Nobjtimes = 200)
+    times              = dMod::predtimes(pe$measurementData$time, Nobjtimes = 200),
+    # High-level functions
+    prd                = prd,
+    obj_data           = obj_data
   )
 
 

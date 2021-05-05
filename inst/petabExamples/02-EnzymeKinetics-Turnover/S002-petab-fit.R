@@ -4,9 +4,17 @@ try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 # Create enzyme kinetics model and data ----
 # -------------------------------------------------------------------------#
 pd <- importPEtabSBML("petab", path2model = "./")
-pd <- importPEtabSBML_indiv("petab", NFLAGcompile = 3, .compiledFolder = "Compiled")
+# ..  -----
+conveniencefunctions::compare(getParameters(pd$dModAtoms$fns$p0), names(pd$pars))
+pd$dModAtoms$symbolicEquations
+pd$dModAtoms$fns$p0(c(pd$pars, structure(rep(0,4), .Names = c("obsE", "obsES", "obsP", "obsS"))))
 
+# ..  -----
 # Test model
+pred <- pd$prd(seq(0,100), c(pd$pars, structure(rep(0,4), .Names = c("obsE", "obsES", "obsP", "obsS"))))
+val <- pd$obj_data(c(pd$pars, structure(rep(0,4), .Names = c("obsE", "obsES", "obsP", "obsS"))))
+print(val, 20,20)
+# ..  -----
 pred <- pd$prd(seq(0,100), pd$pars)
 pd$obj_data(pd$pars)
 
@@ -22,6 +30,9 @@ fits <- as.parframe(fits)
 plotValues(fits)
 dMod_saveMstrust(fits, ".", FLAGoverwrite = TRUE)
 unlink("fit", T)
-
+# -------------------------------------------------------------------------#
+# Indiv ----
+# -------------------------------------------------------------------------#
+# pd <- importPEtabSBML_indiv("petab", NFLAGcompile = 3, .compiledFolder = "Compiled")
 
 # Exit ----

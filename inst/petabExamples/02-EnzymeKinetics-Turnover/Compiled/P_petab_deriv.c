@@ -1,9 +1,9 @@
 #include <R.h>
  #include <math.h>
- void P_petab_deriv_2yoabz1q ( double * x, double * y, double * p, int * n, int * k, int * l ) {
+ void P_petab_deriv_g6wb7trw ( double * x, double * y, double * p, int * n, int * k, int * l ) {
  for(int i = 0; i< *n; i++) {
  y[0+i**l] = pow(10.0,(p[0]))*log(10.0) ;
-y[19+i**l] = 1.0 ;
+y[19+i**l] = pow(10.0,(p[1]))*log(10.0) ;
 y[38+i**l] = 1.0 ;
 y[57+i**l] = 1.0 ;
 y[76+i**l] = pow(10.0,(p[4]))*log(10.0) ;

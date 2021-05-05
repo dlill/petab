@@ -866,6 +866,20 @@ petab_python_setup <- function() {
   reticulate::import("petab")
 }
 
+#' Title
+#'
+#' @return
+#' @export
+#'
+#' @examples
+petab_python_reinstall <- function() {
+  message("Please restart RStudio. If that doesn't help call this function again")
+  if (readline("enter 'yes' to continue") != "yes") return("Nothing was done")
+  # Hacky version for Linux only
+  unlink("~/.virtualenvs/petab", T)
+  unlink("~/.local/share/r-reticulate/", T)
+  reticulate::virtualenv_install("petab", "petab", ignore_installed = TRUE)
+}
 
 # -------------------------------------------------------------------------#
 # PEtab import for dMod ----
