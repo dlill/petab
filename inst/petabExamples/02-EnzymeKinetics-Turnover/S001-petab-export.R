@@ -19,7 +19,7 @@ modelname <- "petab"
 el <- NULL
 el <- addReaction(el, from = "", to = "S", rate = "kproS",
                   description = "Production of substrate")
-el <- addReaction(el, from = "S", to = "", rate = "kdegS * S",
+el <- addReaction(el, from = "S", to = "", rate = "kdegS*S",
                   description = "Degradation of substrate")
 el <- addReaction(el, from = "E + S", to = "ES", rate = "(kon)*E*S",
                   description = "production of complex")
@@ -32,21 +32,27 @@ el <- eqnlist_addDefaultCompartment(el, "cytoplasm") # Need compartment informat
 events <- eventlist()
 events <- addEvent(events, var = "E", time = 0, value = "Eadd", method = "replace")
 
-# .. Conserved quantities  -----
-# debugonce(steadyStates)
-ss <- steadyStates(el)
+# .. SteadyStates  -----
 
+# # Trafos
+# # est -> beforeSS -> SS -> x -> g
+#
+# # condition noE
+# # noE
+# trafoSS <- c(S = "kproS / kdegS", E = 0, C = 0, P = 0)
+# # E
+# trafoSS <- c(S = 0,...)
 
 # .. Infos -----
 
 parInfo <- data.table(tibble::tribble(
   ~parName, ~parValue, ~parUnit,
-  "kon"   ,     1  ,"litre_per_mole_per_second" ,    # Because of compartment, all dMod-fluxes are multiplied with cytoplasm volume
-  "koff"  ,     0.1,"per_second" ,
-  "kcat"  ,     1,"per_second" ,
-  "kproS" ,     2, "mole_per_litre_per_second" ,
-  "kdegS" ,     0.1,"per_second",
-  "Eadd"  ,     1  ,"mole_per_litre"
+  "kon"   , 1        ,  "litre_per_mole_per_second" ,    # Because of compartment, all dMod-fluxes are multiplied with cytoplasm volume
+  "koff"  , 0.1      ,  "per_second" ,
+  "kcat"  , 1        ,  "per_second" ,
+  "kproS" , 2        ,  "mole_per_litre_per_second" ,
+  "kdegS" , 0.1      ,  "per_second",
+  "Eadd"  , 1        ,  "mole_per_litre"
   ))
 
 speciesInfo <- data.table(tibble::tribble(
@@ -84,7 +90,7 @@ ggsave(file.path(.outputFolder, "02-Data.png"), pl, width = 15.5, height = 10, s
 # Export Petab ----
 # -------------------------------------------------------------------------#
 # .. Create petab tables -----
-pe_ex <- petab_experimentalCondition(conditionId = c("NoEnzyme", "Enzyme"), conditionName = c("NoEnzyme", "Enzyme"), E = c(0,1), ES = c(0,1))
+pe_ex <- petab_experimentalCondition(conditionId = c("NoEnzyme", "Enzyme"), conditionName = c("NoEnzyme", "Enzyme"), E = c(0,"Eadd"))
 pe_ob <- petab_observables(observableId = c("obsE","obsS","obsES","obsP"),
                            observableName = c("obsE","obsS","obsES","obsP"),
                            observableFormula = c("E","S","ES","P"),
@@ -93,14 +99,14 @@ pe_ob <- petab_observables(observableId = c("obsE","obsS","obsES","obsP"),
                            noiseDistribution = c("normal"))
 pe_ob[,`:=`(noiseFormula = paste0("noiseParameter1_", observableId, "*", observableId))]
 pe_me <- petab_measurementData(observableId = pred$name,
-                               simulationConditionId = "C1",
+                               simulationConditionId = "Enzyme",
                                measurement = pred$value,
                                time = pred$time,
                                observableParameters = NA_character_,
                                noiseParameters = pred$sigma,
                                datasetId = "data1",
                                replicateId = rep(1:3, each = nrow(pred)/3),
-                               preequilibrationConditionId = NA_character_)
+                               preequilibrationConditionId = "NoEnzyme")
 pe_me[,`:=`(noiseParameters = paste0("sigma_", observableId))]
 pe_me[observableId == "obsE",`:=`(observableParameters = "offset_E")]
 

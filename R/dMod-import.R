@@ -290,7 +290,7 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
 
 
 
-  # ..  -----
+  # .. Collect list -----
   symbolicEquations <- list(
     reactions = myreactions,
     observables = myobservables,
@@ -305,17 +305,33 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
   obj_data <- normL2(mydata, prd, errmodel = myerr,
                      times = seq(0,max(as.data.frame(mydata)$time), len=501))
 
-  petab_dMod <- list(
-    symbolicEquations = symbolicEquations,
-    odemodel = myodemodel,
-    data = mydata,
-    e = myerr,
-    fns = fns,
-    prd = prd,
-    obj_data = obj_data,
-    pars = myfit_values
+  filenameParts = list(modelname = modelname, .currentFolder = mywd,
+                       .compiledFolder = "CompiledObjects",type = "classic")
+
+  # .. Collect final list -----
+  pd <- list(
+    # petab
+    pe                 = readPetab(filename = file.path(path2model, modelname)),
+    # Basic dMod elements
+    dModAtoms          = list(
+      # [ ] add events!
+      symbolicEquations  = symbolicEquations,
+      odemodel           = myodemodel,
+      data               = mydata,
+      gridlist           = NULL,
+      e                  = myerr,
+      fns                = fns
+    ),
+    # other components: Dump your stuff here
+    filenameParts = filenameParts,
+    # Parameters + Time
+    pars               = dMod::unclass_parvec(myfit_values),
+    times              = dMod::predtimes(pe$measurementData$time, Nobjtimes = 200)
   )
-  petab_dMod
+
+
+
+  pd
 }
 
 
@@ -342,12 +358,12 @@ fitModelPEtabSBML <- function(objfun=obj, nrfits=4, nrcores=4, useBounds=TRUE){
   mywd <- getwd()
   dir.create(paste0(mywd,"/Test/mstrust/"), showWarnings = FALSE)
   if(useBounds) out <- dMod::mstrust(objfun=objfun, center=dMod::msParframe(prior, n = nrfits+1, seed=47)[-1,], studyname=model_name, rinit = 0.1, rmax = 10,
-                               fits = nrfits, cores = nrcores, samplefun = "rnorm", resultPath = "Test/mstrust/",
-                               parlower = attr(pouter, "lowerBound"), parupper=attr(pouter, "upperBound"),
-                               stats = FALSE, narrowing = NULL, iterlim=400, sd = 3)
+                                     fits = nrfits, cores = nrcores, samplefun = "rnorm", resultPath = "Test/mstrust/",
+                                     parlower = attr(pouter, "lowerBound"), parupper=attr(pouter, "upperBound"),
+                                     stats = FALSE, narrowing = NULL, iterlim=400, sd = 3)
   else out <- dMod::mstrust(objfun=objfun, center=dMod::msParframe(prior, n = nrfits, seed=47), studyname=model_name, rinit = 0.1, rmax = 10,
-                      fits = nrfits, cores = nrcores, samplefun = "rnorm", resultPath = "Test/mstrust/",
-                      stats = FALSE, narrowing = NULL, iterlim=400, sd = 3)
+                            fits = nrfits, cores = nrcores, samplefun = "rnorm", resultPath = "Test/mstrust/",
+                            stats = FALSE, narrowing = NULL, iterlim=400, sd = 3)
   if(any(lapply(out, function(fgh) fgh$converged)==TRUE)) return(as.parframe(out)) else {cat("No fit converged."); return(NULL)}
 }
 
@@ -1107,7 +1123,7 @@ getReactionsSBML <- function(model, conditions){
     for (rule in 0:(N_rules-1)){
       # substitute m$getRule(0)$getVariable() by m$getRule(0)$getFormula()
       reactions$rates <- cOde::replaceSymbols(m$getRule(rule)$getVariable(),
-                                        paste0("(",m$getRule(rule)$getFormula(), ")"), reactions$rates)
+                                              paste0("(",m$getRule(rule)$getFormula(), ")"), reactions$rates)
     }
   }
 
@@ -1643,7 +1659,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
 
   # 2 Adjust fix.grid
   fg <- gl$fix.grid
-nm <- (intersect(names(fg), names(parscales)))[[1]]
+  nm <- (intersect(names(fg), names(parscales)))[[1]]
   for (nm in intersect(names(fg), names(parscales))) {
     scale <- parscales[nm]
     if (scale == "log10") fg[[nm]] <- log10(fg[[nm]])
@@ -1663,20 +1679,20 @@ nm <- (intersect(names(fg), names(parscales)))[[1]]
 
     cat("Compiling odemodel\n")
     myodemodel <- dMod::odemodel(myreactions, forcings = NULL, events = myevents, fixed=NULL,
-                           estimate = dMod::getParametersToEstimate(est.grid = gl$est.grid,
-                                                              trafo = trafo,
-                                                              reactions = myreactions),
-                           modelname = paste0("odemodel_", modelname),
-                           jacobian = "inz.lsodes", compile = TRUE)
+                                 estimate = dMod::getParametersToEstimate(est.grid = gl$est.grid,
+                                                                          trafo = trafo,
+                                                                          reactions = myreactions),
+                                 modelname = paste0("odemodel_", modelname),
+                                 jacobian = "inz.lsodes", compile = TRUE)
 
     myx <- dMod::Xs(myodemodel,
-              optionsOde = list(method = "lsoda", rtol = 1e-7, atol = 1e-7, maxsteps = 5000),
-              optionsSens = list(method = "lsodes", lrw=200000, rtol = 1e-7, atol = 1e-7))
+                    optionsOde = list(method = "lsoda", rtol = 1e-7, atol = 1e-7, maxsteps = 5000),
+                    optionsSens = list(method = "lsodes", lrw=200000, rtol = 1e-7, atol = 1e-7))
 
     cat("Compiling errormodel\n")
     if(length(cOde::getSymbols(myerrors)))
       myerr <- dMod::Y(myerrors, f = c(as.eqnvec(myreactions), myobservables), states = names(myobservables),
-                 attach.input = FALSE, compile = TRUE, modelname = paste0("errfn_", modelname))
+                       attach.input = FALSE, compile = TRUE, modelname = paste0("errfn_", modelname))
 
     # [ ] Pre-equilibration
     # mypSS <- Id()

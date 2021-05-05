@@ -1,6 +1,0 @@
-"Description","Rate","S","E","ES","P"
-"Production of substrate","kproS",1,,,
-"Degradation of substrate","kdegS * S",-1,,,
-"production of complex","(kon)*E*S",-1,-1,1,
-"decay of complex","koff*ES",1,1,-1,
-"production of product","kcat*ES",,1,-1,1
