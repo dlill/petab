@@ -74,8 +74,9 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
 
 
   # parameterFormulaInjection
-
-
+  pfi <- pe$meta$parameterFormulaInjection
+  if (!is.null(pfi))
+    par[parameterId %in% pfi$parameterId,`:=`(estimate=1, parameterScale = "lin")] # Ensure all parameters set by injection are set to estimate
 
   par
 }
@@ -861,6 +862,11 @@ petab_lint <- function(pe) {
     stop("Petab contains missing times")
   if (any(is.na(pe$measurementData$measurement)))
     stop("Petab contains missing times")
+
+
+  if (!is.null(pe$meta$parameterFormulaInjection)) {
+    names_overwritten <- pe$meta$parameterFormulaInjection$parameterId %in% names(pe$experimentalCondition)
+    if (any(names_overwritten)) stop("Parameters given in est.grid are overwritten by parameterFormulaInjection: ", paste0(names_overwritten, ", "))}
 
   errlist
 }

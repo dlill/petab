@@ -17,7 +17,7 @@ for(folder in c(.outputFolder))
 modelname <- "petab"
 
 el <- NULL
-el <- addReaction(el, from = "", to = "S", rate = "kproS",
+el <- addReaction(el, from = "", to = "S", rate = "kprodS",
                   description = "Production of substrate")
 el <- addReaction(el, from = "S", to = "", rate = "kdegS*S",
                   description = "Degradation of substrate")
@@ -39,7 +39,7 @@ parInfo <- data.table(tibble::tribble(
   "kon"   , 1        ,  "litre_per_mole_per_second" ,    # Because of compartment, all dMod-fluxes are multiplied with cytoplasm volume
   "koff"  , 0.1      ,  "per_second" ,
   "kcat"  , 1        ,  "per_second" ,
-  "kproS" , 2        ,  "mole_per_litre_per_second" ,
+  "kprodS" , 2        ,  "mole_per_litre_per_second" ,
   "kdegS" , 0.1      ,  "per_second",
   "Eadd"  , 1        ,  "mole_per_litre"
 ))
@@ -67,7 +67,8 @@ pars     <- c(setNames(parInfo$parValue, parInfo$parName),
               setNames(speciesInfo$initialAmount, speciesInfo$speciesName))
 
 pl <- plot(x(seq(-10,30, 10), pars))
-ggsave(file.path(.outputFolder, "01-BasicSimulation.png"), pl, width = 15.5, height = 10, scale = 1, units = "cm")
+fpl <- file.path(.outputFolder, "01-BasicSimulation.png")
+if (!file.exists(fpl)) ggsave(fpl, pl, width = 15.5, height = 10, scale = 1, units = "cm")
 
 # .. Simulate Data -----
 pred <- x(unique(c(seq(0,10), seq(0,100, 10))), pars)
@@ -79,7 +80,8 @@ pred[,`:=`(value = exp(log(value) + rnorm(length(value), sd = sigma)))]
 pred[,`:=`(name = paste0("obs", name))]
 
 pl <- ggplot(pred, aes(time, value, color = name)) + geom_point() + theme_bw() + scale_y_log10()
-ggsave(file.path(.outputFolder, "02-Data.png"), pl, width = 15.5, height = 10, scale = 1, units = "cm")
+fpl <- file.path(.outputFolder, "02-Data.png")
+if (!file.exists(fpl)) ggsave(fpl, pl, width = 15.5, height = 10, scale = 1, units = "cm")
 
 # -------------------------------------------------------------------------#
 # Export Petab ----
@@ -108,12 +110,14 @@ pe_me[observableId == "obsE",`:=`(observableParameters = "offset_E")]
 
 pe_mo <- petab_model(equationList = el,events = events,parInfo = parInfo, speciesInfo = speciesInfo)
 
+pe_meta <- petab_meta(parameterFormulaInjection = parameterFormulaInjection)
+
 # .. Create petab -----
-pe <- petab(model = pe_mo,
+pe <- petab(model                 = pe_mo,
             experimentalCondition = pe_ex,
-            measurementData = pe_me,
-            observables = pe_ob,
-            meta = )
+            measurementData       = pe_me,
+            observables           = pe_ob,
+            meta                  = pe_meta)
 pe$parameters <- petab_create_parameter_df(pe)
 
 filename <- "petab"

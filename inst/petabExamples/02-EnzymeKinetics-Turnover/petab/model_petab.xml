@@ -64,7 +64,7 @@
       <parameter id="kon" value="1" units="litre_per_mole_per_second"/>
       <parameter id="koff" value="0.1" units="per_second"/>
       <parameter id="kcat" value="1" units="per_second"/>
-      <parameter id="kproS" value="2" units="mole_per_litre_per_second"/>
+      <parameter id="kprodS" value="2" units="mole_per_litre_per_second"/>
       <parameter id="kdegS" value="0.1" units="per_second"/>
       <parameter id="Eadd" value="1" units="mole_per_litre"/>
     </listOfParameters>
@@ -77,7 +77,7 @@
           <math xmlns="http://www.w3.org/1998/Math/MathML">
             <apply>
               <times/>
-              <ci> kproS </ci>
+              <ci> kprodS </ci>
               <ci> cytoplasm </ci>
             </apply>
           </math>
