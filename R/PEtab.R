@@ -773,12 +773,12 @@ petab_lint <- function(pe) {
   dupes <- which(duplicated(pe$measurementData))
   if(length(dupes)) {
     warning("These rows are duplicates in measurementData: ", paste0(head(dupes,10), collapse = ","), "...")
-    errlist <- c(errlist, measurementDataDupes = dupes)}
+    errlist <- c(errlist, list(measurementDataDupes = dupes))}
 
   dupes <- which(duplicated(pe$observables$observableID))
   if(length(dupes)) {
     warning("These rows are duplicates in observableId: ", paste0(head(dupes,10), collapse = ","), "...")
-    errlist <- c(errlist, observableIdDupes = dupes)}
+    errlist <- c(errlist, list(observableIdDupes = dupes))}
 
   dupes <- which(duplicated(pe$experimentalCondition$conditionId))
   if(length(dupes)) {
@@ -787,9 +787,12 @@ petab_lint <- function(pe) {
 
   if (!is.null(pe$parameters)) {
     pars_NA <- pe$parameters[is.na(nominalValue), parameterId]
-    if (length(pars_NA)) warning("These parameters have no correct nominal value: ", paste0(pars_NA, collapse = ","))
-  }
+    if (length(pars_NA)) warning("These parameters have no correct nominal value: ", paste0(pars_NA, collapse = ","))}
 
+  if (any(is.na(pe$measurementData$time)))
+    stop("Petab contains missing times")
+  if (any(is.na(pe$measurementData$measurement)))
+    stop("Petab contains missing times")
 
   errlist
 }
@@ -1126,7 +1129,7 @@ petab_plotData <- function(petab,
 #' @md
 #' @export
 #' @importFrom conveniencefunctions cfoutput_MdTable
-petab_overviewObsPerCond <- function(pe, Ntruncate = Inf, ...) {
+petab_overviewObsPerCond <- function(pe, Ntruncate = 1000, ...) {
   dx <- petab_joinDCO(pe)
   if ("conditionName" %in% names(dx)) dx[,`:=`(conditionName = conditionId)]
   dx <- dx[,list(observableId = paste0(sort(unique(observableId)), collapse = ",")),
