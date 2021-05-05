@@ -4,7 +4,7 @@ try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 # -------------------------------------------------------------------------#
 # Create enzyme kinetics model and data ----
 # -------------------------------------------------------------------------#
-pd <- importPEtabSBML_indiv("petab", NFLAGcompile = 0, .compiledFolder = "Compiled", SFLAGbrowser = "0")
+pd <- importPEtabSBML_indiv("petab", NFLAGcompile = 0, .compiledFolder = "Compiled", SFLAGbrowser = "Injecti")
 
 
 # ..  -----

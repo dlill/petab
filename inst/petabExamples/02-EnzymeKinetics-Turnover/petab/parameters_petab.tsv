@@ -8,7 +8,7 @@ kcat	kcat	log10	1e-04	1000	1	1	parameterScaleUniform	-1;1	parameterScaleNormal	0
 kdegS	kdegS	log10	1e-04	1000	0.1	1	parameterScaleUniform	-1;1	parameterScaleNormal	0;2
 koff	koff	log10	1e-04	1000	0.1	1	parameterScaleUniform	-1;1	parameterScaleNormal	0;2
 kon	kon	log10	1e-04	1000	1	1	parameterScaleUniform	-1;1	parameterScaleNormal	0;2
-kprodS	kprodS	log10	1e-04	1000	2	1	parameterScaleUniform	-1;1	parameterScaleNormal	0;2
+kprodS	kprodS	lin	1e-04	1000	2	1	parameterScaleUniform	-1;1	parameterScaleNormal	0;2
 offset_E	offset_E	log10	1e-04	1000	1	1	parameterScaleUniform	-1;1	parameterScaleNormal	0;2
 sigma_obsE	sigma_obsE	log10	1e-04	1000	0.1	1	parameterScaleUniform	-1;1	parameterScaleNormal	0;2
 sigma_obsES	sigma_obsES	log10	1e-04	1000	0.1	1	parameterScaleUniform	-1;1	parameterScaleNormal	0;2

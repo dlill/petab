@@ -127,7 +127,7 @@ pdIndiv_updateControls <- function(pd,
 pdIndiv_rebuildPrdObj <- function(pd, Nobjtimes = 100) {
 
   # Rebuild p
-  p <- dMod::P_indiv(pd$dModAtoms$fns$p0, pd$dModAtoms$gridlist$est.grid, pd$dModAtoms$gridlist$fix.grid)
+  p <- dMod::P_indiv((pd$dModAtoms$fns$p1 * pd$dModAtoms$fns$p0), pd$dModAtoms$gridlist$est.grid, pd$dModAtoms$gridlist$fix.grid)
 
   # Rebuild high-level prediction function
   prd0 <- Reduce("*", pd$dModAtoms$fns)
@@ -142,8 +142,8 @@ pdIndiv_rebuildPrdObj <- function(pd, Nobjtimes = 100) {
                            times = tobj)
 
   # Update p, prd and obj_data
-  pd$p <- p
-  pd$prd <- prd
+  pd$p        <- p
+  pd$prd      <- prd
   pd$obj_data <- obj_data
 
   pd

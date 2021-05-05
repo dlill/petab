@@ -1111,7 +1111,6 @@ getReactionsSBML <- function(model, conditions){
   reactions$rates <- replaceSymbols(c("t", "TIME", "T"), "time", reactions$rates)
   events <- TransformEvents(events)
 
-  browser()
   # .. ## check for preequilibration conditions and handle them via events -----
   preeqEvents <- NULL
   myconditions <- read.csv(file = conditions, sep = "\t")
@@ -1542,7 +1541,8 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
                                   path2TestCases = "PEtabTests/",
                                   .compiledFolder = file.path("CompiledObjects"),
                                   NFLAGcompile = c(Auto = 3, Recompile = 0, RebuildGrids = 1, LoadPrevious = 2)[3],
-                                  SFLAGbrowser = c("0None", "1Beginning", "2BuildGrids", "3Compilation", "4CollectList")[1]
+                                  SFLAGbrowser = c("0None", "1Beginning", "2BuildGrids", "3Compilation", "4CollectList",
+                                                   "5Scales", "6ParameterFormulaInjection")[1]
 )
 {
   if (grepl(SFLAGbrowser,"1Beginning")) browser()
@@ -1700,7 +1700,6 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
 
   # 2 Adjust fix.grid
   fg <- gl$fix.grid
-  nm <- (intersect(names(fg), names(parscales)))[[1]]
   for (nm in intersect(names(fg), names(parscales))) {
     scale <- parscales[nm]
     if (scale == "log10") fg[[nm]] <- log10(fg[[nm]])
@@ -1708,6 +1707,21 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
     fg[[nm]][!is.finite(fg[[nm]]) & !is.na(fg[[nm]])] <- -1000
   }
   gl$fix.grid <- fg
+
+  # .. ParameterFormulaInjection -----
+  if (grepl(SFLAGbrowser, "6ParameterFormulaInjection")) browser()
+  trafoInjected <- NULL
+  pfi <- pe$meta$parameterFormulaInjection
+  if (!is.null(pfi)) {
+    # Probably over-cautios: This shouldn't happen. Can probably be removed
+    check_pfiEstimated <- intersect(pfi$parameterId, names(gl$fix.grid))
+    if (length(check_pfiEstimated)) stop("These trafoInjected parameter are in fix.grid: ", paste0(check_pfiEstimated, collapse = ", "))
+    # Remove injected Parameter from est-trafo
+    trafo <- trafo[setdiff(names(trafo), pfi$parameterId)]
+    gl$est.grid[,(pfi$parameterId) := NULL,]
+    # trafoInjected
+    trafoInjected <- setNames(pfi$parameterFormula, pfi$parameterId)
+  }
 
   # -------------------------------------------------------------------------#
   # .. Model Compilation -----
@@ -1738,14 +1752,22 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
     # [ ] Pre-equilibration
     # mypSS <- Id()
 
+    p1 <- dMod::Id()
+    if (length(trafoInjected)){
+      cat("Compiling pInjected\n")
+      p1 <- dMod::P(trafoInjected, compile = TRUE, modelname = paste0("PInjected_", modelname),
+                    attach.input = TRUE)
+    }
+
     cat("Compiling p\n")
-    myp <- dMod::P(trafo, compile = TRUE, modelname = paste0("P_", modelname))
+    p0 <- dMod::P(trafo, compile = TRUE, modelname = paste0("P_", modelname))
     setwd(mywd)
 
   } else if (NFLAGcompile == 1) {
     myg        <- pd$dModAtoms$fns$g
     myx        <- pd$dModAtoms$fns$x
-    myp        <- pd$dModAtoms$fns$p0
+    p1         <- pd$dModAtoms$fns$p1
+    p0         <- pd$dModAtoms$fns$p0
     myodemodel <- pd$dModAtoms$odemodel
     myerr      <- pd$dModAtoms$e
   }
@@ -1758,13 +1780,15 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
     g = myg,
     x = myx,
     # p1 = mypSS, # [ ] Pre-Equilibration
-    p0 = myp
+    p1 = p1,
+    p0 = p0
   )
   symbolicEquations <- list(
     reactions = myreactions,
     observables = myobservables,
     errors  = myerrors,
-    trafo = trafo)
+    trafo = trafo,
+    trafoInjected = trafoInjected)
 
   # .. Collect final list -----
   pd <- list(
