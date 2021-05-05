@@ -937,9 +937,10 @@ petab_python_setup <- function() {
   }
 
   # Stupid RStudio "ich mach mein eigenes environment variables ding"
-  PATH <- Sys.getenv("PATH")
-  PATH <- paste0(file.path(Sys.getenv("HOME"), ".virtualenvs/petab/bin"), ":", PATH)
-  Sys.setenv(PATH = PATH)
+  # PATH <- Sys.getenv("PATH")
+  # PATH <- paste0(file.path(Sys.getenv("HOME"), ".virtualenvs/petab/bin"), ":", PATH)
+  # Sys.setenv(PATH = PATH)
+  message("======================\nIf this function fails, restart RStudio from your terminal\n==============")
 
   message("Using petab virtualenv\n")
   reticulate::use_virtualenv("petab")

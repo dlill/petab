@@ -55,7 +55,7 @@
       <compartment id="cytoplasm" size="1"/>
     </listOfCompartments>
     <listOfSpecies>
-      <species id="E" name="E" compartment="cytoplasm" initialAmount="0"/>
+      <species id="E" name="E" compartment="cytoplasm" initialAmount="1"/>
       <species id="S" name="S" compartment="cytoplasm" initialAmount="100"/>
       <species id="ES" name="ES" compartment="cytoplasm" initialAmount="0"/>
       <species id="P" name="P" compartment="cytoplasm" initialAmount="0"/>
@@ -66,7 +66,6 @@
       <parameter id="kcat" value="1" units="per_second"/>
       <parameter id="kprodS" value="2" units="mole_per_litre_per_second"/>
       <parameter id="kdegS" value="0.1" units="per_second"/>
-      <parameter id="Eadd" value="1" units="mole_per_litre"/>
     </listOfParameters>
     <listOfReactions>
       <reaction id="Productionofsubstrate" reversible="false">

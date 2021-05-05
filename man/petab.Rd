@@ -10,6 +10,7 @@ petab(
   measurementData = NULL,
   observables = NULL,
   parameters = NULL,
+  meta = NULL,
   ...
 )
 }

@@ -11,7 +11,7 @@ static double range[2];
 #define nSplines 0 
 #define precision 1e-05 
 
-#define kproS parms[0] 
+#define kprodS parms[0] 
  #define kdegS parms[1] 
  #define kon parms[2] 
  #define koff parms[3] 
@@ -39,7 +39,7 @@ void odemodel_petab_derivs (int *n, double *t, double *y, double *ydot, double *
 
 	 double time = *t;
 
-	 ydot[0] = 1.0*(kproS*1.0)-1.0*(kdegS*y[0]*1.0)-1.0*(kon*y[1]*y[0]*1.0)+1.0*(koff*y[2]*1.0);
+	 ydot[0] = 1.0*(kprodS*1.0)-1.0*(kdegS*y[0]*1.0)-1.0*(kon*y[1]*y[0]*1.0)+1.0*(koff*y[2]*1.0);
  	 ydot[1] = -1.0*(kon*y[1]*y[0]*1.0)+1.0*(koff*y[2]*1.0)+1.0*(kcat*y[2]*1.0);
  	 ydot[2] = 1.0*(kon*y[1]*y[0]*1.0)-1.0*(koff*y[2]*1.0)-1.0*(kcat*y[2]*1.0);
  	 ydot[3] = 1.0*(kcat*y[2]*1.0);

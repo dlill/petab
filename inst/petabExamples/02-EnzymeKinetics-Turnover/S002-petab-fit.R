@@ -4,23 +4,16 @@ try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 # -------------------------------------------------------------------------#
 # Create enzyme kinetics model and data ----
 # -------------------------------------------------------------------------#
-pd <- importPEtabSBML_indiv("petab", NFLAGcompile = 0, .compiledFolder = "Compiled", SFLAGbrowser = "Injecti")
+pd <- importPEtabSBML_indiv("petab", NFLAGcompile = 3, .compiledFolder = "Compiled", SFLAGbrowser = "0")
 
-
-# ..  -----
-conveniencefunctions::compare(getParameters(pd$dModAtoms$fns$p0), names(pd$pars))
-pd$dModAtoms$symbolicEquations
-debugonce(pd$dModAtoms$fns$p0)
-pd$dModAtoms$fns$p0(c(pd$pars, structure(rep(0,5), .Names = c("obsE", "obsES", "obsP", "obsS", "Enzyme"))))
-
-# ..  -----
 # Test model
-pred <- pd$prd(seq(0,100), c(pd$pars, structure(rep(0,4), .Names = c("obsE", "obsES", "obsP", "obsS"))))
-val <- pd$obj_data(c(pd$pars, structure(rep(0,4), .Names = c("obsE", "obsES", "obsP", "obsS"))))
-print(val, 20,20)
-# ..  -----
 pred <- pd$prd(seq(0,100), pd$pars)
-pd$obj_data(pd$pars)
+val <- pd$obj_data(pd$pars)
+print(val, 20,20)
+
+pd_predictAndPlot(pd)
+
+pd <- pd_fitObsPars(pd, NFLAGsavePd = 3)
 
 # Test fitting
 myfit <- trust(pd$obj_data, pd$pars,1,10,iterlim = 1000)

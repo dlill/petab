@@ -19,6 +19,11 @@ See example-02
 }
 \details{
 Inject a trafo between pEst and x
+
+This is a somewhat elegant, somewhat hacky implementation of "complicated" parameter
+trafos, e.g. custom steady state trafos.
+It would be nicer to have this stuff directly in the SBML file, but I don't have the time for that now.
+Furthermore, some functionality of the import will be reusable when this is moved to SBML as assignmentRule or sth like that
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)

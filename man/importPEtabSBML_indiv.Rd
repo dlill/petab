@@ -11,7 +11,7 @@ importPEtabSBML_indiv(
   .compiledFolder = file.path("CompiledObjects"),
   NFLAGcompile = c(Auto = 3, Recompile = 0, RebuildGrids = 1, LoadPrevious = 2)[3],
   SFLAGbrowser = c("0None", "1Beginning", "2BuildGrids", "3Compilation",
-    "4CollectList")[1]
+    "4CollectList", "5Scales", "6ParameterFormulaInjection")[1]
 )
 }
 \arguments{
