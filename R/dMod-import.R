@@ -1639,8 +1639,10 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   gl <- list(est.grid = est.grid, fix.grid = fix.grid)
 
   # .. Initialize Trafo -----
-  trafo <- setNames(nm = unique(c(getParameters(myreactions), getSymbols(myobservables),
-                                  getSymbols(myerrors), getSymbols(as.character(myevents$value)))))
+  trafo <- setNames(nm = unique(c(getParameters(myreactions),
+                                  getSymbols(myobservables),
+                                  setdiff(getSymbols(myerrors), names(myobservables)),
+                                  getSymbols(as.character(myevents$value)))))
   trafo <- trafo[trafo != "time"]
 
   # .. MeasurementParameter mappings  -----
@@ -1790,6 +1792,9 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
     trafo = trafo,
     trafoInjected = trafoInjected)
 
+  pars <- dMod::unclass_parvec(myfit_values)
+  pars <- pars[setdiff(names(pars), names(trafoInjected))]
+
   # .. Collect final list -----
   pd <- list(
     # petab
@@ -1807,7 +1812,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
     # other components: Dump your stuff here
     filenameParts = filenameParts,
     # Parameters + Time
-    pars               = dMod::unclass_parvec(myfit_values),
+    pars               = pars,
     times              = predtimes(pe$measurementData$time, Nobjtimes = 200)
   )
   # High level prediction function

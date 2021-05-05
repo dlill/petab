@@ -1,9 +1,11 @@
-devtools::load_all("~/Promotion/Promotion/Projects/petab")
+# devtools::load_all("~/Promotion/Promotion/Projects/petab")
+library(petab)
 try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 
 .outputFolder <- paste0("Outputs")
 for(folder in c(.outputFolder))
   if(!dir.exists(folder)) dir.create(folder)
+set.seed(1)
 # -------------------------------------------------------------------------#
 # Create enzyme kinetics model and data ----
 # -------------------------------------------------------------------------#
@@ -29,9 +31,6 @@ el <- addReaction(el, from = "ES", to = "E + P", rate = "kcat*ES",
                   description = "production of product")
 el <- eqnlist_addDefaultCompartment(el, "cytoplasm") # Need compartment information for SBML
 
-events <- eventlist()
-events <- addEvent(events, var = "E", time = 0, value = "Eadd", method = "replace")
-
 # .. Infos -----
 
 parInfo <- data.table(tibble::tribble(
@@ -40,13 +39,12 @@ parInfo <- data.table(tibble::tribble(
   "koff"  , 0.1      ,  "per_second" ,
   "kcat"  , 1        ,  "per_second" ,
   "kprodS" , 2        ,  "mole_per_litre_per_second" ,
-  "kdegS" , 0.1      ,  "per_second",
-  "Eadd"  , 1        ,  "mole_per_litre"
+  "kdegS" , 0.1      ,  "per_second"
 ))
 
 speciesInfo <- data.table(tibble::tribble(
   ~speciesName, ~compName, ~initialAmount,
-  "E"         ,"cytoplasm" ,             0,          # Amount, not concentration
+  "E"         ,"cytoplasm" ,             1,          # Amount, not concentration
   "S"         ,"cytoplasm" ,             100,
   "ES"        ,"cytoplasm" ,             0,
   "P"         ,"cytoplasm" ,             0))
@@ -54,10 +52,10 @@ speciesInfo <- data.table(tibble::tribble(
 # compartmentInfo is left as the default getCompartmentInfo(el)
 # unitInfo is left as the default getUnitInfo(): If you need other units, you need to add them
 
+events <- NULL
 
 # >> Steady state trafo
 parameterFormulaInjection <- petab_parameterFormulaInjection(parameterId = "kprodS", parameterFormula = "kdegS * S")
-
 
 
 # .. Compile and plot model -----
@@ -65,6 +63,7 @@ compiled <- odemodel(f = el,modelname = modelname, events = events)
 x        <- Xs(compiled, condition = "C1")
 pars     <- c(setNames(parInfo$parValue, parInfo$parName),
               setNames(speciesInfo$initialAmount, speciesInfo$speciesName))
+pars["kprodS"] <- with(as.list(pars), eval(parse(text = parameterFormulaInjection$parameterFormula)))
 
 pl <- plot(x(seq(-10,30, 10), pars))
 fpl <- file.path(.outputFolder, "01-BasicSimulation.png")
