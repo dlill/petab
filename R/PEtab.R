@@ -859,8 +859,14 @@ pepy_sample_parameter_startpoints <- function(pe, n_starts = 100L, seed = 1L, FL
 #' # pepy$lint(pe)
 petab_python_setup <- function() {
   if (!"petab" %in% reticulate::virtualenv_list()){
-    reticulate::virtualenv_install("petab", "petab")
+    reticulate::virtualenv_install("petab", "petab", ignore_installed = TRUE)
   }
+
+  # Stupid RStudio "ich mach mein eigenes environment variables ding"
+  PATH <- Sys.getenv("PATH")
+  PATH <- paste0(file.path(Sys.getenv("HOME"), ".virtualenvs/petab/bin"), ":", PATH)
+  Sys.setenv(PATH = PATH)
+
   message("Using petab virtualenv\n")
   reticulate::use_virtualenv("petab")
   reticulate::import("petab")
@@ -878,6 +884,7 @@ petab_python_reinstall <- function() {
   # Hacky version for Linux only
   unlink("~/.virtualenvs/petab", T)
   unlink("~/.local/share/r-reticulate/", T)
+  reticulate::use_virtualenv("petab")
   reticulate::virtualenv_install("petab", "petab", ignore_installed = TRUE)
 }
 

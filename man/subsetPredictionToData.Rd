@@ -4,10 +4,14 @@
 \alias{subsetPredictionToData}
 \title{Subset predictions to observables and conditions observed in data}
 \usage{
-subsetPredictionToData(pplot, dplot)
+subsetPredictionToData(
+  pplot,
+  dplot,
+  NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2)[2]
+)
 }
 \arguments{
-\item{dplot}{}
+\item{NFLAGsubsetType}{}
 }
 \value{
 

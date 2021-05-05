@@ -4,7 +4,7 @@
 \alias{petab_overviewObsPerCond}
 \title{Generate overview table which observables are in which condition}
 \usage{
-petab_overviewObsPerCond(pe, Ntruncate = Inf, ...)
+petab_overviewObsPerCond(pe, Ntruncate = 1000, ...)
 }
 \arguments{
 \item{pe}{\code{\link[=petab]{petab()}} object}

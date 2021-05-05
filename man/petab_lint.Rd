@@ -4,7 +4,7 @@
 \alias{petab_lint}
 \title{Own little linter until petab.py lint is stable}
 \usage{
-petab_lint(petab)
+petab_lint(pe)
 }
 \arguments{
 \item{petab}{}

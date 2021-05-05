@@ -3,11 +3,15 @@ try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 # -------------------------------------------------------------------------#
 # Create enzyme kinetics model and data ----
 # -------------------------------------------------------------------------#
-pd <- importPEtabSBML("petab", path2model = "./")
+debugonce(getReactionsSBML)
+pd <- importPEtabSBML_indiv("petab", NFLAGcompile = 0, .compiledFolder = "Compiled", SFLAGbrowser = "0")
+
+
 # ..  -----
 conveniencefunctions::compare(getParameters(pd$dModAtoms$fns$p0), names(pd$pars))
 pd$dModAtoms$symbolicEquations
-pd$dModAtoms$fns$p0(c(pd$pars, structure(rep(0,4), .Names = c("obsE", "obsES", "obsP", "obsS"))))
+debugonce(pd$dModAtoms$fns$p0)
+pd$dModAtoms$fns$p0(c(pd$pars, structure(rep(0,5), .Names = c("obsE", "obsES", "obsP", "obsS", "Enzyme"))))
 
 # ..  -----
 # Test model
@@ -33,6 +37,5 @@ unlink("fit", T)
 # -------------------------------------------------------------------------#
 # Indiv ----
 # -------------------------------------------------------------------------#
-# pd <- importPEtabSBML_indiv("petab", NFLAGcompile = 3, .compiledFolder = "Compiled")
 
 # Exit ----

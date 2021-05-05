@@ -2,9 +2,10 @@
 #include <R.h> 
  #include <math.h> 
 
-static double parms[42];
+static double parms[72];
 static double forc[0];
 static double cons[0];
+static double eventcounter[1];
 static double range[2];
 
 #define nGridpoints 2 
@@ -16,50 +17,81 @@ static double range[2];
  #define kon parms[2] 
  #define koff parms[3] 
  #define kcat parms[4] 
- #define y0_0 parms[5] 
- #define y1_0 parms[6] 
- #define y2_0 parms[7] 
- #define y3_0 parms[8] 
- #define y4_0 parms[9] 
- #define y5_0 parms[10] 
- #define y6_0 parms[11] 
- #define y7_0 parms[12] 
- #define y8_0 parms[13] 
- #define y9_0 parms[14] 
- #define y10_0 parms[15] 
- #define y11_0 parms[16] 
- #define y12_0 parms[17] 
- #define y13_0 parms[18] 
- #define y14_0 parms[19] 
- #define y15_0 parms[20] 
- #define y16_0 parms[21] 
- #define y17_0 parms[22] 
- #define y18_0 parms[23] 
- #define y19_0 parms[24] 
- #define y20_0 parms[25] 
- #define y21_0 parms[26] 
- #define y22_0 parms[27] 
- #define y23_0 parms[28] 
- #define y24_0 parms[29] 
- #define y25_0 parms[30] 
- #define y26_0 parms[31] 
- #define y27_0 parms[32] 
- #define y28_0 parms[33] 
- #define y29_0 parms[34] 
- #define y30_0 parms[35] 
- #define y31_0 parms[36] 
- #define y32_0 parms[37] 
- #define y33_0 parms[38] 
- #define y34_0 parms[39] 
- #define y35_0 parms[40] 
- #define y36_0 parms[41] 
+ #define Enzyme parms[5] 
+ #define Eadd parms[6] 
+ #define y0_0 parms[7] 
+ #define y1_0 parms[8] 
+ #define y2_0 parms[9] 
+ #define y3_0 parms[10] 
+ #define y4_0 parms[11] 
+ #define y5_0 parms[12] 
+ #define y6_0 parms[13] 
+ #define y7_0 parms[14] 
+ #define y8_0 parms[15] 
+ #define y9_0 parms[16] 
+ #define y10_0 parms[17] 
+ #define y11_0 parms[18] 
+ #define y12_0 parms[19] 
+ #define y13_0 parms[20] 
+ #define y14_0 parms[21] 
+ #define y15_0 parms[22] 
+ #define y16_0 parms[23] 
+ #define y17_0 parms[24] 
+ #define y18_0 parms[25] 
+ #define y19_0 parms[26] 
+ #define y20_0 parms[27] 
+ #define y21_0 parms[28] 
+ #define y22_0 parms[29] 
+ #define y23_0 parms[30] 
+ #define y24_0 parms[31] 
+ #define y25_0 parms[32] 
+ #define y26_0 parms[33] 
+ #define y27_0 parms[34] 
+ #define y28_0 parms[35] 
+ #define y29_0 parms[36] 
+ #define y30_0 parms[37] 
+ #define y31_0 parms[38] 
+ #define y32_0 parms[39] 
+ #define y33_0 parms[40] 
+ #define y34_0 parms[41] 
+ #define y35_0 parms[42] 
+ #define y36_0 parms[43] 
+ #define y37_0 parms[44] 
+ #define y38_0 parms[45] 
+ #define y39_0 parms[46] 
+ #define y40_0 parms[47] 
+ #define y41_0 parms[48] 
+ #define y42_0 parms[49] 
+ #define y43_0 parms[50] 
+ #define y44_0 parms[51] 
+ #define y45_0 parms[52] 
+ #define y46_0 parms[53] 
+ #define y47_0 parms[54] 
+ #define y48_0 parms[55] 
+ #define y49_0 parms[56] 
+ #define y50_0 parms[57] 
+ #define y51_0 parms[58] 
+ #define y52_0 parms[59] 
+ #define y53_0 parms[60] 
+ #define y54_0 parms[61] 
+ #define y55_0 parms[62] 
+ #define y56_0 parms[63] 
+ #define y57_0 parms[64] 
+ #define y58_0 parms[65] 
+ #define y59_0 parms[66] 
+ #define y60_0 parms[67] 
+ #define y61_0 parms[68] 
+ #define y62_0 parms[69] 
+ #define y63_0 parms[70] 
+ #define y64_0 parms[71] 
 #define tmin range[0]
 #define tmax range[1]
 
 
 void odemodel_petab_s_initmod(void (* odeparms)(int *, double *)) {
-	 int N=42;
+	 int N=72;
 	 odeparms(&N, parms);
+	 for(int i=0; i<1; ++i) eventcounter[i] = 0;
 }
 
 void odemodel_petab_s_initforc(void (* odeforcs)(int *, double *)) {
@@ -73,43 +105,109 @@ void odemodel_petab_s_derivs (int *n, double *t, double *y, double *ydot, double
 	 double time = *t;
 
 	 ydot[0] = 1.0*(kproS*1.0)-1.0*(kdegS*y[0]*1.0)-1.0*(kon*y[1]*y[0]*1.0)+1.0*(koff*y[2]*1.0);
- 	 ydot[1] = -1.0*(kon*y[1]*y[0]*1.0)+1.0*(koff*y[2]*1.0)+1.0*(kcat*y[2]*1.0);
+ 	 ydot[1] = -1.0*(kon*y[1]*y[0]*1.0)+1.0*(koff*y[2]*1.0)+1.0*(kcat*y[2]*1.0)+1.0*(0.0);
  	 ydot[2] = 1.0*(kon*y[1]*y[0]*1.0)-1.0*(koff*y[2]*1.0)-1.0*(kcat*y[2]*1.0);
  	 ydot[3] = 1.0*(kcat*y[2]*1.0);
- 	 ydot[4] = (-(kdegS+kon*y[1]))*(y[4])+(-(kon*y[0]))*(y[5])+(koff)*(y[6]);
- 	 ydot[5] = (-(kon*y[1]))*(y[4])+(-(kon*y[0]))*(y[5])+(koff+kcat)*(y[6]);
- 	 ydot[6] = (kon*y[1])*(y[4])+(kon*y[0])*(y[5])+(-(koff+kcat))*(y[6]);
- 	 ydot[7] = (kcat)*(y[6]);
- 	 ydot[8] = (-(kdegS+kon*y[1]))*(y[8])+(-(kon*y[0]))*(y[9])+(koff)*(y[10]);
- 	 ydot[9] = (-(kon*y[1]))*(y[8])+(-(kon*y[0]))*(y[9])+(koff+kcat)*(y[10]);
- 	 ydot[10] = (kon*y[1])*(y[8])+(kon*y[0])*(y[9])+(-(koff+kcat))*(y[10]);
- 	 ydot[11] = (kcat)*(y[10]);
- 	 ydot[12] = (-(kdegS+kon*y[1]))*(y[12])+(-(kon*y[0]))*(y[13])+(koff)*(y[14]);
- 	 ydot[13] = (-(kon*y[1]))*(y[12])+(-(kon*y[0]))*(y[13])+(koff+kcat)*(y[14]);
- 	 ydot[14] = (kon*y[1])*(y[12])+(kon*y[0])*(y[13])+(-(koff+kcat))*(y[14]);
- 	 ydot[15] = (kcat)*(y[14]);
- 	 ydot[16] = (kcat)*(0.0);
- 	 ydot[17] = (-(kdegS+kon*y[1]))*(y[17])+(-(kon*y[0]))*(y[18])+(koff)*(y[19])+1.0;
- 	 ydot[18] = (-(kon*y[1]))*(y[17])+(-(kon*y[0]))*(y[18])+(koff+kcat)*(y[19]);
- 	 ydot[19] = (kon*y[1])*(y[17])+(kon*y[0])*(y[18])+(-(koff+kcat))*(y[19]);
- 	 ydot[20] = (kcat)*(y[19]);
- 	 ydot[21] = (-(kdegS+kon*y[1]))*(y[21])+(-(kon*y[0]))*(y[22])+(koff)*(y[23])-y[0];
- 	 ydot[22] = (-(kon*y[1]))*(y[21])+(-(kon*y[0]))*(y[22])+(koff+kcat)*(y[23]);
- 	 ydot[23] = (kon*y[1])*(y[21])+(kon*y[0])*(y[22])+(-(koff+kcat))*(y[23]);
- 	 ydot[24] = (kcat)*(y[23]);
- 	 ydot[25] = (-(kdegS+kon*y[1]))*(y[25])+(-(kon*y[0]))*(y[26])+(koff)*(y[27])-(y[1]*y[0]);
- 	 ydot[26] = (-(kon*y[1]))*(y[25])+(-(kon*y[0]))*(y[26])+(koff+kcat)*(y[27])-(y[1]*y[0]);
- 	 ydot[27] = (kon*y[1])*(y[25])+(kon*y[0])*(y[26])+(-(koff+kcat))*(y[27])+y[1]*y[0];
+ 	 ydot[4] = 1.0*(0.0);
+ 	 ydot[5] = (-(kdegS+kon*y[1]))*(y[5])+(-(kon*y[0]))*(y[6])+(koff)*(y[7]);
+ 	 ydot[6] = (-(kon*y[1]))*(y[5])+(-(kon*y[0]))*(y[6])+(koff+kcat)*(y[7]);
+ 	 ydot[7] = (kon*y[1])*(y[5])+(kon*y[0])*(y[6])+(-(koff+kcat))*(y[7]);
+ 	 ydot[8] = (kcat)*(y[7]);
+ 	 ydot[9] = 0;
+ 	 ydot[10] = (-(kdegS+kon*y[1]))*(y[10])+(-(kon*y[0]))*(y[11])+(koff)*(y[12]);
+ 	 ydot[11] = (-(kon*y[1]))*(y[10])+(-(kon*y[0]))*(y[11])+(koff+kcat)*(y[12]);
+ 	 ydot[12] = (kon*y[1])*(y[10])+(kon*y[0])*(y[11])+(-(koff+kcat))*(y[12]);
+ 	 ydot[13] = (kcat)*(y[12]);
+ 	 ydot[14] = 0;
+ 	 ydot[15] = (-(kdegS+kon*y[1]))*(y[15])+(-(kon*y[0]))*(y[16])+(koff)*(y[17]);
+ 	 ydot[16] = (-(kon*y[1]))*(y[15])+(-(kon*y[0]))*(y[16])+(koff+kcat)*(y[17]);
+ 	 ydot[17] = (kon*y[1])*(y[15])+(kon*y[0])*(y[16])+(-(koff+kcat))*(y[17]);
+ 	 ydot[18] = (kcat)*(y[17]);
+ 	 ydot[19] = 0;
+ 	 ydot[20] = (-(kdegS+kon*y[1]))*(y[20])+(-(kon*y[0]))*(y[21])+(koff)*(y[22]);
+ 	 ydot[21] = (-(kon*y[1]))*(y[20])+(-(kon*y[0]))*(y[21])+(koff+kcat)*(y[22]);
+ 	 ydot[22] = (kon*y[1])*(y[20])+(kon*y[0])*(y[21])+(-(koff+kcat))*(y[22]);
+ 	 ydot[23] = (kcat)*(y[22]);
+ 	 ydot[24] = 0;
+ 	 ydot[25] = (-(kdegS+kon*y[1]))*(y[25])+(-(kon*y[0]))*(y[26])+(koff)*(y[27]);
+ 	 ydot[26] = (-(kon*y[1]))*(y[25])+(-(kon*y[0]))*(y[26])+(koff+kcat)*(y[27]);
+ 	 ydot[27] = (kon*y[1])*(y[25])+(kon*y[0])*(y[26])+(-(koff+kcat))*(y[27]);
  	 ydot[28] = (kcat)*(y[27]);
- 	 ydot[29] = (-(kdegS+kon*y[1]))*(y[29])+(-(kon*y[0]))*(y[30])+(koff)*(y[31])+y[2];
- 	 ydot[30] = (-(kon*y[1]))*(y[29])+(-(kon*y[0]))*(y[30])+(koff+kcat)*(y[31])+y[2];
- 	 ydot[31] = (kon*y[1])*(y[29])+(kon*y[0])*(y[30])+(-(koff+kcat))*(y[31])-y[2];
- 	 ydot[32] = (kcat)*(y[31]);
- 	 ydot[33] = (-(kdegS+kon*y[1]))*(y[33])+(-(kon*y[0]))*(y[34])+(koff)*(y[35]);
- 	 ydot[34] = (-(kon*y[1]))*(y[33])+(-(kon*y[0]))*(y[34])+(koff+kcat)*(y[35])+y[2];
- 	 ydot[35] = (kon*y[1])*(y[33])+(kon*y[0])*(y[34])+(-(koff+kcat))*(y[35])-y[2];
- 	 ydot[36] = (kcat)*(y[35])+y[2];
+ 	 ydot[29] = 0;
+ 	 ydot[30] = (-(kdegS+kon*y[1]))*(y[30])+(-(kon*y[0]))*(y[31])+(koff)*(y[32])+1.0;
+ 	 ydot[31] = (-(kon*y[1]))*(y[30])+(-(kon*y[0]))*(y[31])+(koff+kcat)*(y[32]);
+ 	 ydot[32] = (kon*y[1])*(y[30])+(kon*y[0])*(y[31])+(-(koff+kcat))*(y[32]);
+ 	 ydot[33] = (kcat)*(y[32]);
+ 	 ydot[34] = 0;
+ 	 ydot[35] = (-(kdegS+kon*y[1]))*(y[35])+(-(kon*y[0]))*(y[36])+(koff)*(y[37])-y[0];
+ 	 ydot[36] = (-(kon*y[1]))*(y[35])+(-(kon*y[0]))*(y[36])+(koff+kcat)*(y[37]);
+ 	 ydot[37] = (kon*y[1])*(y[35])+(kon*y[0])*(y[36])+(-(koff+kcat))*(y[37]);
+ 	 ydot[38] = (kcat)*(y[37]);
+ 	 ydot[39] = 0;
+ 	 ydot[40] = (-(kdegS+kon*y[1]))*(y[40])+(-(kon*y[0]))*(y[41])+(koff)*(y[42])-(y[1]*y[0]);
+ 	 ydot[41] = (-(kon*y[1]))*(y[40])+(-(kon*y[0]))*(y[41])+(koff+kcat)*(y[42])-(y[1]*y[0]);
+ 	 ydot[42] = (kon*y[1])*(y[40])+(kon*y[0])*(y[41])+(-(koff+kcat))*(y[42])+y[1]*y[0];
+ 	 ydot[43] = (kcat)*(y[42]);
+ 	 ydot[44] = 0;
+ 	 ydot[45] = (-(kdegS+kon*y[1]))*(y[45])+(-(kon*y[0]))*(y[46])+(koff)*(y[47])+y[2];
+ 	 ydot[46] = (-(kon*y[1]))*(y[45])+(-(kon*y[0]))*(y[46])+(koff+kcat)*(y[47])+y[2];
+ 	 ydot[47] = (kon*y[1])*(y[45])+(kon*y[0])*(y[46])+(-(koff+kcat))*(y[47])-y[2];
+ 	 ydot[48] = (kcat)*(y[47]);
+ 	 ydot[49] = 0;
+ 	 ydot[50] = (-(kdegS+kon*y[1]))*(y[50])+(-(kon*y[0]))*(y[51])+(koff)*(y[52]);
+ 	 ydot[51] = (-(kon*y[1]))*(y[50])+(-(kon*y[0]))*(y[51])+(koff+kcat)*(y[52])+y[2];
+ 	 ydot[52] = (kon*y[1])*(y[50])+(kon*y[0])*(y[51])+(-(koff+kcat))*(y[52])-y[2];
+ 	 ydot[53] = (kcat)*(y[52])+y[2];
+ 	 ydot[54] = 0;
+ 	 ydot[55] = (-(kdegS+kon*y[1]))*(y[55])+(-(kon*y[0]))*(y[56])+(koff)*(y[57]);
+ 	 ydot[56] = (-(kon*y[1]))*(y[55])+(-(kon*y[0]))*(y[56])+(koff+kcat)*(y[57]);
+ 	 ydot[57] = (kon*y[1])*(y[55])+(kon*y[0])*(y[56])+(-(koff+kcat))*(y[57]);
+ 	 ydot[58] = (kcat)*(y[57]);
+ 	 ydot[59] = 0;
+ 	 ydot[60] = (-(kdegS+kon*y[1]))*(y[60])+(-(kon*y[0]))*(y[61])+(koff)*(y[62]);
+ 	 ydot[61] = (-(kon*y[1]))*(y[60])+(-(kon*y[0]))*(y[61])+(koff+kcat)*(y[62]);
+ 	 ydot[62] = (kon*y[1])*(y[60])+(kon*y[0])*(y[61])+(-(koff+kcat))*(y[62]);
+ 	 ydot[63] = (kcat)*(y[62]);
+ 	 ydot[64] = 0;
 
-	 for(int i=  0 ; i <  3 ; ++i) RPAR[i] = 0;
 }
 
+/** Event function **/
+void odemodel_petab_s_myevent(int *n, double *t, double *y) {
+
+	 double time = *t;
+
+	 if(*t == 0 & eventcounter[0] == 0) {
+		y[9] = 0;
+		y[14] = 0;
+		y[19] = 0;
+		y[24] = 0;
+		y[29] = 0;
+		y[34] = 0;
+		y[39] = 0;
+		y[44] = 0;
+		y[49] = 0;
+		y[54] = 0;
+		y[59] = 0;
+		y[64] = 0;
+		y[59] = y[59] + 1.0;
+		y[4] = Enzyme;
+		y[6] = 0;
+		y[11] = 0;
+		y[16] = 0;
+		y[21] = 0;
+		y[26] = 0;
+		y[31] = 0;
+		y[36] = 0;
+		y[41] = 0;
+		y[46] = 0;
+		y[51] = 0;
+		y[56] = 0;
+		y[61] = 0;
+		y[61] = y[61] + 1.0;
+		y[1] = Eadd;
+		eventcounter[0] = eventcounter[0] + 1.;
+	 }
+
+
+}

@@ -90,7 +90,7 @@ ggsave(file.path(.outputFolder, "02-Data.png"), pl, width = 15.5, height = 10, s
 # Export Petab ----
 # -------------------------------------------------------------------------#
 # .. Create petab tables -----
-pe_ex <- petab_experimentalCondition(conditionId = c("preeq_Enzyme", "Enzyme"), conditionName = c("preeq_Enzyme", "Enzyme"), E = c(0,"Eadd"))
+pe_ex <- petab_experimentalCondition(conditionId = c("NoEnzyme", "Enzyme"), conditionName = c("NoEnzyme", "Enzyme"), E = c(0,"Eadd"))
 pe_ob <- petab_observables(observableId = c("obsE","obsS","obsES","obsP"),
                            observableName = c("obsE","obsS","obsES","obsP"),
                            observableFormula = c("E","S","ES","P"),
