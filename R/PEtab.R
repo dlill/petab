@@ -183,15 +183,11 @@ petab_unjoinDCO <- function(DCO, pe = NULL) {
   if (length(lostConditions))
     warning("Conditions got lost in the transformation: ", paste0(lostConditions, collapse = ", "))
 
-  # Return petab
-  petab(
-    model = pe$model,
-    experimentalCondition = experimentalCondition,
-    measurementData = measurementData,
-    observables = observables,
-    parameters = pe$parameters
-  )
-
+  # Modify and return petab
+  pe$experimentalCondition <- experimentalCondition
+  pe$measurementData <- measurementData
+  pe$observables <- observables
+  pe
 }
 
 
