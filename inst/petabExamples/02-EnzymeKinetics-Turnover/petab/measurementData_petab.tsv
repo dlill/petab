@@ -1,229 +1,229 @@
 observableId	preequilibrationConditionId	simulationConditionId	measurement	time	observableParameters	noiseParameters	datasetId	replicateId
-obsE	NoEnzyme	Enzyme	0.0117295884312668	1	offset_E	sigma_obsE	data1	1
-obsE	NoEnzyme	Enzyme	0.00962452225828439	1	offset_E	sigma_obsE	data1	2
-obsE	NoEnzyme	Enzyme	0.011680313192226	1	offset_E	sigma_obsE	data1	3
-obsE	NoEnzyme	Enzyme	0.0103550149947615	2	offset_E	sigma_obsE	data1	1
-obsE	NoEnzyme	Enzyme	0.0127452208415849	2	offset_E	sigma_obsE	data1	2
-obsE	NoEnzyme	Enzyme	0.0120838425023656	2	offset_E	sigma_obsE	data1	3
-obsE	NoEnzyme	Enzyme	0.0139488097578662	3	offset_E	sigma_obsE	data1	1
-obsE	NoEnzyme	Enzyme	0.0135641502591239	3	offset_E	sigma_obsE	data1	2
-obsE	NoEnzyme	Enzyme	0.0151403086547649	3	offset_E	sigma_obsE	data1	3
-obsE	NoEnzyme	Enzyme	0.0191873834641561	4	offset_E	sigma_obsE	data1	1
-obsE	NoEnzyme	Enzyme	0.0126494697659777	4	offset_E	sigma_obsE	data1	2
-obsE	NoEnzyme	Enzyme	0.0175054275022624	4	offset_E	sigma_obsE	data1	3
-obsE	NoEnzyme	Enzyme	0.0190445348754349	5	offset_E	sigma_obsE	data1	1
-obsE	NoEnzyme	Enzyme	0.0158655179776775	5	offset_E	sigma_obsE	data1	2
-obsE	NoEnzyme	Enzyme	0.016857398659568	5	offset_E	sigma_obsE	data1	3
-obsE	NoEnzyme	Enzyme	0.0179037507745434	6	offset_E	sigma_obsE	data1	1
-obsE	NoEnzyme	Enzyme	0.0175960593743133	6	offset_E	sigma_obsE	data1	2
-obsE	NoEnzyme	Enzyme	0.0199807466680139	6	offset_E	sigma_obsE	data1	3
-obsE	NoEnzyme	Enzyme	0.0174768210309205	7	offset_E	sigma_obsE	data1	1
-obsE	NoEnzyme	Enzyme	0.0212064423289735	7	offset_E	sigma_obsE	data1	2
-obsE	NoEnzyme	Enzyme	0.017264952596164	7	offset_E	sigma_obsE	data1	3
-obsE	NoEnzyme	Enzyme	0.0193821992103964	8	offset_E	sigma_obsE	data1	1
-obsE	NoEnzyme	Enzyme	0.0225080997641997	8	offset_E	sigma_obsE	data1	2
-obsE	NoEnzyme	Enzyme	0.0214112092982414	8	offset_E	sigma_obsE	data1	3
-obsE	NoEnzyme	Enzyme	0.0201222494449262	9	offset_E	sigma_obsE	data1	1
-obsE	NoEnzyme	Enzyme	0.023997487515872	9	offset_E	sigma_obsE	data1	2
-obsE	NoEnzyme	Enzyme	0.0222739303410555	9	offset_E	sigma_obsE	data1	3
-obsE	NoEnzyme	Enzyme	0.0252857366518556	10	offset_E	sigma_obsE	data1	1
-obsE	NoEnzyme	Enzyme	0.0242540945795284	10	offset_E	sigma_obsE	data1	2
-obsE	NoEnzyme	Enzyme	0.021364981257023	10	offset_E	sigma_obsE	data1	3
-obsE	NoEnzyme	Enzyme	0.0491899644855845	20	offset_E	sigma_obsE	data1	1
-obsE	NoEnzyme	Enzyme	0.0498391639684672	20	offset_E	sigma_obsE	data1	2
-obsE	NoEnzyme	Enzyme	0.036535051899749	20	offset_E	sigma_obsE	data1	3
-obsE	NoEnzyme	Enzyme	0.0689393246303988	30	offset_E	sigma_obsE	data1	1
-obsE	NoEnzyme	Enzyme	0.0725096639844445	30	offset_E	sigma_obsE	data1	2
-obsE	NoEnzyme	Enzyme	0.0588137060598274	30	offset_E	sigma_obsE	data1	3
-obsE	NoEnzyme	Enzyme	0.07620836536357	40	offset_E	sigma_obsE	data1	1
-obsE	NoEnzyme	Enzyme	0.0771844790135171	40	offset_E	sigma_obsE	data1	2
-obsE	NoEnzyme	Enzyme	0.074847566310366	40	offset_E	sigma_obsE	data1	3
-obsE	NoEnzyme	Enzyme	0.0955332825842332	50	offset_E	sigma_obsE	data1	1
-obsE	NoEnzyme	Enzyme	0.104705744919512	50	offset_E	sigma_obsE	data1	2
-obsE	NoEnzyme	Enzyme	0.0777476679856041	50	offset_E	sigma_obsE	data1	3
-obsE	NoEnzyme	Enzyme	0.0993364414247715	60	offset_E	sigma_obsE	data1	1
-obsE	NoEnzyme	Enzyme	0.0927562733821331	60	offset_E	sigma_obsE	data1	2
-obsE	NoEnzyme	Enzyme	0.0981346781472118	60	offset_E	sigma_obsE	data1	3
-obsE	NoEnzyme	Enzyme	0.0842079014628319	70	offset_E	sigma_obsE	data1	1
-obsE	NoEnzyme	Enzyme	0.0962703553693727	70	offset_E	sigma_obsE	data1	2
-obsE	NoEnzyme	Enzyme	0.0917280284330628	70	offset_E	sigma_obsE	data1	3
-obsE	NoEnzyme	Enzyme	0.0919940004263679	80	offset_E	sigma_obsE	data1	1
-obsE	NoEnzyme	Enzyme	0.081113761181792	80	offset_E	sigma_obsE	data1	2
-obsE	NoEnzyme	Enzyme	0.113432150856212	80	offset_E	sigma_obsE	data1	3
-obsE	NoEnzyme	Enzyme	0.078096498646415	90	offset_E	sigma_obsE	data1	1
-obsE	NoEnzyme	Enzyme	0.0954658905072819	90	offset_E	sigma_obsE	data1	2
-obsE	NoEnzyme	Enzyme	0.0796387506987387	90	offset_E	sigma_obsE	data1	3
-obsE	NoEnzyme	Enzyme	0.0789135794637375	100	offset_E	sigma_obsE	data1	1
-obsE	NoEnzyme	Enzyme	0.089148131469876	100	offset_E	sigma_obsE	data1	2
-obsE	NoEnzyme	Enzyme	0.0864029601286221	100	offset_E	sigma_obsE	data1	3
-obsES	NoEnzyme	Enzyme	1.01665431938097	1		sigma_obsES	data1	1
-obsES	NoEnzyme	Enzyme	1.02940836440536	1		sigma_obsES	data1	2
-obsES	NoEnzyme	Enzyme	1.05819486722981	1		sigma_obsES	data1	3
-obsES	NoEnzyme	Enzyme	1.0989920041656	2		sigma_obsES	data1	1
-obsES	NoEnzyme	Enzyme	1.14197557930457	2		sigma_obsES	data1	2
-obsES	NoEnzyme	Enzyme	1.01013690399112	2		sigma_obsES	data1	3
-obsES	NoEnzyme	Enzyme	0.951438773294579	3		sigma_obsES	data1	1
-obsES	NoEnzyme	Enzyme	1.00105019008506	3		sigma_obsES	data1	2
-obsES	NoEnzyme	Enzyme	1.0277772170268	3		sigma_obsES	data1	3
-obsES	NoEnzyme	Enzyme	1.01566819032905	4		sigma_obsES	data1	1
-obsES	NoEnzyme	Enzyme	0.91780934981186	4		sigma_obsES	data1	2
-obsES	NoEnzyme	Enzyme	0.973015798326747	4		sigma_obsES	data1	3
-obsES	NoEnzyme	Enzyme	0.939412287285245	5		sigma_obsES	data1	1
-obsES	NoEnzyme	Enzyme	1.0631259016714	5		sigma_obsES	data1	2
-obsES	NoEnzyme	Enzyme	1.09675797177425	5		sigma_obsES	data1	3
-obsES	NoEnzyme	Enzyme	1.02626077381325	6		sigma_obsES	data1	1
-obsES	NoEnzyme	Enzyme	0.968010785164708	6		sigma_obsES	data1	2
-obsES	NoEnzyme	Enzyme	0.952799093152643	6		sigma_obsES	data1	3
-obsES	NoEnzyme	Enzyme	1.02723329944207	7		sigma_obsES	data1	1
-obsES	NoEnzyme	Enzyme	0.987281861723062	7		sigma_obsES	data1	2
-obsES	NoEnzyme	Enzyme	1.08284872753584	7		sigma_obsES	data1	3
-obsES	NoEnzyme	Enzyme	1.16589800304897	8		sigma_obsES	data1	1
-obsES	NoEnzyme	Enzyme	0.740869077555865	8		sigma_obsES	data1	2
-obsES	NoEnzyme	Enzyme	0.875331225721769	8		sigma_obsES	data1	3
-obsES	NoEnzyme	Enzyme	1.0416618055315	9		sigma_obsES	data1	1
-obsES	NoEnzyme	Enzyme	0.843054410655613	9		sigma_obsES	data1	2
-obsES	NoEnzyme	Enzyme	0.934652854095822	9		sigma_obsES	data1	3
-obsES	NoEnzyme	Enzyme	0.974798228678597	10		sigma_obsES	data1	1
-obsES	NoEnzyme	Enzyme	0.975306164483628	10		sigma_obsES	data1	2
-obsES	NoEnzyme	Enzyme	0.907263566655632	10		sigma_obsES	data1	3
-obsES	NoEnzyme	Enzyme	1.05380348848724	20		sigma_obsES	data1	1
-obsES	NoEnzyme	Enzyme	0.832125351209612	20		sigma_obsES	data1	2
-obsES	NoEnzyme	Enzyme	0.853354675535264	20		sigma_obsES	data1	3
-obsES	NoEnzyme	Enzyme	1.04101500185604	30		sigma_obsES	data1	1
-obsES	NoEnzyme	Enzyme	0.934194370266249	30		sigma_obsES	data1	2
-obsES	NoEnzyme	Enzyme	0.913854858641349	30		sigma_obsES	data1	3
-obsES	NoEnzyme	Enzyme	1.05361954877387	40		sigma_obsES	data1	1
-obsES	NoEnzyme	Enzyme	0.817584890573845	40		sigma_obsES	data1	2
-obsES	NoEnzyme	Enzyme	0.985305324256683	40		sigma_obsES	data1	3
-obsES	NoEnzyme	Enzyme	0.992974458987972	50		sigma_obsES	data1	1
-obsES	NoEnzyme	Enzyme	0.793800704058332	50		sigma_obsES	data1	2
-obsES	NoEnzyme	Enzyme	0.922480823764164	50		sigma_obsES	data1	3
-obsES	NoEnzyme	Enzyme	0.897460913668595	60		sigma_obsES	data1	1
-obsES	NoEnzyme	Enzyme	0.844679793588828	60		sigma_obsES	data1	2
-obsES	NoEnzyme	Enzyme	0.989795055828521	60		sigma_obsES	data1	3
-obsES	NoEnzyme	Enzyme	0.976131809225179	70		sigma_obsES	data1	1
-obsES	NoEnzyme	Enzyme	0.999112701619403	70		sigma_obsES	data1	2
-obsES	NoEnzyme	Enzyme	0.875458862133834	70		sigma_obsES	data1	3
-obsES	NoEnzyme	Enzyme	0.802607141311582	80		sigma_obsES	data1	1
-obsES	NoEnzyme	Enzyme	0.917424230418418	80		sigma_obsES	data1	2
-obsES	NoEnzyme	Enzyme	1.0152855072801	80		sigma_obsES	data1	3
-obsES	NoEnzyme	Enzyme	0.94980842428729	90		sigma_obsES	data1	1
-obsES	NoEnzyme	Enzyme	0.770477826411965	90		sigma_obsES	data1	2
-obsES	NoEnzyme	Enzyme	0.925500163464954	90		sigma_obsES	data1	3
-obsES	NoEnzyme	Enzyme	1.03063667265482	100		sigma_obsES	data1	1
-obsES	NoEnzyme	Enzyme	0.783881480888494	100		sigma_obsES	data1	2
-obsES	NoEnzyme	Enzyme	0.783692727124155	100		sigma_obsES	data1	3
-obsP	NoEnzyme	Enzyme	0.938942039720328	1		sigma_obsP	data1	1
-obsP	NoEnzyme	Enzyme	0.992762903406588	1		sigma_obsP	data1	2
-obsP	NoEnzyme	Enzyme	1.06497274850277	1		sigma_obsP	data1	3
-obsP	NoEnzyme	Enzyme	2.29618557835949	2		sigma_obsP	data1	1
-obsP	NoEnzyme	Enzyme	2.51133720248144	2		sigma_obsP	data1	2
-obsP	NoEnzyme	Enzyme	2.00445560916845	2		sigma_obsP	data1	3
-obsP	NoEnzyme	Enzyme	2.80214681600224	3		sigma_obsP	data1	1
-obsP	NoEnzyme	Enzyme	3.0363341560679	3		sigma_obsP	data1	2
-obsP	NoEnzyme	Enzyme	3.21984357040981	3		sigma_obsP	data1	3
-obsP	NoEnzyme	Enzyme	4.26837335459161	4		sigma_obsP	data1	1
-obsP	NoEnzyme	Enzyme	3.49734719231437	4		sigma_obsP	data1	2
-obsP	NoEnzyme	Enzyme	5.08722629817185	4		sigma_obsP	data1	3
-obsP	NoEnzyme	Enzyme	4.84570937589513	5		sigma_obsP	data1	1
-obsP	NoEnzyme	Enzyme	5.29576859770555	5		sigma_obsP	data1	2
-obsP	NoEnzyme	Enzyme	4.31412226719007	5		sigma_obsP	data1	3
-obsP	NoEnzyme	Enzyme	6.03138927504054	6		sigma_obsP	data1	1
-obsP	NoEnzyme	Enzyme	6.34100464765094	6		sigma_obsP	data1	2
-obsP	NoEnzyme	Enzyme	5.05448049413396	6		sigma_obsP	data1	3
-obsP	NoEnzyme	Enzyme	8.27650421799781	7		sigma_obsP	data1	1
-obsP	NoEnzyme	Enzyme	10.0848204390312	7		sigma_obsP	data1	2
-obsP	NoEnzyme	Enzyme	8.69859655051543	7		sigma_obsP	data1	3
-obsP	NoEnzyme	Enzyme	6.7821024678553	8		sigma_obsP	data1	1
-obsP	NoEnzyme	Enzyme	6.47376349924157	8		sigma_obsP	data1	2
-obsP	NoEnzyme	Enzyme	8.01951101906815	8		sigma_obsP	data1	3
-obsP	NoEnzyme	Enzyme	7.67700860575763	9		sigma_obsP	data1	1
-obsP	NoEnzyme	Enzyme	8.84528815382716	9		sigma_obsP	data1	2
-obsP	NoEnzyme	Enzyme	9.89476753491366	9		sigma_obsP	data1	3
-obsP	NoEnzyme	Enzyme	12.166269192914	10		sigma_obsP	data1	1
-obsP	NoEnzyme	Enzyme	9.6727718311545	10		sigma_obsP	data1	2
-obsP	NoEnzyme	Enzyme	10.7293420912833	10		sigma_obsP	data1	3
-obsP	NoEnzyme	Enzyme	19.9067758216548	20		sigma_obsP	data1	1
-obsP	NoEnzyme	Enzyme	22.6709050579826	20		sigma_obsP	data1	2
-obsP	NoEnzyme	Enzyme	18.8922638715273	20		sigma_obsP	data1	3
-obsP	NoEnzyme	Enzyme	30.4958711866508	30		sigma_obsP	data1	1
-obsP	NoEnzyme	Enzyme	24.9579088718171	30		sigma_obsP	data1	2
-obsP	NoEnzyme	Enzyme	29.9941570170852	30		sigma_obsP	data1	3
-obsP	NoEnzyme	Enzyme	41.1389566451506	40		sigma_obsP	data1	1
-obsP	NoEnzyme	Enzyme	38.5231558522906	40		sigma_obsP	data1	2
-obsP	NoEnzyme	Enzyme	38.2014939593261	40		sigma_obsP	data1	3
-obsP	NoEnzyme	Enzyme	44.3181429090707	50		sigma_obsP	data1	1
-obsP	NoEnzyme	Enzyme	40.9498871497471	50		sigma_obsP	data1	2
-obsP	NoEnzyme	Enzyme	48.3012850409683	50		sigma_obsP	data1	3
-obsP	NoEnzyme	Enzyme	67.984274441433	60		sigma_obsP	data1	1
-obsP	NoEnzyme	Enzyme	57.2657649024501	60		sigma_obsP	data1	2
-obsP	NoEnzyme	Enzyme	56.562140027258	60		sigma_obsP	data1	3
-obsP	NoEnzyme	Enzyme	72.3521919439465	70		sigma_obsP	data1	1
-obsP	NoEnzyme	Enzyme	69.1531354703373	70		sigma_obsP	data1	2
-obsP	NoEnzyme	Enzyme	59.8948272023138	70		sigma_obsP	data1	3
-obsP	NoEnzyme	Enzyme	70.5239131167985	80		sigma_obsP	data1	1
-obsP	NoEnzyme	Enzyme	86.0335157475099	80		sigma_obsP	data1	2
-obsP	NoEnzyme	Enzyme	69.4181691571432	80		sigma_obsP	data1	3
-obsP	NoEnzyme	Enzyme	84.5149576015529	90		sigma_obsP	data1	1
-obsP	NoEnzyme	Enzyme	83.0703465226487	90		sigma_obsP	data1	2
-obsP	NoEnzyme	Enzyme	80.2322190047794	90		sigma_obsP	data1	3
-obsP	NoEnzyme	Enzyme	99.0495728393576	100		sigma_obsP	data1	1
-obsP	NoEnzyme	Enzyme	96.4802238055347	100		sigma_obsP	data1	2
-obsP	NoEnzyme	Enzyme	85.4487911845147	100		sigma_obsP	data1	3
-obsS	NoEnzyme	Enzyme	99.7584447984808	1		sigma_obsS	data1	1
-obsS	NoEnzyme	Enzyme	88.0162790660656	1		sigma_obsS	data1	2
-obsS	NoEnzyme	Enzyme	80.8078678812754	1		sigma_obsS	data1	3
-obsS	NoEnzyme	Enzyme	73.1127804992011	2		sigma_obsS	data1	1
-obsS	NoEnzyme	Enzyme	93.2544014366316	2		sigma_obsS	data1	2
-obsS	NoEnzyme	Enzyme	89.0321348567739	2		sigma_obsS	data1	3
-obsS	NoEnzyme	Enzyme	73.8399336489939	3		sigma_obsS	data1	1
-obsS	NoEnzyme	Enzyme	77.078490081402	3		sigma_obsS	data1	2
-obsS	NoEnzyme	Enzyme	63.7637728397633	3		sigma_obsS	data1	3
-obsS	NoEnzyme	Enzyme	81.3950217190121	4		sigma_obsS	data1	1
-obsS	NoEnzyme	Enzyme	67.0432163350494	4		sigma_obsS	data1	2
-obsS	NoEnzyme	Enzyme	63.6362938260099	4		sigma_obsS	data1	3
-obsS	NoEnzyme	Enzyme	58.2497012676953	5		sigma_obsS	data1	1
-obsS	NoEnzyme	Enzyme	55.8384575119809	5		sigma_obsS	data1	2
-obsS	NoEnzyme	Enzyme	72.7956863447608	5		sigma_obsS	data1	3
-obsS	NoEnzyme	Enzyme	61.4082328952639	6		sigma_obsS	data1	1
-obsS	NoEnzyme	Enzyme	63.1755732551371	6		sigma_obsS	data1	2
-obsS	NoEnzyme	Enzyme	61.9700172597867	6		sigma_obsS	data1	3
-obsS	NoEnzyme	Enzyme	49.6455510322602	7		sigma_obsS	data1	1
-obsS	NoEnzyme	Enzyme	55.400893665457	7		sigma_obsS	data1	2
-obsS	NoEnzyme	Enzyme	56.7209523245657	7		sigma_obsS	data1	3
-obsS	NoEnzyme	Enzyme	50.8506038788625	8		sigma_obsS	data1	1
-obsS	NoEnzyme	Enzyme	52.498565658948	8		sigma_obsS	data1	2
-obsS	NoEnzyme	Enzyme	49.9654658038424	8		sigma_obsS	data1	3
-obsS	NoEnzyme	Enzyme	46.6204594706444	9		sigma_obsS	data1	1
-obsS	NoEnzyme	Enzyme	53.7768879204843	9		sigma_obsS	data1	2
-obsS	NoEnzyme	Enzyme	49.4775479507892	9		sigma_obsS	data1	3
-obsS	NoEnzyme	Enzyme	45.135693748384	10		sigma_obsS	data1	1
-obsS	NoEnzyme	Enzyme	43.619905911998	10		sigma_obsS	data1	2
-obsS	NoEnzyme	Enzyme	36.7443948841728	10		sigma_obsS	data1	3
-obsS	NoEnzyme	Enzyme	20.6030977003931	20		sigma_obsS	data1	1
-obsS	NoEnzyme	Enzyme	22.4528686526158	20		sigma_obsS	data1	2
-obsS	NoEnzyme	Enzyme	25.5499279905651	20		sigma_obsS	data1	3
-obsS	NoEnzyme	Enzyme	13.5902232581192	30		sigma_obsS	data1	1
-obsS	NoEnzyme	Enzyme	13.0494372003821	30		sigma_obsS	data1	2
-obsS	NoEnzyme	Enzyme	14.8697136941979	30		sigma_obsS	data1	3
-obsS	NoEnzyme	Enzyme	12.2064979141782	40		sigma_obsS	data1	1
-obsS	NoEnzyme	Enzyme	11.034292319498	40		sigma_obsS	data1	2
-obsS	NoEnzyme	Enzyme	13.2639075593607	40		sigma_obsS	data1	3
-obsS	NoEnzyme	Enzyme	11.590952932698	50		sigma_obsS	data1	1
-obsS	NoEnzyme	Enzyme	10.1236394562832	50		sigma_obsS	data1	2
-obsS	NoEnzyme	Enzyme	11.4600681581888	50		sigma_obsS	data1	3
-obsS	NoEnzyme	Enzyme	11.4059106103469	60		sigma_obsS	data1	1
-obsS	NoEnzyme	Enzyme	13.0730706569574	60		sigma_obsS	data1	2
-obsS	NoEnzyme	Enzyme	10.7015118475998	60		sigma_obsS	data1	3
-obsS	NoEnzyme	Enzyme	9.41526428225092	70		sigma_obsS	data1	1
-obsS	NoEnzyme	Enzyme	11.6282571911397	70		sigma_obsS	data1	2
-obsS	NoEnzyme	Enzyme	12.731011463003	70		sigma_obsS	data1	3
-obsS	NoEnzyme	Enzyme	10.1787808110611	80		sigma_obsS	data1	1
-obsS	NoEnzyme	Enzyme	11.9437594080675	80		sigma_obsS	data1	2
-obsS	NoEnzyme	Enzyme	9.5829304100066	80		sigma_obsS	data1	3
-obsS	NoEnzyme	Enzyme	10.7483859800598	90		sigma_obsS	data1	1
-obsS	NoEnzyme	Enzyme	11.9254880163357	90		sigma_obsS	data1	2
-obsS	NoEnzyme	Enzyme	10.877487201357	90		sigma_obsS	data1	3
-obsS	NoEnzyme	Enzyme	10.2005349636064	100		sigma_obsS	data1	1
-obsS	NoEnzyme	Enzyme	11.7398347612814	100		sigma_obsS	data1	2
-obsS	NoEnzyme	Enzyme	10.8416021695438	100		sigma_obsS	data1	3
+obsE	NoEnzyme	Enzyme	0.0138817007730751	1	offset_E	sigma_obsE	data1	1
+obsE	NoEnzyme	Enzyme	0.0113647514423265	1	offset_E	sigma_obsE	data1	2
+obsE	NoEnzyme	Enzyme	0.0118466079824495	1	offset_E	sigma_obsE	data1	3
+obsE	NoEnzyme	Enzyme	0.0139365801633396	2	offset_E	sigma_obsE	data1	1
+obsE	NoEnzyme	Enzyme	0.0132703672640492	2	offset_E	sigma_obsE	data1	2
+obsE	NoEnzyme	Enzyme	0.011920649296661	2	offset_E	sigma_obsE	data1	3
+obsE	NoEnzyme	Enzyme	0.013802629243913	3	offset_E	sigma_obsE	data1	1
+obsE	NoEnzyme	Enzyme	0.0168239071809922	3	offset_E	sigma_obsE	data1	2
+obsE	NoEnzyme	Enzyme	0.0118734310259453	3	offset_E	sigma_obsE	data1	3
+obsE	NoEnzyme	Enzyme	0.0153119175057797	4	offset_E	sigma_obsE	data1	1
+obsE	NoEnzyme	Enzyme	0.0134769426273197	4	offset_E	sigma_obsE	data1	2
+obsE	NoEnzyme	Enzyme	0.0165253690538002	4	offset_E	sigma_obsE	data1	3
+obsE	NoEnzyme	Enzyme	0.0178589242931163	5	offset_E	sigma_obsE	data1	1
+obsE	NoEnzyme	Enzyme	0.0169153892852476	5	offset_E	sigma_obsE	data1	2
+obsE	NoEnzyme	Enzyme	0.0162987035987938	5	offset_E	sigma_obsE	data1	3
+obsE	NoEnzyme	Enzyme	0.0160659903930475	6	offset_E	sigma_obsE	data1	1
+obsE	NoEnzyme	Enzyme	0.0199889002705965	6	offset_E	sigma_obsE	data1	2
+obsE	NoEnzyme	Enzyme	0.0196311780906379	6	offset_E	sigma_obsE	data1	3
+obsE	NoEnzyme	Enzyme	0.0203427491647449	7	offset_E	sigma_obsE	data1	1
+obsE	NoEnzyme	Enzyme	0.0246250648627575	7	offset_E	sigma_obsE	data1	2
+obsE	NoEnzyme	Enzyme	0.0172950642264631	7	offset_E	sigma_obsE	data1	3
+obsE	NoEnzyme	Enzyme	0.0233777154455913	8	offset_E	sigma_obsE	data1	1
+obsE	NoEnzyme	Enzyme	0.0214260237695741	8	offset_E	sigma_obsE	data1	2
+obsE	NoEnzyme	Enzyme	0.0202271290627368	8	offset_E	sigma_obsE	data1	3
+obsE	NoEnzyme	Enzyme	0.0234677237312649	9	offset_E	sigma_obsE	data1	1
+obsE	NoEnzyme	Enzyme	0.0221052413949227	9	offset_E	sigma_obsE	data1	2
+obsE	NoEnzyme	Enzyme	0.0229458791663052	9	offset_E	sigma_obsE	data1	3
+obsE	NoEnzyme	Enzyme	0.0266711331395397	10	offset_E	sigma_obsE	data1	1
+obsE	NoEnzyme	Enzyme	0.0240180736989204	10	offset_E	sigma_obsE	data1	2
+obsE	NoEnzyme	Enzyme	0.0223668005888361	10	offset_E	sigma_obsE	data1	3
+obsE	NoEnzyme	Enzyme	0.0432127791191807	20	offset_E	sigma_obsE	data1	1
+obsE	NoEnzyme	Enzyme	0.0471868544140577	20	offset_E	sigma_obsE	data1	2
+obsE	NoEnzyme	Enzyme	0.0459822819673686	20	offset_E	sigma_obsE	data1	3
+obsE	NoEnzyme	Enzyme	0.0731593121193903	30	offset_E	sigma_obsE	data1	1
+obsE	NoEnzyme	Enzyme	0.0610526592925992	30	offset_E	sigma_obsE	data1	2
+obsE	NoEnzyme	Enzyme	0.0737778457851181	30	offset_E	sigma_obsE	data1	3
+obsE	NoEnzyme	Enzyme	0.0599438671606975	40	offset_E	sigma_obsE	data1	1
+obsE	NoEnzyme	Enzyme	0.0825997709998346	40	offset_E	sigma_obsE	data1	2
+obsE	NoEnzyme	Enzyme	0.076858832015154	40	offset_E	sigma_obsE	data1	3
+obsE	NoEnzyme	Enzyme	0.0827069047106405	50	offset_E	sigma_obsE	data1	1
+obsE	NoEnzyme	Enzyme	0.081734977657578	50	offset_E	sigma_obsE	data1	2
+obsE	NoEnzyme	Enzyme	0.0772393261856521	50	offset_E	sigma_obsE	data1	3
+obsE	NoEnzyme	Enzyme	0.100683354933185	60	offset_E	sigma_obsE	data1	1
+obsE	NoEnzyme	Enzyme	0.0838149917876147	60	offset_E	sigma_obsE	data1	2
+obsE	NoEnzyme	Enzyme	0.0892549074369866	60	offset_E	sigma_obsE	data1	3
+obsE	NoEnzyme	Enzyme	0.0837790162321046	70	offset_E	sigma_obsE	data1	1
+obsE	NoEnzyme	Enzyme	0.101660313673899	70	offset_E	sigma_obsE	data1	2
+obsE	NoEnzyme	Enzyme	0.110910590669126	70	offset_E	sigma_obsE	data1	3
+obsE	NoEnzyme	Enzyme	0.0810408251586546	80	offset_E	sigma_obsE	data1	1
+obsE	NoEnzyme	Enzyme	0.0876808425379358	80	offset_E	sigma_obsE	data1	2
+obsE	NoEnzyme	Enzyme	0.105957101968487	80	offset_E	sigma_obsE	data1	3
+obsE	NoEnzyme	Enzyme	0.0984680140694784	90	offset_E	sigma_obsE	data1	1
+obsE	NoEnzyme	Enzyme	0.0943041415403423	90	offset_E	sigma_obsE	data1	2
+obsE	NoEnzyme	Enzyme	0.0890448543599136	90	offset_E	sigma_obsE	data1	3
+obsE	NoEnzyme	Enzyme	0.100884095462134	100	offset_E	sigma_obsE	data1	1
+obsE	NoEnzyme	Enzyme	0.0956261418649336	100	offset_E	sigma_obsE	data1	2
+obsE	NoEnzyme	Enzyme	0.101173599682437	100	offset_E	sigma_obsE	data1	3
+obsES	NoEnzyme	Enzyme	0.82973269865698	1		sigma_obsES	data1	1
+obsES	NoEnzyme	Enzyme	0.948237658530225	1		sigma_obsES	data1	2
+obsES	NoEnzyme	Enzyme	0.90793342969155	1		sigma_obsES	data1	3
+obsES	NoEnzyme	Enzyme	1.06466567219267	2		sigma_obsES	data1	1
+obsES	NoEnzyme	Enzyme	0.990116593508011	2		sigma_obsES	data1	2
+obsES	NoEnzyme	Enzyme	1.04638673759147	2		sigma_obsES	data1	3
+obsES	NoEnzyme	Enzyme	0.864152508216754	3		sigma_obsES	data1	1
+obsES	NoEnzyme	Enzyme	0.932309532220488	3		sigma_obsES	data1	2
+obsES	NoEnzyme	Enzyme	0.97806615242555	3		sigma_obsES	data1	3
+obsES	NoEnzyme	Enzyme	1.08975337239048	4		sigma_obsES	data1	1
+obsES	NoEnzyme	Enzyme	1.24407879279869	4		sigma_obsES	data1	2
+obsES	NoEnzyme	Enzyme	1.05584846291634	4		sigma_obsES	data1	3
+obsES	NoEnzyme	Enzyme	0.797164911106248	5		sigma_obsES	data1	1
+obsES	NoEnzyme	Enzyme	1.02370450977221	5		sigma_obsES	data1	2
+obsES	NoEnzyme	Enzyme	0.988276391169405	5		sigma_obsES	data1	3
+obsES	NoEnzyme	Enzyme	0.944046917480852	6		sigma_obsES	data1	1
+obsES	NoEnzyme	Enzyme	0.976014845518782	6		sigma_obsES	data1	2
+obsES	NoEnzyme	Enzyme	0.75560486929169	6		sigma_obsES	data1	3
+obsES	NoEnzyme	Enzyme	0.931590385688691	7		sigma_obsES	data1	1
+obsES	NoEnzyme	Enzyme	1.06739117418663	7		sigma_obsES	data1	2
+obsES	NoEnzyme	Enzyme	0.918938596531799	7		sigma_obsES	data1	3
+obsES	NoEnzyme	Enzyme	1.02599841597424	8		sigma_obsES	data1	1
+obsES	NoEnzyme	Enzyme	0.77740252150052	8		sigma_obsES	data1	2
+obsES	NoEnzyme	Enzyme	0.979586423098371	8		sigma_obsES	data1	3
+obsES	NoEnzyme	Enzyme	1.00347484243096	9		sigma_obsES	data1	1
+obsES	NoEnzyme	Enzyme	0.878637213355659	9		sigma_obsES	data1	2
+obsES	NoEnzyme	Enzyme	0.800766828118603	9		sigma_obsES	data1	3
+obsES	NoEnzyme	Enzyme	0.966927689452062	10		sigma_obsES	data1	1
+obsES	NoEnzyme	Enzyme	0.93359238177143	10		sigma_obsES	data1	2
+obsES	NoEnzyme	Enzyme	0.735649948462247	10		sigma_obsES	data1	3
+obsES	NoEnzyme	Enzyme	1.01412549683514	20		sigma_obsES	data1	1
+obsES	NoEnzyme	Enzyme	0.948764114790846	20		sigma_obsES	data1	2
+obsES	NoEnzyme	Enzyme	0.897065393344192	20		sigma_obsES	data1	3
+obsES	NoEnzyme	Enzyme	0.844018649444033	30		sigma_obsES	data1	1
+obsES	NoEnzyme	Enzyme	0.959096194146943	30		sigma_obsES	data1	2
+obsES	NoEnzyme	Enzyme	1.05908568843588	30		sigma_obsES	data1	3
+obsES	NoEnzyme	Enzyme	0.872073231523929	40		sigma_obsES	data1	1
+obsES	NoEnzyme	Enzyme	0.865761903365918	40		sigma_obsES	data1	2
+obsES	NoEnzyme	Enzyme	0.876136535607969	40		sigma_obsES	data1	3
+obsES	NoEnzyme	Enzyme	0.997439931722091	50		sigma_obsES	data1	1
+obsES	NoEnzyme	Enzyme	0.885965897066096	50		sigma_obsES	data1	2
+obsES	NoEnzyme	Enzyme	0.968071189974487	50		sigma_obsES	data1	3
+obsES	NoEnzyme	Enzyme	1.05719453414452	60		sigma_obsES	data1	1
+obsES	NoEnzyme	Enzyme	0.820161550140267	60		sigma_obsES	data1	2
+obsES	NoEnzyme	Enzyme	1.08070332059792	60		sigma_obsES	data1	3
+obsES	NoEnzyme	Enzyme	0.908853225243691	70		sigma_obsES	data1	1
+obsES	NoEnzyme	Enzyme	0.965782569429884	70		sigma_obsES	data1	2
+obsES	NoEnzyme	Enzyme	0.936266802551448	70		sigma_obsES	data1	3
+obsES	NoEnzyme	Enzyme	0.945575118838142	80		sigma_obsES	data1	1
+obsES	NoEnzyme	Enzyme	1.06957964976237	80		sigma_obsES	data1	2
+obsES	NoEnzyme	Enzyme	0.907413572009588	80		sigma_obsES	data1	3
+obsES	NoEnzyme	Enzyme	0.849386375947215	90		sigma_obsES	data1	1
+obsES	NoEnzyme	Enzyme	1.0569997130228	90		sigma_obsES	data1	2
+obsES	NoEnzyme	Enzyme	0.860035638268933	90		sigma_obsES	data1	3
+obsES	NoEnzyme	Enzyme	0.919455012922397	100		sigma_obsES	data1	1
+obsES	NoEnzyme	Enzyme	0.741209478973039	100		sigma_obsES	data1	2
+obsES	NoEnzyme	Enzyme	0.765236302914174	100		sigma_obsES	data1	3
+obsP	NoEnzyme	Enzyme	1.01730724036418	1		sigma_obsP	data1	1
+obsP	NoEnzyme	Enzyme	1.0338812002648	1		sigma_obsP	data1	2
+obsP	NoEnzyme	Enzyme	0.972538004473896	1		sigma_obsP	data1	3
+obsP	NoEnzyme	Enzyme	1.64084073284899	2		sigma_obsP	data1	1
+obsP	NoEnzyme	Enzyme	1.87727864741093	2		sigma_obsP	data1	2
+obsP	NoEnzyme	Enzyme	2.23748529902316	2		sigma_obsP	data1	3
+obsP	NoEnzyme	Enzyme	2.60762068117119	3		sigma_obsP	data1	1
+obsP	NoEnzyme	Enzyme	2.81169640576345	3		sigma_obsP	data1	2
+obsP	NoEnzyme	Enzyme	3.10620557713084	3		sigma_obsP	data1	3
+obsP	NoEnzyme	Enzyme	4.16783275924614	4		sigma_obsP	data1	1
+obsP	NoEnzyme	Enzyme	3.30357142810063	4		sigma_obsP	data1	2
+obsP	NoEnzyme	Enzyme	4.22089705513077	4		sigma_obsP	data1	3
+obsP	NoEnzyme	Enzyme	4.03606310025249	5		sigma_obsP	data1	1
+obsP	NoEnzyme	Enzyme	4.10925775413535	5		sigma_obsP	data1	2
+obsP	NoEnzyme	Enzyme	5.21071937123098	5		sigma_obsP	data1	3
+obsP	NoEnzyme	Enzyme	5.37575824588121	6		sigma_obsP	data1	1
+obsP	NoEnzyme	Enzyme	6.08780624021119	6		sigma_obsP	data1	2
+obsP	NoEnzyme	Enzyme	4.83308819403185	6		sigma_obsP	data1	3
+obsP	NoEnzyme	Enzyme	7.11851649922209	7		sigma_obsP	data1	1
+obsP	NoEnzyme	Enzyme	6.65491197285764	7		sigma_obsP	data1	2
+obsP	NoEnzyme	Enzyme	5.53508221648865	7		sigma_obsP	data1	3
+obsP	NoEnzyme	Enzyme	6.97573437164637	8		sigma_obsP	data1	1
+obsP	NoEnzyme	Enzyme	8.2180735780063	8		sigma_obsP	data1	2
+obsP	NoEnzyme	Enzyme	9.21467627925706	8		sigma_obsP	data1	3
+obsP	NoEnzyme	Enzyme	9.46826820203618	9		sigma_obsP	data1	1
+obsP	NoEnzyme	Enzyme	7.22668771836927	9		sigma_obsP	data1	2
+obsP	NoEnzyme	Enzyme	8.97072493105955	9		sigma_obsP	data1	3
+obsP	NoEnzyme	Enzyme	8.88451395962631	10		sigma_obsP	data1	1
+obsP	NoEnzyme	Enzyme	10.0828930501714	10		sigma_obsP	data1	2
+obsP	NoEnzyme	Enzyme	9.57991112360944	10		sigma_obsP	data1	3
+obsP	NoEnzyme	Enzyme	23.5181851198282	20		sigma_obsP	data1	1
+obsP	NoEnzyme	Enzyme	20.8056349602082	20		sigma_obsP	data1	2
+obsP	NoEnzyme	Enzyme	23.4689931096954	20		sigma_obsP	data1	3
+obsP	NoEnzyme	Enzyme	29.7280068118386	30		sigma_obsP	data1	1
+obsP	NoEnzyme	Enzyme	35.963560256524	30		sigma_obsP	data1	2
+obsP	NoEnzyme	Enzyme	26.5515898572696	30		sigma_obsP	data1	3
+obsP	NoEnzyme	Enzyme	38.2836037790407	40		sigma_obsP	data1	1
+obsP	NoEnzyme	Enzyme	42.1396757288111	40		sigma_obsP	data1	2
+obsP	NoEnzyme	Enzyme	38.1012895012772	40		sigma_obsP	data1	3
+obsP	NoEnzyme	Enzyme	49.7081620985951	50		sigma_obsP	data1	1
+obsP	NoEnzyme	Enzyme	38.3671530089514	50		sigma_obsP	data1	2
+obsP	NoEnzyme	Enzyme	42.2937701744099	50		sigma_obsP	data1	3
+obsP	NoEnzyme	Enzyme	44.196943097834	60		sigma_obsP	data1	1
+obsP	NoEnzyme	Enzyme	59.0120404664632	60		sigma_obsP	data1	2
+obsP	NoEnzyme	Enzyme	51.9183671033779	60		sigma_obsP	data1	3
+obsP	NoEnzyme	Enzyme	54.7744209949422	70		sigma_obsP	data1	1
+obsP	NoEnzyme	Enzyme	66.6314764371452	70		sigma_obsP	data1	2
+obsP	NoEnzyme	Enzyme	65.0705347890475	70		sigma_obsP	data1	3
+obsP	NoEnzyme	Enzyme	82.615418184843	80		sigma_obsP	data1	1
+obsP	NoEnzyme	Enzyme	72.0909150194077	80		sigma_obsP	data1	2
+obsP	NoEnzyme	Enzyme	70.6412179451551	80		sigma_obsP	data1	3
+obsP	NoEnzyme	Enzyme	72.6859763919416	90		sigma_obsP	data1	1
+obsP	NoEnzyme	Enzyme	103.765711364969	90		sigma_obsP	data1	2
+obsP	NoEnzyme	Enzyme	71.4201623296499	90		sigma_obsP	data1	3
+obsP	NoEnzyme	Enzyme	93.1663079296492	100		sigma_obsP	data1	1
+obsP	NoEnzyme	Enzyme	98.213702013343	100		sigma_obsP	data1	2
+obsP	NoEnzyme	Enzyme	91.7903879797795	100		sigma_obsP	data1	3
+obsS	NoEnzyme	Enzyme	99.2306863645612	1		sigma_obsS	data1	1
+obsS	NoEnzyme	Enzyme	81.8176943185487	1		sigma_obsS	data1	2
+obsS	NoEnzyme	Enzyme	84.3153020980124	1		sigma_obsS	data1	3
+obsS	NoEnzyme	Enzyme	79.7257272664839	2		sigma_obsS	data1	1
+obsS	NoEnzyme	Enzyme	88.0146302415722	2		sigma_obsS	data1	2
+obsS	NoEnzyme	Enzyme	85.9137911820022	2		sigma_obsS	data1	3
+obsS	NoEnzyme	Enzyme	70.1583987685341	3		sigma_obsS	data1	1
+obsS	NoEnzyme	Enzyme	75.4053221974113	3		sigma_obsS	data1	2
+obsS	NoEnzyme	Enzyme	75.2219739482095	3		sigma_obsS	data1	3
+obsS	NoEnzyme	Enzyme	60.26262564715	4		sigma_obsS	data1	1
+obsS	NoEnzyme	Enzyme	73.7133125318979	4		sigma_obsS	data1	2
+obsS	NoEnzyme	Enzyme	67.503718891684	4		sigma_obsS	data1	3
+obsS	NoEnzyme	Enzyme	69.1865072583262	5		sigma_obsS	data1	1
+obsS	NoEnzyme	Enzyme	64.1927314384526	5		sigma_obsS	data1	2
+obsS	NoEnzyme	Enzyme	61.6568758088313	5		sigma_obsS	data1	3
+obsS	NoEnzyme	Enzyme	76.2874938625671	6		sigma_obsS	data1	1
+obsS	NoEnzyme	Enzyme	70.4579217430544	6		sigma_obsS	data1	2
+obsS	NoEnzyme	Enzyme	61.2907054957396	6		sigma_obsS	data1	3
+obsS	NoEnzyme	Enzyme	54.5630889326085	7		sigma_obsS	data1	1
+obsS	NoEnzyme	Enzyme	56.7128186293465	7		sigma_obsS	data1	2
+obsS	NoEnzyme	Enzyme	52.6619992552304	7		sigma_obsS	data1	3
+obsS	NoEnzyme	Enzyme	43.1359957955509	8		sigma_obsS	data1	1
+obsS	NoEnzyme	Enzyme	53.203309681672	8		sigma_obsS	data1	2
+obsS	NoEnzyme	Enzyme	51.4262447823586	8		sigma_obsS	data1	3
+obsS	NoEnzyme	Enzyme	41.4165224024376	9		sigma_obsS	data1	1
+obsS	NoEnzyme	Enzyme	50.7355074969834	9		sigma_obsS	data1	2
+obsS	NoEnzyme	Enzyme	50.6616185557482	9		sigma_obsS	data1	3
+obsS	NoEnzyme	Enzyme	52.8355923372905	10		sigma_obsS	data1	1
+obsS	NoEnzyme	Enzyme	42.0937643275058	10		sigma_obsS	data1	2
+obsS	NoEnzyme	Enzyme	41.0818782076248	10		sigma_obsS	data1	3
+obsS	NoEnzyme	Enzyme	24.4520325025842	20		sigma_obsS	data1	1
+obsS	NoEnzyme	Enzyme	20.726939345226	20		sigma_obsS	data1	2
+obsS	NoEnzyme	Enzyme	26.6639798655738	20		sigma_obsS	data1	3
+obsS	NoEnzyme	Enzyme	16.2878704715477	30		sigma_obsS	data1	1
+obsS	NoEnzyme	Enzyme	14.6379618044416	30		sigma_obsS	data1	2
+obsS	NoEnzyme	Enzyme	17.6544729210676	30		sigma_obsS	data1	3
+obsS	NoEnzyme	Enzyme	13.2674560327953	40		sigma_obsS	data1	1
+obsS	NoEnzyme	Enzyme	12.51273781392	40		sigma_obsS	data1	2
+obsS	NoEnzyme	Enzyme	12.4446790262721	40		sigma_obsS	data1	3
+obsS	NoEnzyme	Enzyme	12.3339614664905	50		sigma_obsS	data1	1
+obsS	NoEnzyme	Enzyme	12.1450866903397	50		sigma_obsS	data1	2
+obsS	NoEnzyme	Enzyme	10.4305893362838	50		sigma_obsS	data1	3
+obsS	NoEnzyme	Enzyme	10.7355256047899	60		sigma_obsS	data1	1
+obsS	NoEnzyme	Enzyme	11.3537817482739	60		sigma_obsS	data1	2
+obsS	NoEnzyme	Enzyme	10.5139046215851	60		sigma_obsS	data1	3
+obsS	NoEnzyme	Enzyme	9.97099562973729	70		sigma_obsS	data1	1
+obsS	NoEnzyme	Enzyme	11.2301742805945	70		sigma_obsS	data1	2
+obsS	NoEnzyme	Enzyme	11.6503955429385	70		sigma_obsS	data1	3
+obsS	NoEnzyme	Enzyme	10.0557149478951	80		sigma_obsS	data1	1
+obsS	NoEnzyme	Enzyme	12.6321035541698	80		sigma_obsS	data1	2
+obsS	NoEnzyme	Enzyme	11.0870942953272	80		sigma_obsS	data1	3
+obsS	NoEnzyme	Enzyme	11.1874828993598	90		sigma_obsS	data1	1
+obsS	NoEnzyme	Enzyme	11.8184073244485	90		sigma_obsS	data1	2
+obsS	NoEnzyme	Enzyme	12.2082716077879	90		sigma_obsS	data1	3
+obsS	NoEnzyme	Enzyme	10.928505674415	100		sigma_obsS	data1	1
+obsS	NoEnzyme	Enzyme	9.77797555018529	100		sigma_obsS	data1	2
+obsS	NoEnzyme	Enzyme	11.1889643523559	100		sigma_obsS	data1	3

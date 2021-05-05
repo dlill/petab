@@ -1124,7 +1124,12 @@ getReactionsSBML <- function(model, conditions){
       mycongrid <- filter(myconditions, conditionId==con | conditionId==paste0("preeq_", con))
       if(ncol(mycongrid)>1){
         for(i in 2:ncol(mycongrid)){
-          preeqEvents <- addEvent(preeqEvents, var=names(mycongrid)[i], time=0, value=mycongrid[[which(mycongrid$conditionId==con),i]],root=NA,  method="replace")
+          preeqEvents <- addEvent(preeqEvents,
+                                  var=names(mycongrid)[i],
+                                  time=0,
+                                  value=mycongrid[[which(mycongrid$conditionId==con),i]],
+                                  root=NA,
+                                  method="replace")
           attrib <- c(attrib, mycongrid[[which(mycongrid$conditionId==paste0("preeq_",con)),i]])
         }
       }
