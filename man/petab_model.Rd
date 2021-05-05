@@ -9,6 +9,7 @@ petab_model(
   events = NA,
   parInfo = getParInfo(equationList),
   speciesInfo = getSpeciesInfo(equationList),
+  parameterFormulaInjection = NULL,
   ...
 )
 }
@@ -16,6 +17,8 @@ petab_model(
 \item{equationList}{eqnlist}
 
 \item{events}{eventlist}
+
+\item{parameterFormulaInjection}{}
 
 \item{...}{not used, but could be used in the future for imitating assignment rules etc}
 }

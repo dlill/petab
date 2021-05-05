@@ -13,7 +13,7 @@
 #' @export
 #'
 #' @examples
-petab_create_parameter_df <- function(pe, observableParameterScale = "log10", parameterFormulaInjection = NULL) {
+petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
 
   model                 <- pe$model
   measurementData       <- pe$measurementData
@@ -71,6 +71,11 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10", pa
     # Append par_ec
     par <- rbindlist(list(par, par_ec))
   }
+
+
+  # parameterFormulaInjection
+
+
 
   par
 }
@@ -234,6 +239,9 @@ petab_mutateDCO <- function(pe, i, j) {
 
 
 
+
+
+
 # -------------------------------------------------------------------------#
 # Initializers of core objects ----
 # -------------------------------------------------------------------------#
@@ -388,6 +396,9 @@ petab_parameters <- function(
 #' @param equationList eqnlist
 #' @param events eventlist
 #' @param ... not used, but could be used in the future for imitating assignment rules etc
+#' @param parInfo
+#' @param speciesInfo
+#' @param parameterFormulaInjection
 #'
 #' @return list
 #'
@@ -396,9 +407,57 @@ petab_parameters <- function(
 #' @export
 petab_model <- function(equationList, events = NA,
                         parInfo = getParInfo(equationList),
-                        speciesInfo = getSpeciesInfo(equationList),...) {
+                        speciesInfo = getSpeciesInfo(equationList),
+                        ...) {
   list(equationList = equationList, events = events,
-       parInfo = parInfo, speciesInfo = speciesInfo, ...)
+       parInfo = parInfo, speciesInfo = speciesInfo,
+       ...)
+}
+
+# -------------------------------------------------------------------------#
+# Initializer of meta objects ----
+# -------------------------------------------------------------------------#
+
+
+#' Title
+#'
+#' @param parameterFormulaInjection
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
+petab_meta <- function(parameterFormulaInjection = NULL, ...) {
+       list(parameterFormulaInjection = parameterFormulaInjection, ...)
+}
+
+
+#' Create a parameterFormulaInjection
+#'
+#' See example-02
+#'
+#' Inject a trafo between pEst and x
+#'
+#' This is a somewhat elegant, somewhat hacky implementation of "complicated" parameter
+#' trafos, e.g. custom steady state trafos.
+#' It would be nicer to have this stuff directly in the SBML file, but I don't have the time for that now.
+#' Furthermore, some functionality of the import will be reusable when this is moved to SBML as assignmentRule or sth like that
+#'
+#' @param parameterId e.g. "kprodS"
+#' @param parameterFormula "kdegS * S"
+#'
+#' @return data.table(parameterId, parameterFormula)
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#'
+#' @examples
+petab_parameterFormulaInjection = function(parameterId, parameterFormula) {
+  data.table(
+    parameterId      = as.character(parameterId),
+    parameterFormula = as.character(parameterFormula)
+  )
 }
 
 
@@ -430,6 +489,7 @@ petab <- function(
   measurementData = NULL,
   observables = NULL,
   parameters = NULL,
+  meta = NULL,
   ...
 ) {
   cat("Sorting tables with base::order()\n")
@@ -439,12 +499,15 @@ petab <- function(
   if(!is.null(measurementData))       measurementData       = do.call(petab_measurementData, measurementData)
   if(!is.null(observables))           observables           = do.call(petab_observables, observables)
   if(!is.null(parameters))            parameters            = do.call(petab_parameters, parameters)
+  if(!is.null(meta))                  meta                  = do.call(petab_meta, meta)
   petab <- list(
     model                 = model,
     experimentalCondition = experimentalCondition,
     measurementData       = measurementData,
     observables           = observables,
-    parameters            = parameters
+    parameters            = parameters,
+    meta                  = meta,
+    ...
   )
 
   petab_lint(petab)
@@ -492,7 +555,7 @@ petab_modelname_path <- function(filename) {
 petab_files <- function(filename, FLAGTestCase = FALSE, FLAGreturnList = FALSE) {
 
   modelname <- petab_modelname_path(filename)$modelname
-  path <- petab_modelname_path(filename)$path
+  path      <- petab_modelname_path(filename)$path
 
   # [ ] warning("model refers to rds instead of xml\n")
   out <- NULL
@@ -501,25 +564,27 @@ petab_files <- function(filename, FLAGTestCase = FALSE, FLAGreturnList = FALSE) 
       yaml                       = paste0(modelname, ".yaml"),
       experimentalCondition      = paste0("_experimentalCondition"     , ".tsv"),
       measurementData            = paste0("_measurementData"           , ".tsv"),
-      modelXML                      = paste0("_model"                     , ".xml"),
+      modelXML                   = paste0("_model"                     , ".xml"),
       # [ ] not very elegant. Remove rds when sbml is stable
       model                      = paste0("_model"                     , ".rds"),
       observables                = paste0("_observables"               , ".tsv"),
       parameters                 = paste0("_parameters"                , ".tsv"),
       simulatedData              = paste0("_simulatedData"             , ".tsv"),
-      visualizationSpecification = paste0("_visualizationSpecification", ".tsv"))
+      visualizationSpecification = paste0("_visualizationSpecification", ".tsv"),
+      meta                       = paste0("_meta"                      , ".rds"))
   } else {
     out <- c(
       yaml                       = paste0(modelname, ".yaml"),
       experimentalCondition      = paste0("experimentalCondition_"     , modelname, ".tsv"),
       measurementData            = paste0("measurementData_"           , modelname, ".tsv"),
-      modelXML                      = paste0("model_"                     , modelname, ".xml"),
+      modelXML                   = paste0("model_"                     , modelname, ".xml"),
       # [ ] not very elegant. Remove rds when sbml is stable
       model                      = paste0("model_"                     , modelname, ".rds"),
       observables                = paste0("observables_"               , modelname, ".tsv"),
       parameters                 = paste0("parameters_"                , modelname, ".tsv"),
       simulatedData              = paste0("simulatedData_"             , modelname, ".tsv"),
-      visualizationSpecification = paste0("visualizationSpecification_", modelname, ".tsv"))
+      visualizationSpecification = paste0("visualizationSpecification_", modelname, ".tsv"),
+      meta                       = paste0("meta_"                      , modelname, ".rds"))
   }
   nm <- names(out)
   out <- setNames(file.path(path, out), nm)
@@ -549,8 +614,8 @@ readPetab <- function(filename, FLAGTestCase = FALSE) {
   files_tsv <- grep("tsv", files, value = TRUE)
   files_tsv <- lapply(files_tsv, data.table::fread)
   # model
-  files_model <- grep("xml", files, value = TRUE) # Do nothing, read rds
-
+  # files_model <- grep("xml", files, value = TRUE) # Do nothing, read rds
+  # model+meta
   files_model <- grep("rds", files, value = TRUE)
   files_model <- lapply(files_model, readRDS)
 
@@ -600,7 +665,7 @@ writePetab <- function(petab, filename = "petab/model") {
     lapply(names(files_tsv), function(nm) {
       data.table::fwrite(petab[[nm]], files[[nm]], sep = "\t")})
 
-  # Write model rds
+  # Write model+meta rds
   files_model <- grep("rds", files, value = TRUE)
   if (length(files_model))
     lapply(names(files_model), function(nm) {
@@ -744,7 +809,8 @@ petab_combine <- function(pe1,pe2, NFLAGconflict = c("stop" = 0, "use_pe1" = 1, 
     experimentalCondition = petab_combine_experimentalCondition(pe1$experimentalCondition, pe2$experimentalCondition),
     measurementData       = petab_combine_measurementData(      pe1$measurementData      , pe2$measurementData),
     observables           = petab_combine_observables(          pe1$observables          , pe2$observables, NFLAGconflict = NFLAGconflict),
-    parameters            = petab_combine_parameters(           pe1$parameters           , pe2$parameters)
+    parameters            = petab_combine_parameters(           pe1$parameters           , pe2$parameters),
+    meta                  = pe1$meta
   )
 
 }

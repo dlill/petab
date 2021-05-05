@@ -1,4 +1,4 @@
-library(petab)
+devtools::load_all("~/Promotion/Promotion/Projects/petab")
 try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 
 .outputFolder <- paste0("Outputs")
@@ -55,6 +55,9 @@ speciesInfo <- data.table(tibble::tribble(
 # unitInfo is left as the default getUnitInfo(): If you need other units, you need to add them
 
 
+# >> Steady state trafo
+parameterFormulaInjection <- petab_parameterFormulaInjection(parameterId = "kprodS", parameterFormula = "kdegS * S")
+
 
 
 # .. Compile and plot model -----
@@ -103,32 +106,14 @@ pe_me[,`:=`(noiseParameters = paste0("sigma_", observableId))]
 pe_me[observableId == "obsE",`:=`(observableParameters = "offset_E")]
 
 
-pe_mo <- petab_model(el,events = events,parInfo = parInfo, speciesInfo = speciesInfo, trafoInjection = trafoInjection)
-
-
-# .. Parameter Trafo Injection -----
-#' Create a parameterFormulaInjection
-#'
-#' @param parameterId
-#' @param parameterFormula
-#'
-#' @return
-#' @export
-#'
-#' @examples
-petab_parameters_parameterFormulaInjection = function(parameterId, parameterFormula) {
-  data.table(
-    parameterId      = as.character(parameterId),
-    parameterFormula = as.character(parameterFormula)
-  )
-}
-
+pe_mo <- petab_model(equationList = el,events = events,parInfo = parInfo, speciesInfo = speciesInfo)
 
 # .. Create petab -----
 pe <- petab(model = pe_mo,
             experimentalCondition = pe_ex,
             measurementData = pe_me,
-            observables = pe_ob)
+            observables = pe_ob,
+            meta = )
 pe$parameters <- petab_create_parameter_df(pe)
 
 filename <- "petab"

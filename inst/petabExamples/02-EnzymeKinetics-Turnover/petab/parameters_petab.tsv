@@ -1,4 +1,5 @@
 parameterId	parameterName	parameterScale	lowerBound	upperBound	nominalValue	estimate	initializationPriorType	initializationPriorParameters	objectivePriorType	objectivePriorParameters
+E	E	log10	1e-04	1000	0	0	parameterScaleUniform	-1;1	parameterScaleNormal	0;2
 ES	ES	log10	1e-04	1000	0	0	parameterScaleUniform	-1;1	parameterScaleNormal	0;2
 P	P	log10	1e-04	1000	0	0	parameterScaleUniform	-1;1	parameterScaleNormal	0;2
 S	S	log10	1e-04	1000	100	1	parameterScaleUniform	-1;1	parameterScaleNormal	0;2
@@ -13,4 +14,3 @@ sigma_obsE	sigma_obsE	log10	1e-04	1000	0.1	1	parameterScaleUniform	-1;1	paramete
 sigma_obsES	sigma_obsES	log10	1e-04	1000	0.1	1	parameterScaleUniform	-1;1	parameterScaleNormal	0;2
 sigma_obsP	sigma_obsP	log10	1e-04	1000	0.1	1	parameterScaleUniform	-1;1	parameterScaleNormal	0;2
 sigma_obsS	sigma_obsS	log10	1e-04	1000	0.1	1	parameterScaleUniform	-1;1	parameterScaleNormal	0;2
-Eadd	Eadd	log	1e-04	1000	1	1	parameterScaleUniform	-1;1	parameterScaleNormal	0;2
