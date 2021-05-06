@@ -21,8 +21,8 @@ plotCombined(pd$prd(seq(0,100), myfit$argument), pd$dModAtoms$data)
 
 # Mstrust
 center <- pepy_sample_parameter_startpoints(pd$pe, n_starts = 8)
-fits <- mstrust(pd$obj_data, center, "fit", fits = 5, iterlim = 20, cores = 8)
-fits <- as.parframe(fits)
+fits <- mstrust(pd$obj_data, center, "fit", fits = 5, iterlim = 50, cores = 8)
+fits <- conveniencefunctions::cf_as.parframe(fits)
 plotValues(fits)
 dMod_saveMstrust(fits, ".", FLAGoverwrite = TRUE)
 unlink("fit", T)

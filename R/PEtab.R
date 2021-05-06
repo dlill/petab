@@ -425,8 +425,8 @@ petab_model <- function(equationList, events = NA,
 #' @export
 #'
 #' @examples
-petab_meta <- function(parameterFormulaInjection = NULL, ...) {
-       list(parameterFormulaInjection = parameterFormulaInjection, ...)
+petab_meta <- function(parameterFormulaInjection = NULL, variableOrder = NULL, ...) {
+       list(parameterFormulaInjection = parameterFormulaInjection, variableOrder = variableOrder, ...)
 }
 
 

@@ -36,9 +36,9 @@ readPd <- function(filename) {
   #   so it would be dangerous to reload them if they were postprocessed
   path <- dirname(dirname(filename))
   if (is.null(pd$results$fits) && dir.exists(file.path(path, "Results", "mstrust")))
-    pd$results$fits <- conveniencefunctions::dMod_readMstrust(path)
+    pd$result$fits <- conveniencefunctions::dMod_readMstrust(path)
   if (is.null(pd$results$profile) && dir.exists(file.path(path, "Results", "profile")))
-    pd$results$profile <- conveniencefunctions::dMod_readProfiles(path)
+    pd$result$profile <- conveniencefunctions::dMod_readProfiles(path)
 
   pd
 }
@@ -289,6 +289,38 @@ pd_parf_opt.base <- function(include = TRUE, parameterSetId = "Base") {
 pd_parf_opt.mstrust <- function(include = TRUE, fitrankRange = 1:20, tol = 1) {
   list(include = include, fitrankRange = fitrankRange, tol = tol)
 }
+
+
+#' Get parameters which are fixed on the boundary
+#'
+#' @param pd pd with pd$pars from a fit
+#' @param tol tolerance how close each parameter on the est-scale should be to the boundary in order to be fixed
+#'
+#' @return vector of fixed parameters
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#'
+#' @examples
+pd_pars_getFixedOnBoundary <- function(pd, tol = 1e-2) {
+  parlower <- petab_getParameterBoundaries(pd$pe, "lower")
+  if (!identical(names(parlower), names(pd$pars))) stop("parameter names and boundaries do not match")
+  parlower <- pd$pars - parlower
+  parlower <- parlower[parlower <= tol]
+
+  parupper <- petab_getParameterBoundaries(pd$pe, "upper")
+  parupper <- -(pd$pars - parupper)
+  parupper <- parupper[parupper <= tol]
+
+  fixedOnBoundary <- pd$pars[c(names(parlower), names(parupper))]
+  fixedOnBoundary
+}
+
+
+
+
+
+
 # -------------------------------------------------------------------------#
 # Fitting functions ----
 # -------------------------------------------------------------------------#
@@ -446,6 +478,7 @@ pd <- petab_exampleRead("01", "pd")
 # -------------------------------------------------------------------------#
 # Plotting ----
 # -------------------------------------------------------------------------#
+
 #' First version of plotting a pd
 #'
 #' Predicts with "pars" and "times"
@@ -496,7 +529,10 @@ pd_plot <- function(pd, ..., page = 1, nrow = 3, ncol = 4, filename = NULL, widt
 #' @md
 #'
 #' @examples
-pd_predictAndPlot <- function(pd, i, opt.base = pd_parf_opt.base(), opt.mstrust = pd_parf_opt.mstrust(),
+pd_predictAndPlot <- function(pd, i,
+                              opt.base = pd_parf_opt.base(),
+                              opt.mstrust = pd_parf_opt.mstrust(),
+                              opt.profile = pd_parf_opt.mstrust(FALSE),
                               NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2)[2],
                               FLAGsummarizeProfilePredictions = TRUE,
                               nrow = 3, ncol = 4, scales = "free", page = 1,
@@ -548,6 +584,112 @@ pd_predictAndPlot <- function(pd, i, opt.base = pd_parf_opt.base(), opt.mstrust 
 }
 
 
+
+#' Title
+#'
+#' @param pd
+#' @param pe
+#' @param i
+#' @param opt.base
+#' @param opt.mstrust
+#' @param opt.profile
+#' @param NFLAGsubsetType
+#' @param FLAGsummarizeProfilePredictions
+#' @param FLAGmeanLine
+#' @param aeslist
+#' @param ggCallback
+#' @param filename
+#' @param FLAGfuture
+#' @param width
+#' @param height
+#' @param scale
+#' @param units
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' pd <- petab_exampleRead("02", "pd")
+#' pe = pd$pe
+#' opt.base = pd_parf_opt.base()
+#' opt.mstrust = pd_parf_opt.mstrust(fitrankRange = 1:2)
+#' opt.profile = pd_parf_opt.mstrust(FALSE)
+#' NFLAGsubsetType = 0
+#' FLAGsummarizeProfilePredictions = TRUE
+#' FLAGmeanLine = TRUE
+#' aeslist = petab_plotHelpers_aeslist()
+#' ggCallback = list(facet_wrap_paginate(~observableId, nrow = 4, ncol = 4, scales = "free"), scale_y_continuous(n.breaks = 5))
+#' filename = NULL
+#' FLAGfuture = TRUE
+#' width = 29.7
+#' height = 21
+#' scale = 1
+#' units = "cm"
+pd_predictAndPlot2 <- function(pd, pe = pd$pe,
+                               i,
+                               opt.base = pd_parf_opt.base(),
+                               opt.mstrust = pd_parf_opt.mstrust(),
+                               opt.profile = pd_parf_opt.mstrust(FALSE),
+                               NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2)[2],
+                               FLAGsummarizeProfilePredictions = TRUE,
+                               FLAGmeanLine = FALSE,
+                               aeslist = petab_plotHelpers_aeslist(),
+                               ggCallback = list(facet_wrap_paginate(~observableId, nrow = 4, ncol = 4, scales = "free"),
+                                                 scale_y_continuous(n.breaks = 5)),
+                               filename = NULL, FLAGfuture = TRUE,
+                               width = 29.7, height = 21, scale = 1, units = "cm"
+) {
+
+
+  # .. Catch i (see petab_mutateDCO for more ideas) -----
+  mi <- missing(i)
+  si <- substitute(i)
+
+  # .. Data -----
+  # observableTransformation
+  dplot <- petab_joinDCO(pe)
+  dplot[,`:=`(measurement = eval(parse(text = paste0(observableTransformation, "(", measurement, ")")))), by = 1:nrow(dplot)]
+  dplot[,`:=`(observableId=factor(observableId, petab_plotHelpers_variableOrder(pd)))]
+
+
+  # .. Prediction -----
+  parf <- pd_parf_collect(pd, opt.base = opt.base, opt.mstrust = opt.mstrust)
+  if (nrow(parf) > 5) cat("Predicting for more than 5 parameter sets. Are you sure?")
+  pplot <- conveniencefunctions::cf_predict(prd = pd$prd, times = pd$times, pars = parf)
+  setnames(pplot, c("condition"  , "name"        , "value"), c("conditionId", "observableId", "measurement"))
+  pplot[,`:=`(observableId=factor(observableId,  petab_plotHelpers_variableOrder(pd)))]
+  pplot <- subsetPredictionToData(pplot, dplot, NFLAGsubsetType = NFLAGsubsetType)
+
+  # .. Error model / prediction ribbon -----
+  # if (FLAGsummarizeProfilePredictions)
+  #   pplot <- pd_plotHelpers_summarizeProfilePredictions(pplot)
+
+  # .. Handle i -----
+  if (!mi) {dplot <- dplot[eval(si)]; pplot <- pplot[eval(si)]}
+
+  # .. Plot -----
+  pl <- conveniencefunctions::cfggplot()
+  if (FLAGmeanLine) { # Add first so the lines don't mask the points
+    dmean <- petab_plotHelpers_meanMeasurementsValue(dplot, aeslist)
+    aesmeanlist <- list(linetype = ~conditionId, group = ~conditionId)
+    aesmeanlist <- c(aeslist, aesmeanlist[setdiff(names(aesmeanlist), names(aeslist))])
+    aesmeanlist <- aesmeanlist[setdiff(names(aesmeanlist), "size")]
+    pl <- pl + geom_line(do.call(aes_q, aesmeanlist), data = dmean, size = 0.1) # make size available as parameter
+  }
+  pl <- pl + geom_point(do.call(aes_q, aeslist[intersect(names(aeslist), conveniencefunctions::cfgg_getAllAesthetics()[["geom_point"]])]), data = dplot)
+  pl <- pl + geom_line( do.call(aes_q, aeslist[intersect(names(aeslist), conveniencefunctions::cfgg_getAllAesthetics()[["geom_line"]])]) , data = pplot)
+  pl <- pl + conveniencefunctions::scale_color_cf()
+  for (plx in ggCallback) pl <- pl + plx
+
+  # Print paginate message so user doesnt forget about additional pages
+  message("Plot has ", ggforce::n_pages(pl), " pages\n")
+
+  # Output
+  cf_outputFigure(pl = pl, filename = filename, width = width, height = height, scale = scale, units = units, FLAGFuture = FLAGfuture)
+}
+
+
+
 #' Title
 #'
 #' @param pd
@@ -577,6 +719,63 @@ pd_plot_compareParameters <- function(pd, parf,
   cf_outputFigure(pl, filename = filename, width = width, height = height, scale = scale, units = units)
 
 }
+
+
+#' Title
+#'
+#' @param x
+#' @param y
+#' @param color
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
+petab_plotHelpers_aeslist <- function(x = ~time, y = ~measurement, color = ~conditionId, linetype = ~parameterSetId, ...) {
+  list(x = x, y = y, color = color, linetype = ~parameterSetId, ...)
+}
+
+
+#' Title
+#'
+#' @param dplot
+#' @param aeslist
+#'
+#' @return
+#' @export
+#'
+#' @examples
+petab_plotHelpers_meanMeasurementsValue <- function(dplot, aeslist) {
+  byvars <- lapply(aeslist, function(x) cOde::getSymbols(as.character(x)))
+  byvars <- do.call(c, byvars)
+  byvars <- setdiff(byvars, "measurement")
+  byvars <- c(byvars, "observableId")
+  byvars <- intersect(byvars, names(dplot))
+  dmean <- copy(dplot)
+  dmean <- dmean[,list(measurement = mean(measurement)), by = byvars]
+}
+
+
+#' Title
+#'
+#' @param pd
+#'
+#' @return
+#' @export
+#'
+#' @examples
+petab_plotHelpers_variableOrder <- function(pd) {
+
+  if (!is.null(pd$pe$meta$variableOrder)) return(variableOrder)
+
+  states      <- pd$dModAtoms$symbolicEquations$reactions$states
+  observables <- names(pd$dModAtoms$symbolicEquations$observables)
+
+  c(observables, states)
+}
+
+
 
 
 

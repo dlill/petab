@@ -8,7 +8,7 @@ pd_tests(
   pd,
   page = 1,
   cn = 1,
-  whichTests = c("01-plot", "02-objData", "03-derivs")[1:2]
+  whichTests = c("01-plot", "02-objData", "03-derivs")[2]
 )
 }
 \arguments{

@@ -4,7 +4,7 @@
 \alias{petab_meta}
 \title{Title}
 \usage{
-petab_meta(parameterFormulaInjection = NULL, ...)
+petab_meta(parameterFormulaInjection = NULL, variableOrder = NULL, ...)
 }
 \arguments{
 \item{...}{}
