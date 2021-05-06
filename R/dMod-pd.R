@@ -278,7 +278,7 @@ pd_parf_collectProfile <- function(pd, rows = c("profile_endpoints", "optimum"),
     }
 
   pars <- rbindlist(list(parsEnd, parsOpt))
-  pars[,`:=`(constraint = NULL, stepsize = NULL, gamma = NULL)]
+  pars <- pars[,.SD, .SDcols = c("parameterSetId", "profileDirection", "value", parameternames)]
   pars <- dMod::parframe(pars, parameters = parameternames, metanames = setdiff(names(pars), parameternames))
   pars
 }
@@ -737,6 +737,9 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
     pplot <- pplot[eval(si)]
     if (!is.null(pplotRibbon)) pplotRibbon <- pplotRibbon[eval(si)]
   }
+
+  pplot <- pe$experimentalCondition[pplot, on = c("conditionId")]
+  if (!is.null(pplotRibbon)) pplotRibbon <- pe$experimentalCondition[pplotRibbon, on = c("conditionId")]
 
   # .. Plot -----
   pl <- conveniencefunctions::cfggplot()
