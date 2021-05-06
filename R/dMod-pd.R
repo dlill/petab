@@ -731,15 +731,19 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
     pplot <- pplot[profileDirection == "optimum"]
   }
 
+  # .. Make experimentalCondition Columns available -----
+  # [ ] Idea: instead of merging experimentalCondition, one could also merge a boiled down version of dplot.
+  #   Then one could have a j argument which first works on dplot before merging.
+  #   However, this is not necessary because this is already possible because pe is supplied separately which allows to do exactly this thing.
+  #   [ ] Document this use as example
+  pplot <- pe$experimentalCondition[pplot, on = c("conditionId")]
+  if (!is.null(pplotRibbon)) pplotRibbon <- pe$experimentalCondition[pplotRibbon, on = c("conditionId")]
   # .. Handle i -----
   if (!mi) {
     dplot <- dplot[eval(si)]
     pplot <- pplot[eval(si)]
     if (!is.null(pplotRibbon)) pplotRibbon <- pplotRibbon[eval(si)]
   }
-
-  pplot <- pe$experimentalCondition[pplot, on = c("conditionId")]
-  if (!is.null(pplotRibbon)) pplotRibbon <- pe$experimentalCondition[pplotRibbon, on = c("conditionId")]
 
   # .. Plot -----
   pl <- conveniencefunctions::cfggplot()
