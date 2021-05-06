@@ -1716,11 +1716,11 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   pfi <- pe$meta$parameterFormulaInjection
   if (!is.null(pfi)) {
     # Probably over-cautios: This shouldn't happen. Can probably be removed
-    check_pfiEstimated <- intersect(pfi$parameterId, names(gl$fix.grid))
-    if (length(check_pfiEstimated)) stop("These trafoInjected parameter are in fix.grid: ", paste0(check_pfiEstimated, collapse = ", "))
+    check_pfiEstimated <- intersect(pfi$parameterId, names(gl$est.grid))
+    if (length(check_pfiEstimated)) stop("These trafoInjected parameter are in est.grid: ", paste0(check_pfiEstimated, collapse = ", "))
     # Remove injected Parameter from est-trafo
     trafo <- trafo[setdiff(names(trafo), pfi$parameterId)]
-    gl$est.grid[,(pfi$parameterId) := NULL,]
+    gl$fix.grid[,(pfi$parameterId) := NULL,]
     # trafoInjected
     trafoInjected <- setNames(pfi$parameterFormula, pfi$parameterId)
   }
@@ -1736,9 +1736,10 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
 
     cat("Compiling odemodel\n")
     myodemodel <- dMod::odemodel(myreactions, forcings = NULL, events = myevents, fixed=NULL,
-                                 estimate = dMod::getParametersToEstimate(est.grid = gl$est.grid,
+                                 estimate = c(dMod::getParametersToEstimate(est.grid = gl$est.grid,
                                                                           trafo = trafo,
                                                                           reactions = myreactions),
+                                              pe$meta$parameterFormulaInjection$parameterId),
                                  modelname = paste0("odemodel_", modelname),
                                  jacobian = "inz.lsodes", compile = TRUE)
 

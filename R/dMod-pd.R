@@ -630,7 +630,7 @@ subsetPredictionToData <- function(pplot, dplot, NFLAGsubsetType = c(none = 0, s
 #' @importFrom ggforce facet_wrap_paginate
 #'
 #' @examples
-pd_tests <- function(pd, page = 1, cn = 1, whichTests = c("01-plot", "02-objData", "03-derivs")[1:2]) {
+pd_tests <- function(pd, page = 1, cn = 1, whichTests = c("01-plot", "02-objData", "03-derivs")[2]) {
 
   cat("The following tests are implemented: \n", 'c("01-plot", "02-objData", "03-derivs")')
 

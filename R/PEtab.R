@@ -76,7 +76,7 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
   # parameterFormulaInjection
   pfi <- pe$meta$parameterFormulaInjection
   if (!is.null(pfi))
-    par[parameterId %in% pfi$parameterId,`:=`(estimate=1, parameterScale = "lin")] # Ensure all parameters set by injection are set to estimate
+    par[parameterId %in% pfi$parameterId,`:=`(estimate=0, parameterScale = "lin")] # Ensure all parameters set by injection are set to estimate
 
   par
 }
@@ -185,8 +185,8 @@ petab_unjoinDCO <- function(DCO, pe = NULL) {
 
   # Modify and return petab
   pe$experimentalCondition <- experimentalCondition
-  pe$measurementData <- measurementData
-  pe$observables <- observables
+  pe$measurementData       <- measurementData
+  pe$observables           <- observables
   pe
 }
 
