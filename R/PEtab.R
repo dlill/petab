@@ -1171,10 +1171,11 @@ petab_plotData <- function(petab,
   # create plotting data.table
   dplot <- petab_joinDCO(petab)
   # apply log transformation to data when applicable
-  if (FLAGUseObservableTransformation)
-    dplot[observableTransformation != "lin",
-          `:=`(measurement = eval(parse(text = paste0(observableTransformation, "(measurement)"))),
-               observableId = paste0(observableTransformation, " ", observableId))]
+  if (FLAGUseObservableTransformation) {
+    dplot[,`:=`(measurement = eval(parse(text = paste0(observableTransformation, "(measurement)"))),
+               observableId = paste0(observableTransformation, " ", observableId)),
+          by = 1:nrow(dplot)]
+  }
 
   # mean values to draw lines
   if (FLAGmeanLine){
@@ -1192,7 +1193,7 @@ petab_plotData <- function(petab,
   # Create plot
   pl <- cfggplot()
   if (FLAGmeanLine) { # Add first so te lines don't mask the points
-    aesmean0 <- list(linetype = ~conditionId, group = ~conditionId)
+    aesmean0 <- list(linetype = ~conditionId, group = as.formula(paste0("~ interaction(", paste0(setdiff(byvars, c("time")), collapse = ", "), ")")))
     aesmeanlist <- c(aeslist, aesmean0[setdiff(names(aesmean0), names(aeslist))])
     pl <- pl + geom_line(do.call(aes_q, aesmeanlist), data = dmean)
   }

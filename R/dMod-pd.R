@@ -278,6 +278,10 @@ pd_parf_collectProfile <- function(pd, rows = c("profile_endpoints", "optimum"),
     }
 
   pars <- rbindlist(list(parsEnd, parsOpt))
+  # [ ] Idea: return whichPar as well. Then, when summarizing profiles in pd_predictAndPlot2 by min and max,
+  #   one could have a look in which profile the minimum/maximum values occured, i.e. which profiles contribute most to prediction uncertainty
+  #   Don't know if this is informative, but for now I'd copy the prediction code which would lead to a lot of code duplication which I don't want
+  #   And I shouldn't be distracted from my main goals now
   pars <- pars[,.SD, .SDcols = c("parameterSetId", "profileDirection", "value", parameternames)]
   pars <- dMod::parframe(pars, parameters = parameternames, metanames = setdiff(names(pars), parameternames))
   pars
@@ -767,7 +771,7 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
   message("Plot has ", ggforce::n_pages(pl), " pages\n")
 
   # Output
-  cf_outputFigure(pl = pl, filename = filename, width = width, height = height, scale = scale, units = units, FLAGFuture = FLAGfuture)
+  conveniencefunctions::cf_outputFigure(pl = pl, filename = filename, width = width, height = height, scale = scale, units = units, FLAGFuture = FLAGfuture)
 }
 
 
