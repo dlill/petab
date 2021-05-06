@@ -8,7 +8,10 @@ petab_plotHelpers_aeslist(
   x = ~time,
   y = ~measurement,
   color = ~conditionId,
+  fill = ~conditionId,
   linetype = ~parameterSetId,
+  ymin = ~measurementmin,
+  ymax = ~measurementmax,
   ...
 )
 }

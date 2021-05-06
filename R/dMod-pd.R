@@ -245,6 +245,46 @@ pd_parf_collectPars <- function(pd, parameterSetId = "Base") {
 }
 
 
+#' Title
+#'
+#' @param pd
+#' @param rows
+#' @param parameters
+#'
+#' @return
+#' @export
+#'
+#' @examples
+pd_parf_collectProfile <- function(pd, rows = c("profile_endpoints", "optimum"), parameters = NULL) {
+
+  parameternames <- attr(pd$result$profiles, "parameters")
+  if (!length(parameters)) parameters <- unique(pd$result$profiles$whichPar)
+
+  pars <- copy(pd$result$profiles)
+  pars <- data.table::as.data.table(pars)
+  pars <- pars[whichPar %in% parameters]
+  pars[,`:=`(profileDirection = if(constraint < 0) "left" else if (constraint > 0) "right" else "optimum"), by = 1:nrow(pars)]
+
+  parsEnd <- parsOpt <- NULL
+  if ("profile_endpoints" %in% rows){
+    parsEnd <- pars[profileDirection != "optimum",.SD[which.max(abs(constraint))], by = c("whichPar", "profileDirection")]
+    parsEnd[,`:=`(parameterSetId = "profile_endpoints")]
+    setcolorder(parsEnd, c(names(pars), "parameterSetId"))
+    }
+  if ("optimum" %in% rows){
+    parsOpt <- pars[which(profileDirection == "optimum")[1]]
+    parsOpt[,`:=`(parameterSetId = "optimum")]
+    setcolorder(parsOpt, c(names(pars), "parameterSetId"))
+    }
+
+  pars <- rbindlist(list(parsEnd, parsOpt))
+  pars[,`:=`(constraint = NULL, stepsize = NULL, gamma = NULL)]
+  pars <- dMod::parframe(pars, parameters = parameternames, metanames = setdiff(names(pars), parameternames))
+  pars
+}
+
+
+
 #' Collect parameters for simultaneous prediction or plotting
 #'
 #' @param pd
@@ -259,11 +299,9 @@ pd_parf_collectPars <- function(pd, parameterSetId = "Base") {
 pd_parf_collect <- function(pd,
                             opt.base = pd_parf_opt.base(include = TRUE, parameterSetId = "Base"),
                             opt.mstrust = pd_parf_opt.mstrust(include = TRUE, fitrankRange = 1:20, tol = 1),
-                            opt.profile = list(include = FALSE, rows = "profile_endpoints", parameters = NULL)) {
+                            opt.profile = pd_parf_opt.profile(include = FALSE, rows = "profile_endpoints", parameters = NULL)) {
 
-  # [ ] refactor: each opt.* should get its own collector function: collect_opt.base(include, parameterSetId), collect_opt.fit(...)
-  # [ ] refactor: each collect step should get individual function
-  parf_base <- parf_fit <- NULL
+  parf_base <- parf_fit <- parf_profile <- NULL
 
   if (opt.base$include) {
     args <- c(list(pd = pd), opt.base[setdiff(names(opt.base), "include")])
@@ -273,9 +311,11 @@ pd_parf_collect <- function(pd,
     args <- c(list(pd = pd), opt.mstrust[setdiff(names(opt.mstrust), "include")])
     parf_fit <- do.call(pd_parf_collectMstrust, args)}
 
-  if (opt.profile$include) cat("collect profiles is not implemented yet")
+  if (opt.profile$include) {
+    args <- c(list(pd = pd), opt.profile[setdiff(names(opt.profile), "include")])
+    parf_profile <- do.call(pd_parf_collectProfile, args)}
 
-  parf <- cf_parf_rbindlist(list(parf_base, parf_fit))
+  parf <- cf_parf_rbindlist(list(parf_base, parf_fit, parf_profile))
   parf <- parf[order(parf$value)]
 
   parf
@@ -288,6 +328,11 @@ pd_parf_opt.base <- function(include = TRUE, parameterSetId = "Base") {
 #' @export
 pd_parf_opt.mstrust <- function(include = TRUE, fitrankRange = 1:20, tol = 1) {
   list(include = include, fitrankRange = fitrankRange, tol = tol)
+}
+
+#' @export
+pd_parf_opt.profile <- function(include = FALSE, rows = c("profile_endpoints", "optimum"), parameters = NULL) {
+  list(include = include, rows = rows, parameters = parameters)
 }
 
 
@@ -360,7 +405,7 @@ pd_fitObsPars <- function(pd, NFLAGsavePd = 3) {
 }
 
 
-# .. fit_hierarchical -----
+# fit_hierarchical -----
 # could be implemented as objective function which automatically fits observable parameters
 pd_normHierarchical <- function(pd){
 pd <- petab_exampleRead("01", "pd")
@@ -475,6 +520,15 @@ pd <- petab_exampleRead("01", "pd")
   return(myfn)
 }
 
+
+# -------------------------------------------------------------------------#
+# Profiles ----
+# -------------------------------------------------------------------------#
+
+
+
+
+
 # -------------------------------------------------------------------------#
 # Plotting ----
 # -------------------------------------------------------------------------#
@@ -532,7 +586,7 @@ pd_plot <- function(pd, ..., page = 1, nrow = 3, ncol = 4, filename = NULL, widt
 pd_predictAndPlot <- function(pd, i,
                               opt.base = pd_parf_opt.base(),
                               opt.mstrust = pd_parf_opt.mstrust(),
-                              opt.profile = pd_parf_opt.mstrust(FALSE),
+                              opt.profile = pd_parf_opt.profile(FALSE),
                               NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2)[2],
                               FLAGsummarizeProfilePredictions = TRUE,
                               nrow = 3, ncol = 4, scales = "free", page = 1,
@@ -543,7 +597,7 @@ pd_predictAndPlot <- function(pd, i,
   si <- substitute(i)
 
   # .. Collect parameters and predict -----
-  parf <- pd_parf_collect(pd, opt.base = opt.base, opt.mstrust = opt.mstrust)
+  parf <- pd_parf_collect(pd, opt.base = opt.base, opt.mstrust = opt.mstrust, opt.profile = opt.profile)
   if (nrow(parf) > 5) cat("Predicting for more than 5 parameter sets. Are you sure?")
   predictions <- conveniencefunctions::cf_predict(prd = pd$prd, times = pd$times, pars = parf)
 
@@ -609,16 +663,17 @@ pd_predictAndPlot <- function(pd, i,
 #' @export
 #'
 #' @examples
-#' pd <- petab_exampleRead("02", "pd")
+#' # pd <- petab_exampleRead("02", "pd")
 #' pe = pd$pe
-#' opt.base = pd_parf_opt.base()
-#' opt.mstrust = pd_parf_opt.mstrust(fitrankRange = 1:2)
-#' opt.profile = pd_parf_opt.mstrust(FALSE)
+#' opt.base = pd_parf_opt.base(FALSE,)
+#' opt.mstrust = pd_parf_opt.mstrust(FALSE, fitrankRange = 1:2)
+#' opt.profile <- pd_parf_opt.profile(T, parameters = c("geneSerpine1_act2", "geneSerpine1_inh1", "geneSerpine1_inh2", "geneSerpine1_inh3", "pRec_degind", "S_phos"))
 #' NFLAGsubsetType = 0
 #' FLAGsummarizeProfilePredictions = TRUE
-#' FLAGmeanLine = TRUE
+#' FLAGmeanLine = FALSE
 #' aeslist = petab_plotHelpers_aeslist()
 #' ggCallback = list(facet_wrap_paginate(~observableId, nrow = 4, ncol = 4, scales = "free"), scale_y_continuous(n.breaks = 5))
+#' opt.gg = list(ribbonAlpha = 0.2)
 #' filename = NULL
 #' FLAGfuture = TRUE
 #' width = 29.7
@@ -629,13 +684,14 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
                                i,
                                opt.base = pd_parf_opt.base(),
                                opt.mstrust = pd_parf_opt.mstrust(),
-                               opt.profile = pd_parf_opt.mstrust(FALSE),
+                               opt.profile = pd_parf_opt.profile(FALSE),
                                NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2)[2],
                                FLAGsummarizeProfilePredictions = TRUE,
                                FLAGmeanLine = FALSE,
                                aeslist = petab_plotHelpers_aeslist(),
                                ggCallback = list(facet_wrap_paginate(~observableId, nrow = 4, ncol = 4, scales = "free"),
                                                  scale_y_continuous(n.breaks = 5)),
+                               opt.gg = list(ribbonAlpha = 0.2), # would be nice to put this into opt.profile or maybe opt.gg?
                                filename = NULL, FLAGfuture = TRUE,
                                width = 29.7, height = 21, scale = 1, units = "cm"
 ) {
@@ -653,19 +709,34 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
 
 
   # .. Prediction -----
-  parf <- pd_parf_collect(pd, opt.base = opt.base, opt.mstrust = opt.mstrust)
-  if (nrow(parf) > 5) cat("Predicting for more than 5 parameter sets. Are you sure?")
-  pplot <- conveniencefunctions::cf_predict(prd = pd$prd, times = pd$times, pars = parf)
+  parf <- pd_parf_collect(pd, opt.base = opt.base, opt.mstrust = opt.mstrust, opt.profile = opt.profile)
+  if (nrow(parf) > 5) {
+    pd$times <- pd_predtimes(pd, N = 60)
+    if (!opt.profile$include) cat("Predicting for more than 5 parameter sets. Are you sure?")
+  }
+  pplot <- conveniencefunctions::cf_predict(prd = pd$prd, times = pd$times, pars = parf, fixed = pd$fixed)
   setnames(pplot, c("condition"  , "name"        , "value"), c("conditionId", "observableId", "measurement"))
   pplot[,`:=`(observableId=factor(observableId,  petab_plotHelpers_variableOrder(pd)))]
   pplot <- subsetPredictionToData(pplot, dplot, NFLAGsubsetType = NFLAGsubsetType)
 
   # .. Error model / prediction ribbon -----
-  # if (FLAGsummarizeProfilePredictions)
-  #   pplot <- pd_plotHelpers_summarizeProfilePredictions(pplot)
+  pplotRibbon <- NULL
+  if (FLAGsummarizeProfilePredictions && opt.profile$include) {
+    # pd_plotHelpers_summarizeProfilePredictions - in here not as separate function because of multiple return elements
+    pplotRibbon <- pplot[profileDirection %in% c("left", "right")]
+    pplotRibbon <- pplotRibbon[,list(
+      measurementmin = min(measurement),
+      measurementmax = max(measurement)
+      ), by = c("conditionId", "observableId", "time")] # Last one is a bit hacky. Better use different aeslist functions for profiles and mstrusts
+    pplot <- pplot[profileDirection == "optimum"]
+  }
 
   # .. Handle i -----
-  if (!mi) {dplot <- dplot[eval(si)]; pplot <- pplot[eval(si)]}
+  if (!mi) {
+    dplot <- dplot[eval(si)]
+    pplot <- pplot[eval(si)]
+    if (!is.null(pplotRibbon)) pplotRibbon <- pplotRibbon[eval(si)]
+  }
 
   # .. Plot -----
   pl <- conveniencefunctions::cfggplot()
@@ -678,10 +749,14 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
   }
   pl <- pl + geom_point(do.call(aes_q, aeslist[intersect(names(aeslist), conveniencefunctions::cfgg_getAllAesthetics()[["geom_point"]])]), data = dplot)
   pl <- pl + geom_line( do.call(aes_q, aeslist[intersect(names(aeslist), conveniencefunctions::cfgg_getAllAesthetics()[["geom_line"]])]) , data = pplot)
-  pl <- pl + conveniencefunctions::scale_color_cf()
+  if (!is.null(pplotRibbon)) {
+    aesl <- aeslist[intersect(names(aeslist), conveniencefunctions::cfgg_getAllAesthetics()[["geom_ribbon"]])]
+    aesl <- aesl[setdiff(names(aesl), c("linetype", "lty", "y", "color", "colour"))]
+    pl <- pl + geom_ribbon(do.call(aes_q, aesl), data = pplotRibbon, alpha = opt.gg$ribbonAlpha)}
+  pl <- pl + conveniencefunctions::scale_color_cf(aesthetics = c("color", "fill"))
   for (plx in ggCallback) pl <- pl + plx
 
-  # Print paginate message so user doesnt forget about additional pages
+  # .. Print paginate message so user doesnt forget about additional pages -----
   message("Plot has ", ggforce::n_pages(pl), " pages\n")
 
   # Output
@@ -732,8 +807,15 @@ pd_plot_compareParameters <- function(pd, parf,
 #' @export
 #'
 #' @examples
-petab_plotHelpers_aeslist <- function(x = ~time, y = ~measurement, color = ~conditionId, linetype = ~parameterSetId, ...) {
-  list(x = x, y = y, color = color, linetype = ~parameterSetId, ...)
+petab_plotHelpers_aeslist <- function(x = ~time,
+                                      y = ~measurement,
+                                      color = ~conditionId,
+                                      fill = ~conditionId,
+                                      linetype = ~parameterSetId,
+                                      ymin = ~measurementmin,
+                                      ymax = ~measurementmax,
+                                      ...) {
+  list(x = x, y = y, color = color, fill = fill, linetype = linetype, ymin = ymin, ymax = ymax, ...)
 }
 
 

@@ -10,13 +10,14 @@ pd_predictAndPlot2(
   i,
   opt.base = pd_parf_opt.base(),
   opt.mstrust = pd_parf_opt.mstrust(),
-  opt.profile = pd_parf_opt.mstrust(FALSE),
+  opt.profile = pd_parf_opt.profile(FALSE),
   NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2)[2],
   FLAGsummarizeProfilePredictions = TRUE,
-  FLAGmeanLine = TRUE,
+  FLAGmeanLine = FALSE,
   aeslist = petab_plotHelpers_aeslist(),
   ggCallback = list(facet_wrap_paginate(~observableId, nrow = 4, ncol = 4, scales =
     "free"), scale_y_continuous(n.breaks = 5)),
+  opt.gg = list(ribbonAlpha = 0.2),
   filename = NULL,
   FLAGfuture = TRUE,
   width = 29.7,
@@ -33,4 +34,23 @@ pd_predictAndPlot2(
 }
 \description{
 Title
+}
+\examples{
+# pd <- petab_exampleRead("02", "pd")
+pe = pd$pe
+opt.base = pd_parf_opt.base(FALSE,)
+opt.mstrust = pd_parf_opt.mstrust(FALSE, fitrankRange = 1:2)
+opt.profile <- pd_parf_opt.profile(T, parameters = c("geneSerpine1_act2", "geneSerpine1_inh1", "geneSerpine1_inh2", "geneSerpine1_inh3", "pRec_degind", "S_phos"))
+NFLAGsubsetType = 0
+FLAGsummarizeProfilePredictions = TRUE
+FLAGmeanLine = FALSE
+aeslist = petab_plotHelpers_aeslist()
+ggCallback = list(facet_wrap_paginate(~observableId, nrow = 4, ncol = 4, scales = "free"), scale_y_continuous(n.breaks = 5))
+opt.gg = list(ribbonAlpha = 0.2)
+filename = NULL
+FLAGfuture = TRUE
+width = 29.7
+height = 21
+scale = 1
+units = "cm"
 }

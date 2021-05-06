@@ -8,7 +8,8 @@ pd_parf_collect(
   pd,
   opt.base = pd_parf_opt.base(include = TRUE, parameterSetId = "Base"),
   opt.mstrust = pd_parf_opt.mstrust(include = TRUE, fitrankRange = 1:20, tol = 1),
-  opt.profile = list(include = FALSE, rows = "profile_endpoints", parameters = NULL)
+  opt.profile = pd_parf_opt.profile(include = FALSE, rows = "profile_endpoints",
+    parameters = NULL)
 )
 }
 \arguments{
