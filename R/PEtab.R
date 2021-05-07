@@ -58,8 +58,7 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
   if (length(parnamesOuter)){
     # Collect ec_pars
     par_ec <- petab_parameters(parameterId = parnamesOuter,
-                               parameterName = parnamesOuter,
-                               parameterScale = "log")
+                               parameterName = parnamesOuter)
     message("Please check parameter scale of parameter names occuring in experimentalCondition or implement the scale matching in this function: ",
             paste(parnamesOuter, collapse = ", "))
     # [ ] Note: If you implement the scale-matching, refactor this function. Put all par_ec handling into another function
