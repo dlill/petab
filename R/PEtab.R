@@ -425,7 +425,7 @@ petab_model <- function(equationList, events = NA,
 #'
 #' @examples
 petab_meta <- function(parameterFormulaInjection = NULL, variableOrder = NULL, ...) {
-       list(parameterFormulaInjection = parameterFormulaInjection, variableOrder = variableOrder, ...)
+  list(parameterFormulaInjection = parameterFormulaInjection, variableOrder = variableOrder, ...)
 }
 
 
@@ -630,54 +630,57 @@ readPetab <- function(filename, FLAGTestCase = FALSE) {
 #' @importFrom data.table fwrite
 #'
 #' @examples
-writePetab <- function(petab, filename = "petab/model") {
+writePetab <- function(pe, filename = "petab/model") {
+
+  # run linter once more
+  pe <- do.call(petab, pe)
 
   # Create folder, load petab
   dir.create(petab_modelname_path(filename)$path, FALSE, TRUE)
-  pe <- petab_python_setup()
+  pepy <- petab_python_setup()
 
   # Get filenames
   files <- petab_files(filename = filename)
   modelname <- gsub(".petab$","", basename(filename))
 
   # Write yaml
-  pe$create_problem_yaml(sbml_files        = basename(files["modelXML"]),
-                         condition_files   = basename(files["experimentalCondition"]),
-                         measurement_files = basename(files["measurementData"]),
-                         parameter_file    = basename(files["parameters"]),
-                         observable_files  = basename(files["observables"]),
-                         yaml_file         = files["yaml"])
+  pepy$create_problem_yaml(sbml_files        = basename(files["modelXML"]),
+                           condition_files   = basename(files["experimentalCondition"]),
+                           measurement_files = basename(files["measurementData"]),
+                           parameter_file    = basename(files["parameters"]),
+                           observable_files  = basename(files["observables"]),
+                           yaml_file         = files["yaml"])
 
   # [ ] Hack: Remove once sbml export is stable
-  if ("model" %in% names(petab)) petab$modelXML <- petab$model
+  if ("model" %in% names(pe)) pe$modelXML <- pe$model
 
   # Select files to write
-  files <- files[names(petab)]
-  files <- files[vapply(petab, function(x) !is.null(x), TRUE)]
+  files <- files[names(pe)]
+  files <- files[vapply(pe, function(x) !is.null(x), TRUE)]
 
   # Write tables
   files_tsv <- grep("tsv", files, value = TRUE)
   if (length(files_tsv))
     lapply(names(files_tsv), function(nm) {
-      data.table::fwrite(petab[[nm]], files[[nm]], sep = "\t")})
+      data.table::fwrite(pe[[nm]], files[[nm]], sep = "\t")})
 
   # Write model+meta rds
   files_model <- grep("rds", files, value = TRUE)
   if (length(files_model))
     lapply(names(files_model), function(nm) {
-      saveRDS(petab[[nm]], files[[nm]])})
+      saveRDS(pe[[nm]], files[[nm]])})
 
   # Write model xml
   files_model <- grep("xml", files, value = TRUE)
   if (length(files_model)) {
-    args <- c(petab$model, list(filename = files_model,
-                                modelname = modelname))
+    args <- c(pe$model, list(filename = files_model,
+                             modelname = modelname))
     args <- args[setdiff(names(args), "events")] # [ ] Todo: Events
     do.call(sbml_exportEquationList, args)
   }
 
   cat("Success?")
-  invisible(petab)
+  invisible(pe)
 }
 
 
@@ -830,28 +833,23 @@ petab_combine <- function(pe1,pe2, NFLAGconflict = c("stop" = 0, "use_pe1" = 1, 
 #' @examples
 petab_lint <- function(pe) {
 
+  # Basic weeoe mwaaxr
+
   # [ ] Implement access to petab.lint
   errlist <- list()
 
-  # Some quick own checks
-  dupes <- which(duplicated(pe$measurementData))
-  if(length(dupes)) {
-    warning("These rows are duplicates in measurementData: ", paste0(head(dupes,10), collapse = ","), "...")
-    errlist <- c(errlist, list(measurementDataDupes = dupes))}
-
-  dupes <- which(duplicated(pe$observables$observableID))
-  if(length(dupes)) {
-    warning("These rows are duplicates in observableId: ", paste0(head(dupes,10), collapse = ","), "...")
-    errlist <- c(errlist, list(observableIdDupes = dupes))}
-
+  # experimentalCondition
   dupes <- which(duplicated(pe$experimentalCondition$conditionId))
   if(length(dupes)) {
     warning("These rows are duplicates in conditionId :", paste0(head(dupes,10), collapse = ","), "...")
     errlist <- c(errlist, list(conditionIdDupes = dupes))}
 
-  if (!is.null(pe$parameters)) {
-    pars_NA <- pe$parameters[is.na(nominalValue), parameterId]
-    if (length(pars_NA)) warning("These parameters have no correct nominal value: ", paste0(pars_NA, collapse = ","))}
+
+  # measurementData
+  dupes <- which(duplicated(pe$measurementData))
+  if(length(dupes)) {
+    warning("These rows are duplicates in measurementData: ", paste0(head(dupes,10), collapse = ","), "...")
+    errlist <- c(errlist, list(measurementDataDupes = dupes))}
 
   if (any(is.na(pe$measurementData$time)))
     stop("Petab contains missing times")
@@ -859,6 +857,28 @@ petab_lint <- function(pe) {
     stop("Petab contains missing times")
 
 
+  # observables
+  dupes <- which(duplicated(pe$observables$observableID))
+  if(length(dupes)) {
+    warning("These rows are duplicates in observableId: ", paste0(head(dupes,10), collapse = ","), "...")
+    errlist <- c(errlist, list(observableIdDupes = dupes))}
+
+
+  # parameters
+  if (!is.null(pe$parameters)) {
+    pars_NA <- pe$parameters[is.na(nominalValue), parameterId]
+    if (length(pars_NA)) warning("These parameters have no correct nominal value: ", paste0(pars_NA, collapse = ","))
+
+    parsNotEstimatedNotLin <- pe$parameters[estimate == 0 & parameterScale != "lin"]
+    if (nrow(parsNotEstimatedNotLin)) {
+      warning("Fixed parameters not on lin scale: ", paste0(parsNotEstimatedNotLin$parameterId, collapse = ","))
+      logscale_but_zero <- parsNotEstimatedNotLin$nominalValue == 0
+      if (any(logscale_but_zero)) stop("Fixed parameters on log-scale, but their nominal value is zero: ",
+                                       paste0(parsNotEstimatedNotLin$parameterId[logscale_but_zero], collapse = ","))
+    }
+  }
+
+  # meta
   if (!is.null(pe$meta$parameterFormulaInjection)) {
     names_overwritten <- pe$meta$parameterFormulaInjection$parameterId %in% names(pe$experimentalCondition)
     if (any(names_overwritten)) stop("Parameters given in est.grid are overwritten by parameterFormulaInjection: ", paste0(names_overwritten, ", "))}
@@ -1172,7 +1192,7 @@ petab_plotData <- function(petab,
   # apply log transformation to data when applicable
   if (FLAGUseObservableTransformation) {
     dplot[,`:=`(measurement = eval(parse(text = paste0(observableTransformation, "(measurement)"))),
-               observableId = paste0(observableTransformation, " ", observableId)),
+                observableId = paste0(observableTransformation, " ", observableId)),
           by = 1:nrow(dplot)]
   }
 

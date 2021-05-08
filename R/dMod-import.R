@@ -1731,7 +1731,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   if (grepl(SFLAGbrowser, "3Compilation")) browser()
   if (NFLAGcompile == 0) {
     setwd(.compiledFolder)
-    cat("Compiling g\n")
+    cat("Compiling g --- Parallelize with future?\n")
     myg <- dMod::Y(myobservables, myreactions, compile=TRUE, modelname=paste0("g_",modelname))
 
     cat("Compiling odemodel\n")

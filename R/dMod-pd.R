@@ -959,3 +959,25 @@ pd_tests <- function(pd, page = 1, cn = 1, whichTests = c("01-plot", "02-objData
 }
 
 
+#' Mainly to have the code accessible
+#'
+#' @param pd
+#' @param ID
+#'
+#' @return
+#' @export
+#'
+#' @examples
+pd_debug_p0 <- function(pd, ID = 1) {
+  pars <- pd$pars
+  fixed <- pd$fixed
+  est.grid <- pd$dModAtoms$gridlist$est.grid
+  fix.grid <- pd$dModAtoms$gridlist$fix.grid
+  dummy <- make_pars(pars, fixed, est.grid, fix.grid, ID)
+  pars_ <- dummy$pars
+  fixed_ <- dummy$fixed
+  pd$dModAtoms$fns$p0(pars_, fixed = fixed_)
+}
+
+
+
