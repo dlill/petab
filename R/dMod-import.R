@@ -1657,6 +1657,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   gl <- indiv_addLocalParsToGridList(pars = errParMapping, gridlist = gl, FLAGoverwrite = TRUE)
 
   # .. Fill values into grid and trafo -----
+  cat("fixed inits are taken from SBML, not from pe$parameters (if you have time, change this) ...\n")
   parameterlist <- list(
     list(par = SBMLfixedpars[setdiff(names(SBMLfixedpars), names(pars_est))],  overwrite = FALSE),
     list(par = mycompartments[setdiff(names(mycompartments), names(pars_est))], overwrite = FALSE),

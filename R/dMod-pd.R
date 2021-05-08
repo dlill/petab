@@ -922,12 +922,12 @@ subsetPredictionToData <- function(pplot, dplot, NFLAGsubsetType = c(none = 0, s
 #' @importFrom ggforce facet_wrap_paginate
 #'
 #' @examples
-pd_tests <- function(pd, page = 1, cn = 1, whichTests = c("01-plot", "02-objData", "03-derivs")[2]) {
+pd_tests <- function(pd, page = 1, cn = 1, whichTests = c("plot" = 1, "objData" = 2, "derivs" = 3)[2]) {
 
   cat("The following tests are implemented: \n", 'c("01-plot", "02-objData", "03-derivs")')
 
   # Test prediction without derivs
-  if ("01-plot" %in% whichTests){
+  if (1 %in% whichTests){
     prediction <- pd$prd(objtimes(pd$pe$measurementData$time, 200), pd$pars)
     pl <- dMod::plotPrediction(prediction, name %in% pd$pe$observables$observableId) +
       ggforce::facet_wrap_paginate(~name, nrow = 4, ncol = 4, scales = "free", page = page)
@@ -937,7 +937,7 @@ pd_tests <- function(pd, page = 1, cn = 1, whichTests = c("01-plot", "02-objData
     print(pl)
   }
   # Test obj
-  if ("02-objData" %in% whichTests){
+  if (2 %in% whichTests){
   objval <- pd$obj_data(pd$pars)
   cat("\n===================================================\n")
   cat("02-objData: Objective function\n")
@@ -945,7 +945,7 @@ pd_tests <- function(pd, page = 1, cn = 1, whichTests = c("01-plot", "02-objData
   print(objval)
   }
   # Test x for one condition
-  if ("03-derivs" %in% whichTests){
+  if (3 %in% whichTests){
   pars <- pd$p(pd$pars)
   pars <- pars[[cn]]
   pred <- pd$dModAtoms$fns$x(objtimes(pd$pe$measurementData$time), pars)
