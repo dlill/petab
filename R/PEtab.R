@@ -362,9 +362,9 @@ petab_parameters <- function(
   parameterId,
   parameterName                 = NA,
   parameterScale                = c("log10", "log", "lin")[[1]],
-  lowerBound                    = 0.0001, # given on linear scale
-  upperBound                    = 1000,   # given on linear scale
-  nominalValue                  = 1,      # given on linear scale
+  lowerBound                    = 0.00001, # given on linear scale
+  upperBound                    = 1000,    # given on linear scale
+  nominalValue                  = 1,       # given on linear scale
   estimate                      = c(1,0)[[1]],
   initializationPriorType       = c("parameterScaleUniform","uniform","normal","laplace","logNormal","logLaplace","parameterScaleNormal","parameterScaleLaplace")[[1]],
   initializationPriorParameters = "-1;1",
