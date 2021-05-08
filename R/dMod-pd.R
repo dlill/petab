@@ -922,9 +922,9 @@ subsetPredictionToData <- function(pplot, dplot, NFLAGsubsetType = c(none = 0, s
 #' @importFrom ggforce facet_wrap_paginate
 #'
 #' @examples
-pd_tests <- function(pd, page = 1, cn = 1, whichTests = c("plot" = 1, "objData" = 2, "derivs" = 3)[2]) {
+pd_tests <- function(pd, page = 1, cn = 1, whichTests = c("plot" = 1, "objData" = 2, "derivs" = 3, "Rprof obj data" = 4)[2]) {
 
-  cat("The following tests are implemented: \n", 'c("01-plot", "02-objData", "03-derivs")')
+  cat("Number of implemented tests: 4")
 
   # Test prediction without derivs
   if (1 %in% whichTests){
@@ -956,6 +956,22 @@ pd_tests <- function(pd, page = 1, cn = 1, whichTests = c("plot" = 1, "objData" 
   cat("===================================================\n")
   print(derivs[[1]][1:10, 1:10])
   }
+
+  if (4 %in% whichTests){
+  cat("\n===================================================\n")
+  cat("04-summaryRprof of obj_data")
+  cat("===================================================\n")
+  rp <- tempfile()
+  Rprof(rp)
+  pd$obj_data(pd$pars)
+  Rprof(NULL)
+  rp <- summaryRprof(rp)
+  print(rp$by.total)
+
+    }
+
+
+
 }
 
 
