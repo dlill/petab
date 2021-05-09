@@ -1076,6 +1076,7 @@ petab_createObjPrior <- function(pe, FLAGuseNominalValueAsCenter) {
   p[,`:=`(mu = as.numeric(gsub(";.*", "", objectivePriorParameters)))]
   if (FLAGuseNominalValueAsCenter) {
     # Apply transformation before using as center
+    cat("using pe$parameters$nominalValue as center for prior\n")
     p[,`:=`(estValue =
               eval(parse(
                 text = paste0(parameterScale, "(", nominalValue, ")")))),
@@ -1465,29 +1466,50 @@ petab_transformPars_est2Lin <- function(pe, parsEst) {
 #' @param pe2 parameters from pe2
 #' @param mergeCols columns to merge into pe_pa1
 #'
-#' @return updated pe_pa1
+#' @return updated pe1
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family Parameter wrangling
 #'
 #' @examples
-petab_mergeParameterValues <- function(pe1,pe2, mergeCols = c("nominalValue", "parameterScale")) {
+petab_mergeParameters <- function(pe1,pe2, mergeCols = c("nominalValue", "parameterScale", "estimate")) {
   # Get values
   pe_pa1 <- pe1$parameters
   pe_pa2 <- pe2$parameters
-  mergeColsPA2 <- paste0(mergeCols, "PA2")
-
-  # Merge, update, clean
-  pe_pa <- merge(pe_pa1, pe_pa2[,c("parameterId", ..mergeCols)], by = "parameterId", all.x = TRUE, all.y = FALSE, suffixes = c("", "PA2"))
-  pe_pa[!is.na(nominalValuePA2),(mergeCols) := lapply(.SD, function(x) x), .SDcols = mergeColsPA2]
-  pe_pa[,(mergeColsPA2) := NULL]
-
+  # Merge
+  pe_pa <- petab_parameters_mergeParameters(pe_pa1, pe_pa2, mergeCols)
   # Update pe1
   pe1$parameters <- pe_pa
   pe1
 }
 
+#' Title
+#'
+#' @param pe_pa1 parameters_df to merge values into
+#' @param pe_pa2 parameters_df to merge values from
+#' @param mergeCols Columns you want to update in pe_pa1
+#'
+#' @return updated pe_pa1
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#'
+#' @family Parameter wrangling
+#' @importFrom data.table merge.data.table
+#'
+#' @examples
+petab_parameters_mergeParameters <- function(pe_pa1, pe_pa2, mergeCols = c("nominalValue", "parameterScale", "estimate")) {
+  cat("Merging columns: ", paste0(mergeCols, collapse = ","))
+
+  mergeColsPA2 <- paste0(mergeCols, "PA2")
+  pe_pa2 <- pe_pa2[,c("parameterId", ..mergeCols)]
+  # Merge, update, clean
+  pe_pa <- data.table::merge.data.table(pe_pa1, pe_pa2, by = "parameterId", all.x = TRUE, all.y = FALSE, suffixes = c("", "PA2"))
+  pe_pa[!is.na(nominalValuePA2),(mergeCols) := lapply(.SD, function(x) x), .SDcols = mergeColsPA2]
+  pe_pa[,(mergeColsPA2) := NULL]
+  pe_pa
+}
 
 # -------------------------------------------------------------------------#
 # Scales ----

@@ -23,7 +23,8 @@ pd_predictAndPlot2(
   width = 29.7,
   height = 21,
   scale = 1,
-  units = "cm"
+  units = "cm",
+  FLAGreturnPlotData = FALSE
 )
 }
 \arguments{
