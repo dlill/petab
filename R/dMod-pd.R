@@ -697,7 +697,8 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
                                                  scale_y_continuous(n.breaks = 5)),
                                opt.gg = list(ribbonAlpha = 0.2), # would be nice to put this into opt.profile or maybe opt.gg?
                                filename = NULL, FLAGfuture = TRUE,
-                               width = 29.7, height = 21, scale = 1, units = "cm"
+                               width = 29.7, height = 21, scale = 1, units = "cm",
+                               FLAGreturnPlotData = FALSE
 ) {
 
 
@@ -742,11 +743,21 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
   #   [ ] Document this use as example
   pplot <- pe$experimentalCondition[pplot, on = c("conditionId")]
   if (!is.null(pplotRibbon)) pplotRibbon <- pe$experimentalCondition[pplotRibbon, on = c("conditionId")]
+
+  # .. HACK: Add parameterSetId to dplot do grouping can be performed with respect to it -----
+  dplot[,`:=`(parameterSetId = "DATA")]
+
   # .. Handle i -----
   if (!mi) {
     dplot <- dplot[eval(si)]
     pplot <- pplot[eval(si)]
     if (!is.null(pplotRibbon)) pplotRibbon <- pplotRibbon[eval(si)]
+  }
+
+  # HACK: Return data, don't plot. Is this nice? Think about it.
+  # Probably best to make a dedicated plotting function which takes this list as input
+  if (FLAGreturnPlotData) {
+    return(list(dplot = dplot, pplot = pplot, pplotRibbon = pplotRibbon))
   }
 
   # .. Plot -----
