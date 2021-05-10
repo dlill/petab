@@ -7,7 +7,8 @@
 subsetPredictionToData(
   pplot,
   dplot,
-  NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2)[2]
+  NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2, strict_cutTimes = 3,
+    cutTimes_keepInternal = 3)[2]
 )
 }
 \arguments{

@@ -23,6 +23,17 @@ updated pe_pa1
 \description{
 Title
 }
+\seealso{
+Other Parameter wrangling: 
+\code{\link{petab_getPars_estScale}()},
+\code{\link{petab_getPars_linScale}()},
+\code{\link{petab_mergeParameters}()},
+\code{\link{petab_setPars_estScale}()},
+\code{\link{petab_setPars_linScale}()},
+\code{\link{petab_transformPars_est2Lin}()},
+\code{\link{petab_transformPars_lin2Est}()}
+}
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }
+\concept{Parameter wrangling}

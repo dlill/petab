@@ -695,6 +695,7 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
                                aeslist = petab_plotHelpers_aeslist(),
                                ggCallback = list(facet_wrap_paginate(~observableId, nrow = 4, ncol = 4, scales = "free"),
                                                  scale_y_continuous(n.breaks = 5)),
+                               opt.sim = list(Ntimes_gt5ParSetIds = 60),
                                opt.gg = list(ribbonAlpha = 0.2), # would be nice to put this into opt.profile or maybe opt.gg?
                                filename = NULL, FLAGfuture = TRUE,
                                width = 29.7, height = 21, scale = 1, units = "cm",
@@ -716,10 +717,13 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
   # .. Prediction -----
   parf <- pd_parf_collect(pd, opt.base = opt.base, opt.mstrust = opt.mstrust, opt.profile = opt.profile)
   if (nrow(parf) > 5) {
-    pd$times <- pd_predtimes(pd, N = 60)
+    pd$times <- pd_predtimes(pd, N = min(60, opt.sim$Ntimes_gt5ParSetIds)) # hack hack hack make consistent with opt.sim$predtimes
     if (!opt.profile$include) cat("Predicting for more than 5 parameter sets. Are you sure?")
   }
-  pplot <- conveniencefunctions::cf_predict(prd = pd$prd, times = pd$times, pars = parf, fixed = pd$fixed)
+  if (!is.null(opt.sim$predtimes)) pd$times <- opt.sim$predtimes
+  simconds <- if (!mi && !NFLAGsubsetType%in%c(2,4)) dplot[eval(si)] else dplot
+  simconds <- unique(simconds[,conditionId])
+  pplot <- conveniencefunctions::cf_predict(prd = pd$prd, times = pd$times, pars = parf, fixed = pd$fixed, conditions = simconds)
   setnames(pplot, c("condition"  , "name"        , "value"), c("conditionId", "observableId", "measurement"))
   pplot[,`:=`(observableId=factor(observableId,  petab_plotHelpers_variableOrder(pd)))]
   pplot <- subsetPredictionToData(pplot, dplot, NFLAGsubsetType = NFLAGsubsetType)
@@ -897,8 +901,11 @@ petab_plotHelpers_variableOrder <- function(pd) {
 #' @export
 #'
 #' @examples
-subsetPredictionToData <- function(pplot, dplot, NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2)[2]) {
-  if (NFLAGsubsetType == 0) return(pplot)
+subsetPredictionToData <- function(pplot, dplot, NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2, strict_cutTimes = 3,
+                                                                     cutTimes_keepInternal = 3
+                                                                     )[2]) {
+  pplot_out <- pplot
+  if (NFLAGsubsetType == 0) return(pplot_out)
 
   # strict: Only combinations of observables and conditions which are present in data
   dplot_lookup <- copy(dplot)
@@ -906,8 +913,16 @@ subsetPredictionToData <- function(pplot, dplot, NFLAGsubsetType = c(none = 0, s
   dplot_lookup <- unique(dplot_lookup)
   pplot_out <- pplot[dplot_lookup, on = c("observableId", "conditionId")]
 
+  if (NFLAGsubsetType %in% c(3,4)) {
+    dplot_lookup <- copy(dplot)
+    dplot_lookup <- dplot_lookup[,list(maxtime = max(time)), by = c("observableId", "conditionId")]
+    dplot_lookup <- unique(dplot_lookup)
+    pplot_out <- pplot[dplot_lookup, on = c("observableId", "conditionId")]
+    pplot_out <- pplot_out[time <= maxtime]
+  }
+
+  if (NFLAGsubsetType %in% c(2,4)) {
   # keepInternal: Additionally keep ALL conditions of ALL internal states (with no data)
-  if (NFLAGsubsetType == 2) {
   pplot_keepInt <- pplot[!observableId %in% dplot$observableId]
   pplot_out <- rbindlist(list(pplot_out, pplot_keepInt))
   }

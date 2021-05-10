@@ -23,6 +23,7 @@ parsEst <- petab_getPars_estScale(pe)
 Other Parameter wrangling: 
 \code{\link{petab_getPars_linScale}()},
 \code{\link{petab_mergeParameters}()},
+\code{\link{petab_parameters_mergeParameters}()},
 \code{\link{petab_setPars_estScale}()},
 \code{\link{petab_setPars_linScale}()},
 \code{\link{petab_transformPars_est2Lin}()},
