@@ -35,10 +35,10 @@ readPd <- function(filename) {
   # If in pd already, some filenameParts variable might have been derived from them,
   #   so it would be dangerous to reload them if they were postprocessed
   path <- dirname(dirname(filename))
-  if (is.null(pd$results$fits) && dir.exists(file.path(path, "Results", "mstrust")))
+  if (is.null(pd$result$fits) && dir.exists(file.path(path, "Results", "mstrust")))
     pd$result$fits <- conveniencefunctions::dMod_readMstrust(path)
-  if (is.null(pd$results$profile) && dir.exists(file.path(path, "Results", "profile")))
-    pd$result$profile <- conveniencefunctions::dMod_readProfiles(path)
+  if (is.null(pd$result$profile) && dir.exists(file.path(path, "Results", "profile")))
+    pd$result$profiles <- conveniencefunctions::dMod_readProfiles(path)
 
   pd
 }

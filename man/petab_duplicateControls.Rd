@@ -4,12 +4,14 @@
 \alias{petab_duplicateControls}
 \title{Duplicate control data points}
 \usage{
-petab_duplicateControls(pe, i, conditionMapping)
+petab_duplicateControls(pe, i, conditionMapping, FLAGDuplicatesFirst = TRUE)
 }
 \arguments{
 \item{i}{logical expression operating on the DC (not DCO) indicating which data points are to be duplicated}
 
 \item{conditionMapping}{data.table(conditionId, conditionIdNew) where conditionId is the control condition and conditionIdNew is the condition where to the data point shall be copied}
+
+\item{FLAGDuplicatesFirst}{put duplicated data on top or bottom of measurementData? Relevant for plotting, which points are getting drawn on top of each other}
 }
 \value{
 pe with updated
