@@ -1738,7 +1738,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
     cat("Compiling odemodel\n")
     myodemodel <- dMod::odemodel(myreactions, forcings = NULL, events = myevents, fixed=NULL,
                                  estimate = c(dMod::getParametersToEstimate(est.grid = gl$est.grid,
-                                                                          trafo = trafo,
+                                                                          trafo = c(trafo, trafoInjected),
                                                                           reactions = myreactions),
                                               pe$meta$parameterFormulaInjection$parameterId),
                                  modelname = paste0("odemodel_", modelname),

@@ -25,7 +25,9 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
   par_sp <- petab_parameters(parameterId =   speciesInfo$speciesName,
                              parameterName = speciesInfo$speciesName,
                              nominalValue =  speciesInfo$initialAmount,
-                             estimate = as.numeric(speciesInfo$initialAmount > 0))
+                             estimate = as.numeric(speciesInfo$initialAmount > 0),
+                             parameterScale = ifelse(speciesInfo$initialAmount > 0, "log10", "lin")
+                             )
   # Kinetic parameters in ODEs
   parInfo <- model$parInfo
   par_pa <- petab_parameters(parameterId =   parInfo$parName,
@@ -73,9 +75,11 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
 
 
   # parameterFormulaInjection
+  # Ensure all parameters set by injection are set to estimate  0,
+  # then they will be handled correctly by
   pfi <- pe$meta$parameterFormulaInjection
   if (!is.null(pfi))
-    par[parameterId %in% pfi$parameterId,`:=`(estimate=0, parameterScale = "lin")] # Ensure all parameters set by injection are set to estimate
+    par[parameterId %in% pfi$parameterId,`:=`(estimate=0, parameterScale = "lin")]
 
   par
 }
@@ -1170,6 +1174,8 @@ petab_getMeasurementParsScales <- function(measurementData,parameters) {
 #'
 #' @return ggplot
 #'
+#' @family plotData
+#'
 #' @importFrom ggforce n_pages
 #' @importFrom conveniencefunctions cf_outputFigure
 #' @importFrom cOde getSymbols
@@ -1192,8 +1198,9 @@ petab_plotData <- function(petab,
   dplot <- petab_joinDCO(petab)
   # apply log transformation to data when applicable
   if (FLAGUseObservableTransformation) {
-    dplot[,`:=`(measurement = eval(parse(text = paste0(observableTransformation, "(measurement)"))),
-                observableId = paste0(observableTransformation, " ", observableId)),
+    dplot[,`:=`(measurement = eval(parse(text = paste0(observableTransformation, "(measurement)")))#,
+                # observableId = paste0(observableTransformation, " ", observableId) # HACK for Jamboree, where I didn't want the scale in the plot: Make this accessible as option
+                ),
           by = 1:nrow(dplot)]
   }
 
@@ -1211,7 +1218,7 @@ petab_plotData <- function(petab,
   aeslist <- c(aeslist, aes0[setdiff(names(aes0), names(aeslist))])
 
   # Create plot
-  pl <- cfggplot()
+  pl <- cfggplot(dplot)
   if (FLAGmeanLine) { # Add first so te lines don't mask the points
     aesmean0 <- list(linetype = ~conditionId, group = as.formula(paste0("~ interaction(", paste0(setdiff(byvars, c("time")), collapse = ", "), ")")))
     aesmeanlist <- c(aeslist, aesmean0[setdiff(names(aesmean0), names(aeslist))])
@@ -1509,6 +1516,56 @@ petab_parameters_mergeParameters <- function(pe_pa1, pe_pa2, mergeCols = c("nomi
   pe_pa[!is.na(nominalValuePA2),(mergeCols) := lapply(.SD, function(x) x), .SDcols = mergeColsPA2]
   pe_pa[,(mergeColsPA2) := NULL]
   pe_pa
+}
+
+
+# -------------------------------------------------------------------------#
+# MeasurementData ----
+# -------------------------------------------------------------------------#
+
+#' Duplicate control data points
+#'
+#' Mainly for plotting, e.g. such that mean-lines start at zero
+#'
+#' @param pe
+#' @param i logical expression operating on the DC (not DCO) indicating which data points are to be duplicated
+#' @param conditionMapping data.table(conditionId, conditionIdNew) where conditionId is the control condition and conditionIdNew is the condition where to the data point shall be copied
+#' @param FLAGDuplicatesFirst put duplicated data on top or bottom of measurementData? Relevant for plotting, which points are getting drawn on top of each other
+#'
+#' @return pe with updated
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#'
+#' @family plotData
+#'
+#' @importFrom data.table rbindlist
+#'
+#' @examples
+petab_duplicateControls <- function(pe, i, conditionMapping, FLAGDuplicatesFirst = TRUE) {
+  si <- substitute(i)
+  # join_DC (couldn't I just have used the DCO?)
+  DC <- pe$experimentalCondition[pe$measurementData, on = c("conditionId" = "simulationConditionId")]
+  # copy controls
+  dc_ctrl <- DC[eval(si)]
+  # rename
+  dc_ctrl <- lapply(1:nrow(conditionMapping), function(idx) {
+    dc_ctrlx <- dc_ctrl[conditionMapping[idx], on =c("conditionId")]
+    dc_ctrlx[,`:=`(conditionId = NULL)]
+    setnames(dc_ctrlx, "conditionIdNew", "simulationConditionId")
+    dc_ctrlx
+  })
+  dc_ctrl <- data.table::rbindlist(dc_ctrl)
+  pe_measurementData_ctrl <- do.call(petab_measurementData,dc_ctrl[,.SD, .SDcols = names(pe$measurementData)])
+  if (FLAGDuplicatesFirst){
+    # HACK: Make nicer. I needed this in one plot because controls were light-colored crosses and stimulated
+    # were big dark points and the crosses within the points looked ugly (because of the order, duplicates were plotted first, then the true data got overlaid)
+    #
+    pe$measurementData <- data.table::rbindlist(list(pe_measurementData_ctrl,pe$measurementData))
+  } else {
+    pe$measurementData <- data.table::rbindlist(list(pe$measurementData,pe_measurementData_ctrl))
+  }
+  pe
 }
 
 # -------------------------------------------------------------------------#

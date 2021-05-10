@@ -40,6 +40,11 @@ ggplot
 \description{
 Automatic multipage export in the background with the future package and ggforce::facet_wrap_paginate
 }
+\seealso{
+Other plotData: 
+\code{\link{petab_duplicateControls}()}
+}
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }
+\concept{plotData}

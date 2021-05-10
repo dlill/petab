@@ -74,7 +74,11 @@ pd_files <- function(filenameParts) {
                            paste0(filenameParts$modelname, "_", filenameParts$type, ".rds")),
        obsParsFitted = file.path(filenameParts$.currentFolder,
                                  filenameParts$.compiledFolder,
-                                 paste0(".obsparsfitted")))
+                                 paste0(".obsparsfitted")),
+       traceFile = file.path(filenameParts$.currentFolder,
+                                 filenameParts$.compiledFolder,
+                                 paste0("traceFile.txt"))
+       )
 }
 
 
@@ -405,6 +409,42 @@ pd_fitObsPars <- function(pd, NFLAGsavePd = 3) {
 
   pd <- pd_updateEstPars(pd, parsEst = fit$argument, FLAGupdatePE = TRUE, FLAGsavePd = NFLAGsavePd > 0)
   if (NFLAGsavePd > 0) writeLines("obsPars fitted", logfile)
+  pd
+}
+
+
+#' Run a fit only for observation parameters
+#'
+#' @param pd
+#' @param NFLAGsavePd 3 as an option doesn't make sense hre
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#'
+#' @family pd
+#' @family pd fittting
+#'
+#' @importFrom dMod trust
+#'
+#' @examples
+pd_fit <- function(pd, NFLAGsavePd = 1, iterlim = 1000, printIter = TRUE, traceFile = pd_files(pd)$traceFile) {
+
+  fit_par <- pd$pars
+  fit_fix <- pd$fixed
+
+  parlower <- petab_getParameterBoundaries(pd$pe, "lower")
+  parupper <- petab_getParameterBoundaries(pd$pe, "upper")
+
+  cat("dig into bad fitting of S302 of TGFb...\n")
+
+  fit <- dMod::trust(pd$obj_data, fit_par, 1,10, iterlim = iterlim, fixed = fit_fix,
+               # parlower = parlower, parupper = parupper, printIter = printIter, traceFile = traceFile)
+               parlower = parlower, parupper = parupper, printIter = printIter, traceFile = NULL)
+  if (!fit$converged) warning("Fit not converged, please try increasing 'iterlim' (was ", iterlim,")")
+
+  pd <- pd_updateEstPars(pd, parsEst = fit$argument, FLAGupdatePE = TRUE, FLAGsavePd = NFLAGsavePd > 0)
   pd
 }
 
