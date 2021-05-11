@@ -5,7 +5,7 @@
   
 # Petab for R
 
-![Petab for R Logo](docs/petabLogo.png "Petab for R Logo")
+![Petab for R Logo](docs/petabLogoSmall.png "Petab for R Logo")
 
 ## Main features
 
