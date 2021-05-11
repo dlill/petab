@@ -3,11 +3,7 @@
 [![codecov](https://codecov.io/gh/dlill/petab/branch/main/graph/badge.svg?token=HBQ0ERVEOK)](https://codecov.io/gh/dlill/petab)
 <!-- badges: end -->
   
-# Petab for R
-
 ![Petab for R Logo](docs/petabLogoSmall.png "Petab for R Logo")
-
-## Main features
 
 * petab-handling itself, fitting and simulation tool agnostic
     * https://github.com/PEtab-dev/PEtab
