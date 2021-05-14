@@ -20,20 +20,28 @@ devtools::install_github("dlill/petab")
 ```
 
 
-## Notable functions
+## Notable functions (not exhaustive)
 
 Basic functionality for petab handling
 
-* `petab_mutateDCO` - consistently manipulate experimentalCondition, observables and measurementData at once in very expressive data.table language
-* `petab_plotData`  - Plot your data with great liberty in customizing the plot, e.g. changing aesthetics and facets and sensible defaults. Supports pagination and asynchronous outputting so you don't wait forever until you can use your R-session again
+* `petab_mutateDCO` - consistently manipulate `experimentalCondition`, `observables` and `measurementData` at once in very expressive `data.table` language. Everything, `i` and `j` can do in a data.table, petab_mutateDCO can to it as well!
+* `petab_plotData`  - Plot your data with great liberty in customizing the plot
+    * **ggCallbacks**, **aeslist**
+        * Easily customize plot in terms of layers, aesthetics, layout and labels, scales
+    * **Multipage output** via `ggforce::facet_grid/wrap_paginate`
+    * **Asynchronous output** via the `future`-package, so you don't wait forever until you can use your R-session again
+    * **Observable transformations** on/off
+* `petab_python_setup` Access the original petab development library. Sets up a virtualenv via the `reticulate`-package, to have a clean installation.
+
 
 dMod functionality
 
-* `importPEtabSBML_indiv` - Import PEtab to dMod
+* `importPEtabSBML_indiv` - Import PEtab to dMod. Can check if the input PEtab is changed to only recompile the model when necessary
 * `writePetab` - If the model part is specified in dMod language, the SBML is exported
 * `pd_predictAndPlot2` - Simulate and plot your model
-    * **ggCallbacks** 
-        * Easily customize plot in terms of layers, aesthetics, layout and labels, scales
+    * **ggCallbacks**, **aeslist**
+        * Easily customize the `ggplot` in terms of layers, aesthetics, layout, labels, scales and theme
+    * **Multipage output** via `ggforce::facet_grid/wrap_paginate`
     * **Asynchronous output**
     * **Quick subsetting**
         * Plot all internal states yes/no
