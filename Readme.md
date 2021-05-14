@@ -22,6 +22,12 @@ devtools::install_github("dlill/petab")
 
 ## Notable functions (not exhaustive)
 
+Learning
+
+* `petab_exampleList` - Show all available examples
+* `petab_exampleRead` - Read an example to play around with it
+
+
 Basic functionality for petab handling
 
 * `petab_mutateDCO` - consistently manipulate `experimentalCondition`, `observables` and `measurementData` at once in very expressive `data.table` language. Everything, `i` and `j` can do in a data.table, petab_mutateDCO can to it as well!

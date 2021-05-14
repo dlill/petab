@@ -8,17 +8,26 @@
 #' @examples
 #' petab_exampleList()
 petab_exampleList <- function() {
-  # files <- list.files(system.file("petabExamples", package = "petab"), recursive = TRUE)
-  # unique(dirname(files))
-  list.files(system.file("petabExamples", package = "petab"))
+  examplesAvailable <- list.files(system.file("petabExamples", package = "petab"))
+
+  for (ex in examplesAvailable) {
+    cat("\n======================================================", ex, "======================================================", sep ="\n")
+    pe <- readPetab(petab_examplePath(ex, "pe"))
+    cat("\n\n")
+    petab_overviewObsPerCond(pe)
+  }
+  exampleNotes <- lapply(examplesAvailable, function(ex) {
+
+
+    })
 }
 
 #' Get paths of an example
 #'
 #' @param exampleName (partial match of) example name
-#' @param object
+#' @param object "pe", "pd" or "dir"
 #'
-#' @return
+#' @return file path to the specified object
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
@@ -34,7 +43,8 @@ petab_examplePath <- function(exampleName, object = c("pe", "pd", "dir")[1]) {
   } else if (object == "pd") {file.path("Compiled", "petab_indiv.rds")
   } else if (object =="dir") {NULL}
 
-  exampleFile <- system.file(file.path("petabExamples", petab_exampleList()), package = "petab")
+  examplesAvailable <- list.files(system.file("petabExamples", package = "petab"))
+  exampleFile <- system.file(file.path("petabExamples", examplesAvailable), package = "petab")
   exampleFile <- exampleFile[grep(exampleName, exampleFile, fixed = TRUE)]
   if (length(exampleFile) > 1) stop("Ambiguous specification. Choose one of \n* ", paste0(exampleFile, collapse = "\n* "))
   exampleFile <- file.path(exampleFile, fileEnding)
@@ -42,6 +52,8 @@ petab_examplePath <- function(exampleName, object = c("pe", "pd", "dir")[1]) {
 }
 
 #' Read an example
+#'
+#' @inheritParams petab_examplePath
 #'
 #' @return pd or pe
 #' @export
