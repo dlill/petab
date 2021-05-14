@@ -11,6 +11,15 @@
 * dMod interface
     * https://github.com/dkaschek/dMod
 
+## Installation
+
+```
+devtools::install_github("dkaschek/dMod@hackathon"   )
+devtools::install_github("dlill/conveniencefunctions")
+devtools::install_github("dlill/petab")
+```
+
+
 ## Notable functions
 
 Basic functionality for petab handling

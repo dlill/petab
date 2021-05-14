@@ -1,3 +1,10 @@
-"Description","Rate","S4","ppS2","comp"
-"27","k_244 * ppS2 ",-1,-1,1
-"28","S * comp",1,1,-1
+"Description","Rate","Rec","TGFb","TGFb_pRec","S2","ppS2","pS2","S4","ppS2_S4_S4"
+"production of receptor","kprod_Rec",1,,,,,,,
+"degradation of receptor","kdeg_Rec * Rec",-1,,,,,,,
+"1","Rec_act * TGFb * Rec",-1,-1,1,,,,,
+"2","pRec_degind * TGFb_pRec",,,-1,,,,,
+"11","S_phos * TGFb_pRec * S2 + kphos_basal * S2",,,,-1,1,,,
+"12","S_dephosphos * ppS2",,,,,-1,1,,
+"13","S_dephos * pS2",,,,1,,-1,,
+"27","k_244 * ppS2 * S4 * S4",,,,,-1,,-2,1
+"28","S_dephosphos * ppS2_S4_S4",,,,,,1,2,-1
