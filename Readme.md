@@ -37,6 +37,22 @@ dMod functionality
         * If you have *multistart fits*, you can directly compare different model trajectories at different optima
         * If you have *profiles* or *prediction profiles*, you can use the left and right endpoints of all profiles for predictions which are then summarized to produce *model uncertainty bands* surrounding the prediction at the best fit
 
+# Contributing
+
+Some thoughts on coding-style
+
+* Code is *debugged* more often than it is written (similar to Python's philosophy that code is read more often than it is written). Therefore, code should be *debuggable*
+    * Only few calls should span multiple lines (e.g. lapplys), and don't use pipes. Make every step explicit, so people can easily see intermediate results
+    * No *large functions* of more than 100 lines, no if statements where you have to scroll to see the closing bracket. All of these can be refactored to use smaller helper functions which improve clarity of the progam's logic and help to debug by being more informative in the traceback.
+    * Informative error messages, telling *what* went wrong, instead of telling that *something* went wrong
+* Documentation WITH examples is a must
+* Declare function imports properly, so functions and their roxygen skeletons can be moved to a different package easily
+* Try to use `git commit --amend` and `devtools::document` until the code definitely works before pushing to keep the git log clean
+* Reuse the semantics of some flags, e.g. `NFLAGsave = 3` should always mean "check if input files changed, and if not, reload the previously saved version, if it exists"
+* Try to program with good taste: https://www.youtube.com/watch?v=o8NPllzkFhE
+* Optimally, push to a branch and create PR
+
+
 # Version history
 
 * New in 0.1.1
