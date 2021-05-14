@@ -25,7 +25,7 @@ devtools::install_github("dlill/petab")
 Learning
 
 * `petab_exampleList` - Show all available examples
-* `petab_exampleRead` - Read an example to play around with it
+* `petab_exampleRead` - Load an example to play around with it or navigate to the folder including some R-scripts e.g. on Ubuntu+Gnome with `system(paste0("nautilus ", petab_examplePath(exampleName = "01", "dir")), wait = FALSE)`
 
 
 Basic functionality for petab handling

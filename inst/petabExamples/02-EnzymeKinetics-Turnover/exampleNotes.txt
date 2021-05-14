@@ -1,0 +1,2 @@
+* "Non-trivial" initial conditions by steady state trafo
+* Currently solved via parameterTrafoInjection in pe$meta

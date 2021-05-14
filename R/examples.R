@@ -12,6 +12,10 @@ petab_exampleList <- function() {
 
   for (ex in examplesAvailable) {
     cat("\n======================================================", ex, "======================================================", sep ="\n")
+    
+    notes <- if (file.exists(petab_examplePath(ex, "notes"))) readLines(petab_examplePath(ex, "notes")) else ""
+    cat(notes, sep = "\n")
+    
     pe <- readPetab(petab_examplePath(ex, "pe"))
     cat("\n\n")
     petab_overviewObsPerCond(pe)
@@ -41,7 +45,8 @@ petab_examplePath <- function(exampleName, object = c("pe", "pd", "dir")[1]) {
   cat("Reading ", object, "...\n")
   fileEnding <- if (object == "pe") {"petab"
   } else if (object == "pd") {file.path("Compiled", "petab_indiv.rds")
-  } else if (object =="dir") {NULL}
+  } else if (object =="dir") {NULL
+  } else if (object == "notes") {"exampleNotes.txt"}
 
   examplesAvailable <- list.files(system.file("petabExamples", package = "petab"))
   exampleFile <- system.file(file.path("petabExamples", examplesAvailable), package = "petab")
