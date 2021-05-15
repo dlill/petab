@@ -699,7 +699,8 @@ writePetab <- function(pe, filename = "petab/model") {
 #'
 #' @return
 #' @export
-#'
+#' 
+#' @family Combine petabs
 #' @examples
 petab_combine_experimentalCondition <- function(ec1, ec2, NFLAGconflict = c("stop" = 0, "use_pe1" = 1, "use_pe2" = 2)[2]) {
   s12 <- setdiff(names(ec1), names(ec2))
@@ -736,6 +737,7 @@ petab_combine_experimentalCondition <- function(ec1, ec2, NFLAGconflict = c("sto
 #'
 #' @return
 #' @export
+#' @family Combine petabs
 #'
 #' @examples
 petab_combine_measurementData <- function(md1, md2) {
@@ -749,6 +751,8 @@ petab_combine_measurementData <- function(md1, md2) {
 #'
 #' @return
 #' @export
+#' @family Combine petabs
+#' @importFrom data.table rbindlist
 #'
 #' @examples
 petab_combine_observables <- function(o1,o2, NFLAGconflict = c("stop" = 0, "use_pe1" = 1, "use_pe2" = 2)[2]) {
@@ -766,7 +770,7 @@ petab_combine_observables <- function(o1,o2, NFLAGconflict = c("stop" = 0, "use_
       o1 <- o1[!observableId %in% i12]
     }
   }
-  rbindlist(list(o1,o2), use.names = TRUE)
+  data.table::rbindlist(list(o1,o2), use.names = TRUE)
 }
 
 
@@ -778,8 +782,13 @@ petab_combine_observables <- function(o1,o2, NFLAGconflict = c("stop" = 0, "use_
 #'
 #' @return
 #' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family Combine petabs
 #'
+#' @importFrom data.table rbindlist
 #' @examples
+#' 
 petab_combine_parameters <- function(p1,p2) {
 
   if (is.null(p1)) return(p2)
@@ -791,7 +800,7 @@ petab_combine_parameters <- function(p1,p2) {
             paste0(i12, collapse = ","))
   }
   p2 <- p2[!parameterId %in% p1$parameterId]
-  rbindlist(list(p1,p2), use.names = TRUE)
+  data.table::rbindlist(list(p1,p2), use.names = TRUE)
 }
 
 #' Title
@@ -802,6 +811,7 @@ petab_combine_parameters <- function(p1,p2) {
 #'
 #' @return
 #' @export
+#' @family Combine petabs
 #'
 #' @examples
 petab_combine <- function(pe1,pe2, NFLAGconflict = c("stop" = 0, "use_pe1" = 1, "use_pe2" = 2)[2]) {
@@ -904,6 +914,8 @@ petab_lint <- function(pe) {
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
+#' @family pepy
+#' 
 #' @importFrom dMod parframe
 #'
 #'
@@ -931,6 +943,27 @@ pepy_sample_parameter_startpoints <- function(pe, n_starts = 100L, seed = 1L, FL
 # Python setup ----
 # -------------------------------------------------------------------------#
 
+#' Reinstall the python setup
+#'
+#' @return nothing, installs the virtualenv again
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family pepy
+#' @importFrom reticulate use_virtualenv virtualenv_install
+#' 
+petab_python_reinstall <- function() {
+  message("Please restart RStudio. If that doesn't help call this function again")
+  if (readline("enter 'yes' to continue") != "yes") return("Nothing was done")
+  # Hacky version for Linux only
+  unlink("~/.virtualenvs/petab", T)
+  unlink("~/.local/share/r-reticulate/", T)
+  reticulate::use_virtualenv("petab")
+  reticulate::virtualenv_install("petab", "petab", ignore_installed = TRUE)
+}
+
+
+
 #' Setup the connection to python petab
 #'
 #' * if petab virtualenv not present:
@@ -945,6 +978,9 @@ pepy_sample_parameter_startpoints <- function(pe, n_starts = 100L, seed = 1L, FL
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @export
+#' #' @family pepy
+
+#' 
 #' @importFrom reticulate virtualenv_list virtualenv_install use_virtualenv import
 #'
 #' @examples
@@ -959,28 +995,13 @@ petab_python_setup <- function() {
   # PATH <- Sys.getenv("PATH")
   # PATH <- paste0(file.path(Sys.getenv("HOME"), ".virtualenvs/petab/bin"), ":", PATH)
   # Sys.setenv(PATH = PATH)
-  message("======================\nIf this function fails, restart RStudio from your terminal\n==============")
+  message("======================\nIf this function fails, restart RStudio from your terminal and/or recreate the *.Rproj file of your current project \n==============")
 
   message("Using petab virtualenv\n")
   reticulate::use_virtualenv("petab")
   reticulate::import("petab")
 }
 
-#' Title
-#'
-#' @return
-#' @export
-#'
-#' @examples
-petab_python_reinstall <- function() {
-  message("Please restart RStudio. If that doesn't help call this function again")
-  if (readline("enter 'yes' to continue") != "yes") return("Nothing was done")
-  # Hacky version for Linux only
-  unlink("~/.virtualenvs/petab", T)
-  unlink("~/.local/share/r-reticulate/", T)
-  reticulate::use_virtualenv("petab")
-  reticulate::virtualenv_install("petab", "petab", ignore_installed = TRUE)
-}
 
 # -------------------------------------------------------------------------#
 # PEtab import for dMod ----
@@ -1065,6 +1086,7 @@ petab_getMeasurementParsMapping <- function(pe, column = c("observableParameters
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #'
+#' @importFrom dMod constraintL2
 #' @examples
 petab_createObjPrior <- function(pe, FLAGuseNominalValueAsCenter) {
   # [ ] Todo: Move this function to dMod-*.R file
@@ -1255,7 +1277,7 @@ petab_overviewObsPerCond <- function(pe, Ntruncate = 1000, ...) {
   dx <- dx[,list(observableId = paste0(sort(unique(observableId)), collapse = ",")),
            by = c("conditionId", "conditionName")]
   dx <- dx[,`:=`(observableId = substr(observableId, 1, Ntruncate))]
-  cfoutput_MdTable(dx, ...)
+  conveniencefunctions::cfoutput_MdTable(dx, ...)
 }
 
 # -------------------------------------------------------------------------#
@@ -1315,10 +1337,12 @@ petab_getParametersToEstimate <- function(pe) {
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
+#' 
+#' @importFrom data.table copy
 #'
 #' @examples
 petab_getParametersExperimentalCondition <- function(experimentalCondition) {
-  ec <- copy(experimentalCondition)
+  ec <- data.table::copy(experimentalCondition)
   ec[,`:=`(conditionId = NULL, conditionName = NULL)]
   ec <- lapply(ec, getSymbols)
   ec <- do.call(c,ec)
@@ -1341,11 +1365,12 @@ petab_getParametersExperimentalCondition <- function(experimentalCondition) {
 #' @md
 #' @family Parameter wrangling
 #'
+#' @importFrom data.table copy
 #' @examples
 #' pe <- petab_exampleRead("01")
 #' parsEst <- petab_getPars_estScale(pe)
 petab_getPars_estScale <- function(pe) {
-  p <- copy(pe$parameters)
+  p <- data.table::copy(pe$parameters)
   p[,`:=`(estValue = eval(parse(text = paste0(parameterScale, "(", nominalValue, ")")))),by = 1:nrow(p)]
   setNames(p$estValue, p$parameterId)
 }
@@ -1539,7 +1564,7 @@ petab_parameters_mergeParameters <- function(pe_pa1, pe_pa2, mergeCols = c("nomi
 #'
 #' @family plotData
 #'
-#' @importFrom data.table rbindlist
+#' @importFrom data.table rbindlist setnames
 #'
 #' @examples
 petab_duplicateControls <- function(pe, i, conditionMapping, FLAGDuplicatesFirst = TRUE) {
@@ -1552,7 +1577,7 @@ petab_duplicateControls <- function(pe, i, conditionMapping, FLAGDuplicatesFirst
   dc_ctrl <- lapply(1:nrow(conditionMapping), function(idx) {
     dc_ctrlx <- dc_ctrl[conditionMapping[idx], on =c("conditionId")]
     dc_ctrlx[,`:=`(conditionId = NULL)]
-    setnames(dc_ctrlx, "conditionIdNew", "simulationConditionId")
+    data.table::setnames(dc_ctrlx, "conditionIdNew", "simulationConditionId")
     dc_ctrlx
   })
   dc_ctrl <- data.table::rbindlist(dc_ctrl)
@@ -1576,7 +1601,7 @@ petab_duplicateControls <- function(pe, i, conditionMapping, FLAGDuplicatesFirst
 #'
 #' @param parameterScale vector with entries "lin", "log", "log10"
 #'
-#' @return
+#' @return vector with entries "lin", "exp", "10^"
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
@@ -1613,7 +1638,6 @@ lin <- function(x) {
 #   * Could be used for programming on the DCO,
 #     e.g. with meta_measurementData$cellline, it's easy to parameterize by cell line
 # [ ] petab_simulate,
-# [ ] petab_createObj_prior: Can be called either in petab_fit or in importPetab*
 # [ ] petab_fit(FLAGrunbg,FLAGslurm)
 # [ ] petab_updateParameters Incorporate fit values
 # [ ] petab_addFitResults
@@ -1628,9 +1652,5 @@ lin <- function(x) {
 # [ ] sbml - getSpeciesInfo: speciesUnit
 # [ ] sbml - initialAssignments
 # [ ] sbml - assignmentRules
-# [x] petab_import: append original petab
-
-# * Sample from prior, ...
-# * petablint ...
 
 

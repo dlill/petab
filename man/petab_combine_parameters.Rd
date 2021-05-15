@@ -15,3 +15,17 @@ petab_combine_parameters(p1, p2)
 \description{
 Title
 }
+\examples{
+
+}
+\seealso{
+Other Combine petabs: 
+\code{\link{petab_combine_experimentalCondition}()},
+\code{\link{petab_combine_measurementData}()},
+\code{\link{petab_combine_observables}()},
+\code{\link{petab_combine}()}
+}
+\author{
+Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+}
+\concept{Combine petabs}

@@ -6,6 +6,11 @@
 \usage{
 petab_exampleRead(exampleName, object = c("pe", "pd")[1])
 }
+\arguments{
+\item{exampleName}{(partial match of) example name}
+
+\item{object}{"pe", "pd" or "dir"}
+}
 \value{
 pd or pe
 }

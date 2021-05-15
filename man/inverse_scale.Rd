@@ -10,7 +10,7 @@ inverse_scale(parameterScale)
 \item{parameterScale}{vector with entries "lin", "log", "log10"}
 }
 \value{
-
+vector with entries "lin", "exp", "10^"
 }
 \description{
 Title

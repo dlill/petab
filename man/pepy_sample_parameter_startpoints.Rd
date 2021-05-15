@@ -27,6 +27,11 @@ n_starts = 100L
 seed = 1L
 FLAGincludeCurrent = TRUE
 }
+\seealso{
+Other pepy: 
+\code{\link{petab_python_reinstall}()}
+}
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }
+\concept{pepy}

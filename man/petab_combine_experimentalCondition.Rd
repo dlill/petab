@@ -19,3 +19,11 @@ petab_combine_experimentalCondition(
 \description{
 Title
 }
+\seealso{
+Other Combine petabs: 
+\code{\link{petab_combine_measurementData}()},
+\code{\link{petab_combine_observables}()},
+\code{\link{petab_combine_parameters}()},
+\code{\link{petab_combine}()}
+}
+\concept{Combine petabs}

@@ -2,13 +2,21 @@
 % Please edit documentation in R/PEtab.R
 \name{petab_python_reinstall}
 \alias{petab_python_reinstall}
-\title{Title}
+\title{Reinstall the python setup}
 \usage{
 petab_python_reinstall()
 }
 \value{
-
+nothing, installs the virtualenv again
 }
 \description{
-Title
+Reinstall the python setup
 }
+\seealso{
+Other pepy: 
+\code{\link{pepy_sample_parameter_startpoints}()}
+}
+\author{
+Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+}
+\concept{pepy}
