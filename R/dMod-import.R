@@ -1551,6 +1551,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   on.exit({setwd(mywd)})
 
   # .. Define path to SBML, PEtab and pd files -----
+  filename  <- path.expand(filename)
   path      <- petab_modelname_path(filename)$path
   modelname <- petab_modelname_path(filename)$modelname
   files     <- petab_files(filename, FLAGTestCase = testCases, FLAGreturnList = TRUE)
