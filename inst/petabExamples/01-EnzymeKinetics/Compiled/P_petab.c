@@ -1,6 +1,6 @@
 #include <R.h>
  #include <math.h>
- void P_petab_cz6l8vwr ( double * x, double * y, double * p, int * n, int * k, int * l ) {
+ void P_petab_ncrlp39k ( double * x, double * y, double * p, int * n, int * k, int * l ) {
  for(int i = 0; i< *n; i++) {
  y[0+i**l] = pow(10.0,(p[0])) ;
 y[1+i**l] = pow(10.0,(p[1])) ;

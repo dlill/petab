@@ -1,6 +1,6 @@
 #include <R.h>
  #include <math.h>
- void errfn_petab_deriv_34zxpwig ( double * x, double * y, double * p, int * n, int * k, int * l ) {
+ void errfn_petab_deriv_v09uj0b9 ( double * x, double * y, double * p, int * n, int * k, int * l ) {
  for(int i = 0; i< *n; i++) {
  y[16+i**l] = 1.0 ;
 y[21+i**l] = 1.0 ;

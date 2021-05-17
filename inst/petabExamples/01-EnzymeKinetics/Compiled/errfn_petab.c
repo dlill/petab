@@ -1,6 +1,6 @@
 #include <R.h>
  #include <math.h>
- void errfn_petab_ztsrc6h0 ( double * x, double * y, double * p, int * n, int * k, int * l ) {
+ void errfn_petab_7zkiegbw ( double * x, double * y, double * p, int * n, int * k, int * l ) {
  for(int i = 0; i< *n; i++) {
  y[0+i**l] = p[0] ;
 y[1+i**l] = p[1] ;
