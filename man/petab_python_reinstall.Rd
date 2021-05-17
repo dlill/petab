@@ -14,7 +14,8 @@ Reinstall the python setup
 }
 \seealso{
 Other pepy: 
-\code{\link{pepy_sample_parameter_startpoints}()}
+\code{\link{pepy_sample_parameter_startpoints}()},
+\code{\link{petab_python_setup}()}
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)

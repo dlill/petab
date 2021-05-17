@@ -15,3 +15,11 @@ pd_objtimes(pd, N = 100)
 \description{
 Wrapper around predtimes
 }
+\seealso{
+Other pd helpers: 
+\code{\link{pd_predtimes}()}
+}
+\author{
+Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+}
+\concept{pd helpers}

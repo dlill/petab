@@ -56,3 +56,6 @@ height = 21
 scale = 1
 units = "cm"
 }
+\author{
+Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+}

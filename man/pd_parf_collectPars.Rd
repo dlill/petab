@@ -10,8 +10,18 @@ pd_parf_collectPars(pd, parameterSetId = "Base")
 \item{pd}{}
 }
 \value{
-
+\code{\link[dMod:parframe]{dMod::parframe()}}
 }
 \description{
 Title
 }
+\seealso{
+Other parframe handling: 
+\code{\link{pd_parf_collectMstrust}()},
+\code{\link{pd_parf_collectProfile}()},
+\code{\link{pd_parf_collect}()}
+}
+\author{
+Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+}
+\concept{parframe handling}

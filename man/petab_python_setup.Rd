@@ -27,6 +27,12 @@ use as pe <- petab_python_setup()
 pepy <- petab_python_setup()
 # pepy$lint(pe)
 }
+\seealso{
+Other pepy: 
+\code{\link{pepy_sample_parameter_startpoints}()},
+\code{\link{petab_python_reinstall}()}
+}
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }
+\concept{pepy}

@@ -154,6 +154,29 @@ pdIndiv_rebuildPrdObj <- function(pd, Nobjtimes = 100) {
 }
 
 
+#' Title
+#'
+#' @param pd 
+#' @param parameters 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' parameters <- c("k_233", "k_234", "k_244")
+pd_addObjPrior <- function(pd, parameters, FLAGuseNominalValueAsCenter) {
+  
+  cat("Todo: Implement this properly\n*write about prior in logfile\n*think about rebuildPrdObj\n*Use obj as default objective function from beginning")
+  
+  pe_aux <- copy(pd$pe)
+  pe_aux$parameters <-pe_aux$parameters[parameterId %in% parameters]
+  pd$obj_prior <- petab_createObjPrior(pe_aux, FLAGuseNominalValueAsCenter = FLAGuseNominalValueAsCenter)
+  pd$obj <- pd$obj_data + pd$obj_prior
+  pd
+}
+
+
+
 # -------------------------------------------------------------------------#
 # Helpers ----
 # -------------------------------------------------------------------------#
@@ -165,6 +188,10 @@ pdIndiv_rebuildPrdObj <- function(pd, Nobjtimes = 100) {
 #'
 #' @return
 #' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family pd helpers
+#' @importFrom dMod predtimes
 #'
 #' @examples
 pd_predtimes <- function(pd, N = 100) {
@@ -180,6 +207,10 @@ pd_predtimes <- function(pd, N = 100) {
 #'
 #' @return
 #' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family pd helpers
+#' @importFrom dMod objtimes
 #'
 #' @examples
 pd_objtimes <- function(pd, N = 100) {
@@ -221,11 +252,15 @@ pd_updateEstPars <- function(pd, parsEst, FLAGupdatePE = TRUE, FLAGsavePd = FALS
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
+#' @family parframe handling
+#' @importFrom conveniencefunctions cf_parf_getStepRepresentatives
+#' @importFrom data.table as.data.table
+#' @importFrom dMod parframe
 #'
 #' @examples
 pd_parf_collectMstrust <- function(pd, fitrankRange = 1:15, tol = 1) {
   parf0 <- pd$result$fits[fitrankRange]
-  fitidxs = cf_parf_getStepRepresentatives(parf0, tol = tol)
+  fitidxs = conveniencefunctions::cf_parf_getStepRepresentatives(parf0, tol = tol)
   pars <- parf0[fitidxs]
   pars <- data.table::as.data.table(pars)
   pars[,`:=`(parameterSetId = paste0("step", step, ",", "rank", fitrank))]
@@ -240,8 +275,12 @@ pd_parf_collectMstrust <- function(pd, fitrankRange = 1:15, tol = 1) {
 #' @param pars2parframe
 #' @param pd
 #'
-#' @return
+#' @return [dMod::parframe()]
 #' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family parframe handling
+#' @importFrom conveniencefunctions pars2parframe
 #'
 #' @examples
 pd_parf_collectPars <- function(pd, parameterSetId = "Base") {
@@ -255,8 +294,13 @@ pd_parf_collectPars <- function(pd, parameterSetId = "Base") {
 #' @param rows
 #' @param parameters
 #'
-#' @return
+#' @return [dMod::parframe()]
 #' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family parframe handling
+#' @importFrom data.table as.data.table setcolorder rbindlist
+#' @importFrom dMod parframe
 #'
 #' @examples
 pd_parf_collectProfile <- function(pd, rows = c("profile_endpoints", "optimum"), parameters = NULL) {
@@ -273,15 +317,15 @@ pd_parf_collectProfile <- function(pd, rows = c("profile_endpoints", "optimum"),
   if ("profile_endpoints" %in% rows){
     parsEnd <- pars[profileDirection != "optimum",.SD[which.max(abs(constraint))], by = c("whichPar", "profileDirection")]
     parsEnd[,`:=`(parameterSetId = "profile_endpoints")]
-    setcolorder(parsEnd, c(names(pars), "parameterSetId"))
+    data.table::setcolorder(parsEnd, c(names(pars), "parameterSetId"))
     }
   if ("optimum" %in% rows){
     parsOpt <- pars[which(profileDirection == "optimum")[1]]
     parsOpt[,`:=`(parameterSetId = "optimum")]
-    setcolorder(parsOpt, c(names(pars), "parameterSetId"))
+    data.table::setcolorder(parsOpt, c(names(pars), "parameterSetId"))
     }
 
-  pars <- rbindlist(list(parsEnd, parsOpt))
+  pars <- data.table::rbindlist(list(parsEnd, parsOpt))
   # [ ] Idea: return whichPar as well. Then, when summarizing profiles in pd_predictAndPlot2 by min and max,
   #   one could have a look in which profile the minimum/maximum values occured, i.e. which profiles contribute most to prediction uncertainty
   #   Don't know if this is informative, but for now I'd copy the prediction code which would lead to a lot of code duplication which I don't want
@@ -304,6 +348,8 @@ pd_parf_collectProfile <- function(pd, rows = c("profile_endpoints", "optimum"),
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
+#' @family parframe handling
+#' @importFrom conveniencefunctions cf_parf_rbindlist
 pd_parf_collect <- function(pd,
                             opt.base = pd_parf_opt.base(include = TRUE, parameterSetId = "Base"),
                             opt.mstrust = pd_parf_opt.mstrust(include = TRUE, fitrankRange = 1:20, tol = 1),
@@ -323,7 +369,7 @@ pd_parf_collect <- function(pd,
     args <- c(list(pd = pd), opt.profile[setdiff(names(opt.profile), "include")])
     parf_profile <- do.call(pd_parf_collectProfile, args)}
 
-  parf <- cf_parf_rbindlist(list(parf_base, parf_fit, parf_profile))
+  parf <- conveniencefunctions::cf_parf_rbindlist(list(parf_base, parf_fit, parf_profile))
   parf <- parf[order(parf$value)]
 
   parf
@@ -387,6 +433,8 @@ pd_pars_getFixedOnBoundary <- function(pd, tol = 1e-2) {
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
+#' @family pd fitting
+#' @importFrom dMod trust
 #'
 #' @examples
 pd_fitObsPars <- function(pd, NFLAGsavePd = 3) {
@@ -405,7 +453,7 @@ pd_fitObsPars <- function(pd, NFLAGsavePd = 3) {
   parlower <- petab_getParameterBoundaries(pd$pe, "lower")[obspars]
   parupper <- petab_getParameterBoundaries(pd$pe, "upper")[obspars]
 
-  fit <- trust(pd$obj_data, fit_par, 1,10, iterlim = 1000, fixed = fit_fix, parlower = parlower, parupper = parupper)
+  fit <- dMod::trust(pd$obj_data, fit_par, 1,10, iterlim = 1000, fixed = fit_fix, parlower = parlower, parupper = parupper)
 
   pd <- pd_updateEstPars(pd, parsEst = fit$argument, FLAGupdatePE = TRUE, FLAGsavePd = NFLAGsavePd > 0)
   if (NFLAGsavePd > 0) writeLines("obsPars fitted", logfile)
@@ -569,6 +617,100 @@ pd <- petab_exampleRead("01", "pd")
 # Profiles ----
 # -------------------------------------------------------------------------#
 
+# -------------------------------------------------------------------------#
+# L1 ----
+# -------------------------------------------------------------------------#
+
+#' Prepare data for some L1 plots
+#'
+#' @param pd with pd$result$L1
+#'
+#' @return data.table(parameterId,parameterType,isL1Parameter,lambda,value,iterations,converged,muValue,estValue,estDeviance)
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family L1
+#' @importFrom data.table as.data.table data.table
+#' 
+#' @examples
+pd_L1_preparePlottingData <- function(pd) {
+  d <- pd$result$L1
+  d <- data.table::as.data.table(as.data.frame(d))
+  d <- melt(d, measure.vars = names(pd$pars), variable.name = "parameterId", variable.factor = FALSE, value.name = "estValue")
+  d <- petab_getParameterType(pd$pe)[d, on = "parameterId"]
+  d[,`:=`(isL1Parameter = parameterId %in% pd$L1$parametersL1)]
+  d <- data.table::data.table(muValue = pd$pars, parameterId = names(pd$pars))[d, on = "parameterId"]
+  d[,`:=`(estDeviance = muValue - estValue)]
+  d[,`:=`(estDeviance = round(estDeviance, 4))]
+  d
+}
+
+#' Title
+#'
+#' @param pd with pd$result$L1
+#' @param ... Arguments going to cf_outputFigure
+#'
+#' @return ggplot
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family L1
+#' @importFrom conveniencefunctions cfggplot cf_outputFigure
+#'
+#' @examples
+pd_L1_plotDevianceVsLambda <- function(pd, ...) {
+  d <- pd_L1_preparePlottingData(pd)
+  pl <- conveniencefunctions::cfggplot(d, aes(lambda, estDeviance, color = parameterId)) + 
+    facet_wrap(~parameterType + isL1Parameter, scales = "free") + 
+    geom_line() + 
+    scale_color_viridis_d() + 
+    scale_x_log10() + 
+    theme(legend.position = "bottom") + 
+    geom_blank()
+  conveniencefunctions::cf_outputFigure(pl, ...)
+}
+
+#' Title
+#'
+#' @param pd 
+#' @param ... 
+#'
+#' @return ggplot
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family L1
+#' @importFrom conveniencefunctions cfggplot cf_outputFigure
+#'
+#' @examples
+pd_L1_plotIsConvergedVsLambda <- function(pd, ...) {
+  d <- pd_L1_preparePlottingData(pd)
+  pl <- conveniencefunctions::cfggplot(unique(d[,list(isconverged = as.numeric(converged), lambda)]), aes(lambda, isconverged)) + 
+    geom_point() + 
+    scale_x_log10()
+  conveniencefunctions::cf_outputFigure(pl, ...)
+}
+
+#' Title
+#'
+#' @param pd 
+#' @param ... 
+#'
+#' @return ggplot
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family L1
+#' @importFrom conveniencefunctions cfggplot cf_outputFigure
+#'
+#' @examples
+pd_L1_plotValueVsLambda <- function(pd, ...) {
+  d <- pd_L1_preparePlottingData(pd)
+  pl <- conveniencefunctions::cfggplot(unique(d[,list(value, lambda)]), aes(lambda, value)) + 
+    geom_point() + 
+    scale_x_log10()
+  conveniencefunctions::cf_outputFigure(pl, ...)
+}
 
 
 
@@ -596,11 +738,11 @@ pd <- petab_exampleRead("01", "pd")
 #' pd_plot(pdx)
 pd_plot <- function(pd, ..., page = 1, nrow = 3, ncol = 4, filename = NULL, width = 29.7, height = 21, scale = 1, units = "cm"){
   pred <- pd$prd(pd$times, pd$pars)
-  pl <- plotCombined(pred, pd$dModAtoms$data, ...) +
-    facet_wrap_paginate(~name, nrow = nrow, ncol = ncol, scales = "free", page = page) +
-    theme_cf() +
-    scale_color_cf()
-  cf_outputFigure(pl, filename, width = width, height = height, scale = scale, units = units)
+  pl <- dMod::plotCombined(pred, pd$dModAtoms$data, ...) +
+    ggforce::facet_wrap_paginate(~name, nrow = nrow, ncol = ncol, scales = "free", page = page) +
+    conveniencefunctions::theme_cf() +
+    conveniencefunctions::scale_color_cf()
+  conveniencefunctions::cf_outputFigure(pl, filename, width = width, height = height, scale = scale, units = units)
 }
 
 
@@ -678,7 +820,7 @@ pd_predictAndPlot <- function(pd, i,
     scale_y_continuous(n.breaks = n.breaks) +
     conveniencefunctions::scale_color_cf()
 
-  cf_outputFigure(pl, filename = filename, width = width, height = height, scale = scale, units = units)
+  conveniencefunctions::cf_outputFigure(pl, filename = filename, width = width, height = height, scale = scale, units = units)
 }
 
 
@@ -705,6 +847,11 @@ pd_predictAndPlot <- function(pd, i,
 #'
 #' @return
 #' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @importFrom conveniencefunctions cf_predict cfggplot cfgg_getAllAesthetics scale_color_cf cf_outputFigure
+#' @importFrom data.table setnames
+#' @importFrom ggforce n_pages
 #'
 #' @examples
 #' # pd <- petab_exampleRead("02", "pd")
@@ -764,7 +911,7 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
   simconds <- if (!mi && !NFLAGsubsetType%in%c(2,4)) dplot[eval(si)] else dplot
   simconds <- unique(simconds[,conditionId])
   pplot <- conveniencefunctions::cf_predict(prd = pd$prd, times = pd$times, pars = parf, fixed = pd$fixed, conditions = simconds)
-  setnames(pplot, c("condition"  , "name"        , "value"), c("conditionId", "observableId", "measurement"))
+  data.table::setnames(pplot, c("condition"  , "name"        , "value"), c("conditionId", "observableId", "measurement"))
   pplot[,`:=`(observableId=factor(observableId,  petab_plotHelpers_variableOrder(pd)))]
   pplot <- subsetPredictionToData(pplot, dplot, NFLAGsubsetType = NFLAGsubsetType)
 

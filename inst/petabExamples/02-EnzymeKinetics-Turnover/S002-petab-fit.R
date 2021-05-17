@@ -15,14 +15,15 @@ pd_predictAndPlot(pd)
 pd <- pd_fitObsPars(pd, NFLAGsavePd = 3)
 
 # Test fitting
-myfit <- trust(pd$obj_data, pd$pars,1,10,iterlim = 1000)
+# myfit <- trust(pd$obj_data, pd$pars,1,10,iterlim = 1000)
 # plotCombined(pd$prd(seq(0,100), pd$pars), pd$dModAtoms$data)
 # plotCombined(pd$prd(seq(0,100), myfit$argument), pd$dModAtoms$data)
 pd_predictAndPlot2(pd)
 
 # Mstrust
 center <- pepy_sample_parameter_startpoints(pd$pe, n_starts = 8)
-fits <- mstrust(pd$obj_data, center, "fit", fits = 4, iterlim = 1000, cores = 4, output = TRUE,
+fits <- mstrust(pd$obj_data, center, paste0("fit", 1), 
+                fits = 4, iterlim = 1000, cores = 4, output = TRUE,
                 cautiousMode = TRUE)
 fits <- conveniencefunctions::cf_as.parframe(fits)
 plotValues(fits)

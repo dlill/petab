@@ -21,6 +21,13 @@ pd with pd$parf
 \description{
 Collect parameters for simultaneous prediction or plotting
 }
+\seealso{
+Other parframe handling: 
+\code{\link{pd_parf_collectMstrust}()},
+\code{\link{pd_parf_collectPars}()},
+\code{\link{pd_parf_collectProfile}()}
+}
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }
+\concept{parframe handling}

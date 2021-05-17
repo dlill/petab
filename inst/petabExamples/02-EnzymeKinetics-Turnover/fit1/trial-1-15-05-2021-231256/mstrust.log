@@ -1,0 +1,69 @@
+Parameter assignment information
+mstrust     : studyname, center, fits, cores, optmethod, samplefun, resultPath, stats, narrowing, output
+trust       : objfun, rinit, rmax, iterlim
+rnorm       : n
+
+
+-------
+Fit 4 completed
+--> iterations : 146
+-->  converged : TRUE
+--> obj. value : -111.28
+-------
+-------
+Fit 1 completed
+--> iterations : 181
+-->  converged : TRUE
+--> obj. value : -111.28
+-------
+-------
+Fit 3 completed
+--> iterations : 244
+-->  converged : TRUE
+--> obj. value : -108.19
+-------
+-------
+Fit 5 completed
+--> iterations : 79
+-->  converged : TRUE
+--> obj. value : -111.28
+-------
+-------
+Fit 2 completed
+--> iterations : 226
+-->  converged : TRUE
+--> obj. value : -108.19
+-------
+-------
+Fit 6 completed
+--> iterations : 135
+-->  converged : TRUE
+--> obj. value : -108.19
+-------
+-------
+Fit 7 completed
+--> iterations : 125
+-->  converged : TRUE
+--> obj. value : -108.19
+-------
+-------
+Fit 9 completed
+--> iterations : 164
+-->  converged : TRUE
+--> obj. value : -108.19
+-------
+-------
+Fit 8 completed
+--> iterations : 198
+-->  converged : TRUE
+--> obj. value : -111.28
+-------
+Multi start trust summary
+Outcome     : Occurrence
+Error       : 0
+Fatal       : 0 must be 0
+Unconverged : 0
+Converged   : 9
+           -----------
+Total       : 9[9]
+

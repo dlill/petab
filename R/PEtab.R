@@ -978,8 +978,7 @@ petab_python_reinstall <- function() {
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @export
-#' #' @family pepy
-
+#' @family pepy
 #' 
 #' @importFrom reticulate virtualenv_list virtualenv_install use_virtualenv import
 #'
@@ -1051,6 +1050,10 @@ petab_getMeasurementParsMapping <- function(pe, column = c("observableParameters
   mp <- mp[!is.na(OUTERPARAMETER)]
   mp[,`:=`(INNERPARAMETER = paste0(INNERPARAMETER, observableId))]
   mp <- mp[,list(condition, INNERPARAMETER, OUTERPARAMETER)]
+  dupes <- duplicated(mp[,list(condition,INNERPARAMETER)])
+  if (any(dupes)) {
+    print(mp[dupes, list(condition,INNERPARAMETER)])
+    stop(column, "contain non-unique values in some conditions (see print output above)")}
   mp <- dcast(mp, condition ~ INNERPARAMETER, value.var = "OUTERPARAMETER")
 
   # Check that all conditions are specified, and if not, create empty row

@@ -29,7 +29,8 @@ FLAGincludeCurrent = TRUE
 }
 \seealso{
 Other pepy: 
-\code{\link{petab_python_reinstall}()}
+\code{\link{petab_python_reinstall}()},
+\code{\link{petab_python_setup}()}
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)

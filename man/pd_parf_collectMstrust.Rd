@@ -15,6 +15,13 @@ pd_parf_collectMstrust(pd, fitrankRange = 1:15, tol = 1)
 \description{
 Title
 }
+\seealso{
+Other parframe handling: 
+\code{\link{pd_parf_collectPars}()},
+\code{\link{pd_parf_collectProfile}()},
+\code{\link{pd_parf_collect}()}
+}
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }
+\concept{parframe handling}
