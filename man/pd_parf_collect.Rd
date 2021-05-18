@@ -9,7 +9,8 @@ pd_parf_collect(
   opt.base = pd_parf_opt.base(include = TRUE, parameterSetId = "Base"),
   opt.mstrust = pd_parf_opt.mstrust(include = TRUE, fitrankRange = 1:20, tol = 1),
   opt.profile = pd_parf_opt.profile(include = FALSE, rows = "profile_endpoints",
-    parameters = NULL)
+    parameters = NULL),
+  opt.L1 = pd_parf_opt.L1(include = FALSE, rows = 1:nrow(pd$result$L1))
 )
 }
 \arguments{
@@ -23,6 +24,7 @@ Collect parameters for simultaneous prediction or plotting
 }
 \seealso{
 Other parframe handling: 
+\code{\link{pd_parf_collectL1}()},
 \code{\link{pd_parf_collectMstrust}()},
 \code{\link{pd_parf_collectPars}()},
 \code{\link{pd_parf_collectProfile}()}

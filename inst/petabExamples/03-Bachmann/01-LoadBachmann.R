@@ -35,7 +35,10 @@ if(!dir.exists(folder)) dir.create(folder)
 # -------------------------------------------------------------------------#
 pe_file <- "Bachmann_MSB2011"
 pe <- readPetab(pe_file)
-pd <- importPEtabSBML_indiv(pe_file, .compiledFolder = .compiledFolder, NFLAGcompile = 3, SFLAGbrowser = "0")
+
+
+# Apparently, the scale is not found
+pd <- importPEtabSBML_indiv(pe_file, .compiledFolder = .compiledFolder, NFLAGcompile = 0, SFLAGbrowser = "2")
 
 
 # -------------------------------------------------------------------------#

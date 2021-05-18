@@ -11,6 +11,7 @@ pd_predictAndPlot2(
   opt.base = pd_parf_opt.base(),
   opt.mstrust = pd_parf_opt.mstrust(),
   opt.profile = pd_parf_opt.profile(FALSE),
+  opt.L1 = pd_parf_opt.L1(FALSE),
   NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2)[2],
   FLAGsummarizeProfilePredictions = TRUE,
   FLAGmeanLine = FALSE,

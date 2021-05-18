@@ -236,12 +236,38 @@ pd_objtimes <- function(pd, N = 100) {
 #' @examples
 pd_updateEstPars <- function(pd, parsEst, FLAGupdatePE = TRUE, FLAGsavePd = FALSE) {
   pd$pars[names(parsEst)] <- parsEst
+  
+  pd$result$base <- conveniencefunctions::pars2parframe(pd$pars, parameterSetId = "Base", obj = pd$obj_data)
+  
   if (FLAGupdatePE) {
     cat("pd$pe pars have been *set*")
     petab_setPars_estScale(pd$pe, parsEst)}
   if (FLAGsavePd) writePd(pd)
   pd
 }
+
+
+
+#' Title
+#'
+#' @param conveniencefunctions
+#' @param pars2parframe
+#' @param pd
+#'
+#' @return [dMod::parframe()]
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family parframe handling
+#' @importFrom conveniencefunctions pars2parframe
+#'
+#' @examples
+pd_parf_collectPars <- function(pd, parameterSetId = "Base") {
+  if (!is.null(pd$result$base)) 
+    pd <- pd_updateEstPars(pd, pd$pars, FLAGupdatePE = FALSE)
+  pd$result$base
+}
+
 
 #' Title
 #'
@@ -268,24 +294,6 @@ pd_parf_collectMstrust <- function(pd, fitrankRange = 1:15, tol = 1) {
   pars
 }
 
-
-#' Title
-#'
-#' @param conveniencefunctions
-#' @param pars2parframe
-#' @param pd
-#'
-#' @return [dMod::parframe()]
-#' @export
-#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
-#' @md
-#' @family parframe handling
-#' @importFrom conveniencefunctions pars2parframe
-#'
-#' @examples
-pd_parf_collectPars <- function(pd, parameterSetId = "Base") {
-  conveniencefunctions::pars2parframe(pd$pars,parameterSetId = parameterSetId, pd$obj_data)
-}
 
 
 #' Title
@@ -336,6 +344,25 @@ pd_parf_collectProfile <- function(pd, rows = c("profile_endpoints", "optimum"),
 }
 
 
+#' Title
+#'
+#' @param pd
+#' @param rows numeric vector of row indices. NULL keeps all rows
+#'
+#' @return [dMod::parframe()]
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family parframe handling
+#'
+#' @examples
+pd_parf_collectL1 <- function(pd, rows = NULL) {
+  if (is.null(rows)) rows <- 1:nrow(pd$result$L1)
+  pars <- pd$result$L1[rows]
+  pars$parameterSetId <- pars$lambdaL1
+  pars
+}
+
 
 #' Collect parameters for simultaneous prediction or plotting
 #'
@@ -351,11 +378,13 @@ pd_parf_collectProfile <- function(pd, rows = c("profile_endpoints", "optimum"),
 #' @family parframe handling
 #' @importFrom conveniencefunctions cf_parf_rbindlist
 pd_parf_collect <- function(pd,
-                            opt.base = pd_parf_opt.base(include = TRUE, parameterSetId = "Base"),
+                            opt.base =    pd_parf_opt.base(include = TRUE, parameterSetId = "Base"),
                             opt.mstrust = pd_parf_opt.mstrust(include = TRUE, fitrankRange = 1:20, tol = 1),
-                            opt.profile = pd_parf_opt.profile(include = FALSE, rows = "profile_endpoints", parameters = NULL)) {
+                            opt.profile = pd_parf_opt.profile(include = FALSE, rows = "profile_endpoints", parameters = NULL),
+                            opt.L1 =      pd_parf_opt.L1(include = FALSE, rows = 1:nrow(pd$result$L1))
+                            ) {
 
-  parf_base <- parf_fit <- parf_profile <- NULL
+  parf_base <- parf_fit <- parf_profile <- parf_L1 <- NULL
 
   if (opt.base$include) {
     args <- c(list(pd = pd), opt.base[setdiff(names(opt.base), "include")])
@@ -369,7 +398,13 @@ pd_parf_collect <- function(pd,
     args <- c(list(pd = pd), opt.profile[setdiff(names(opt.profile), "include")])
     parf_profile <- do.call(pd_parf_collectProfile, args)}
 
-  parf <- conveniencefunctions::cf_parf_rbindlist(list(parf_base, parf_fit, parf_profile))
+  if (opt.L1$include && !is.null(pd$result$L1)) {
+    args <- c(list(pd = pd), opt.L1[setdiff(names(opt.L1), "include")])
+    parf_L1 <- do.call(pd_parf_collectL1, args)}
+
+  parf <- conveniencefunctions::cf_parf_rbindlist(list(parf_base, parf_fit, parf_profile, parf_L1))
+  
+  # debatable
   parf <- parf[order(parf$value)]
 
   parf
@@ -387,6 +422,11 @@ pd_parf_opt.mstrust <- function(include = TRUE, fitrankRange = 1:20, tol = 1) {
 #' @export
 pd_parf_opt.profile <- function(include = FALSE, rows = c("profile_endpoints", "optimum"), parameters = NULL) {
   list(include = include, rows = rows, parameters = parameters)
+}
+
+#' @export
+pd_parf_opt.L1 <- function(include = FALSE, rows = NULL) {
+  list(include = include, rows = rows)
 }
 
 
@@ -876,6 +916,7 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
                                opt.base = pd_parf_opt.base(),
                                opt.mstrust = pd_parf_opt.mstrust(),
                                opt.profile = pd_parf_opt.profile(FALSE),
+                               opt.L1 = pd_parf_opt.L1(FALSE),
                                NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2)[2],
                                FLAGsummarizeProfilePredictions = TRUE,
                                FLAGmeanLine = FALSE,
@@ -899,10 +940,9 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
   dplot <- petab_joinDCO(pe)
   dplot[,`:=`(measurement = eval(parse(text = paste0(observableTransformation, "(", measurement, ")")))), by = 1:nrow(dplot)]
   dplot[,`:=`(observableId=factor(observableId, petab_plotHelpers_variableOrder(pd)))]
-
-
+  
   # .. Prediction -----
-  parf <- pd_parf_collect(pd, opt.base = opt.base, opt.mstrust = opt.mstrust, opt.profile = opt.profile)
+  parf <- pd_parf_collect(pd, opt.base = opt.base, opt.mstrust = opt.mstrust, opt.profile = opt.profile, opt.L1 = opt.L1)
   if (nrow(parf) > 5) {
     pd$times <- pd_predtimes(pd, N = min(60, opt.sim$Ntimes_gt5ParSetIds)) # hack hack hack make consistent with opt.sim$predtimes
     if (!opt.profile$include) cat("Predicting for more than 5 parameter sets. Are you sure?")

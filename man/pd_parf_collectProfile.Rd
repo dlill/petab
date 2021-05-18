@@ -21,6 +21,7 @@ Title
 }
 \seealso{
 Other parframe handling: 
+\code{\link{pd_parf_collectL1}()},
 \code{\link{pd_parf_collectMstrust}()},
 \code{\link{pd_parf_collectPars}()},
 \code{\link{pd_parf_collect}()}

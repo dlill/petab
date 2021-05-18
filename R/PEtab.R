@@ -895,7 +895,8 @@ petab_lint <- function(pe) {
   # meta
   if (!is.null(pe$meta$parameterFormulaInjection)) {
     names_overwritten <- pe$meta$parameterFormulaInjection$parameterId %in% names(pe$experimentalCondition)
-    if (any(names_overwritten)) stop("Parameters given in est.grid are overwritten by parameterFormulaInjection: ", paste0(names_overwritten, ", "))}
+    if (any(names_overwritten)) stop("Parameters given in est.grid are overwritten by parameterFormulaInjection: ", 
+                                     paste0(pe$meta$parameterFormulaInjection$parameterId[names_overwritten], ", "))}
 
   errlist
 }
