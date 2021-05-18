@@ -359,7 +359,7 @@ pd_parf_collectProfile <- function(pd, rows = c("profile_endpoints", "optimum"),
 pd_parf_collectL1 <- function(pd, rows = NULL) {
   if (is.null(rows)) rows <- 1:nrow(pd$result$L1)
   pars <- pd$result$L1[rows]
-  pars$parameterSetId <- pars$lambdaL1
+  pars$parameterSetId <- factor(pars$lambdaL1)
   pars
 }
 
@@ -517,7 +517,7 @@ pd_fitObsPars <- function(pd, NFLAGsavePd = 3) {
 #' @importFrom dMod trust
 #'
 #' @examples
-pd_fit <- function(pd, NFLAGsavePd = 1, iterlim = 1000, printIter = TRUE, traceFile = pd_files(pd)$traceFile) {
+pd_fit <- function(pd, NFLAGsavePd = 1, iterlim = 1000, printIter = TRUE, traceFile = NULL) {
 
   fit_par <- pd$pars
   fit_fix <- pd$fixed
@@ -528,8 +528,7 @@ pd_fit <- function(pd, NFLAGsavePd = 1, iterlim = 1000, printIter = TRUE, traceF
   cat("dig into bad fitting of S302 of TGFb...\n")
 
   fit <- dMod::trust(pd$obj_data, fit_par, 1,10, iterlim = iterlim, fixed = fit_fix,
-               # parlower = parlower, parupper = parupper, printIter = printIter, traceFile = traceFile)
-               parlower = parlower, parupper = parupper, printIter = printIter, traceFile = NULL)
+               parlower = parlower, parupper = parupper, printIter = printIter, traceFile = traceFile)
   if (!fit$converged) warning("Fit not converged, please try increasing 'iterlim' (was ", iterlim,")")
 
   pd <- pd_updateEstPars(pd, parsEst = fit$argument, FLAGupdatePE = TRUE, FLAGsavePd = NFLAGsavePd > 0)
@@ -685,6 +684,18 @@ pd_L1_preparePlottingData <- function(pd) {
   d
 }
 
+pd_L1_getObjBounds <- function(pd,tol = 1e-4) {
+  d <- pd_L1_preparePlottingData(pd)
+  d <- d[isL1Parameter == TRUE]
+  d <- d[,list(Ntotal = .N, NFree = sum(abs(estDeviance) > tol)), by = "lambdaL1"]
+  # Best way would be to include a fit with lambda = 0 and compare against this fit
+  # This way one could also exclude "non-informative" parameters, such as k_233,k_234,k_244 in JS1
+  d[,`:=`(df = max(NFree) - NFree)]
+  d[,`:=`(chis = qchisq(0.95, df))]
+  d
+}
+
+
 #' Title
 #'
 #' @param pd with pd$result$L1
@@ -700,7 +711,7 @@ pd_L1_preparePlottingData <- function(pd) {
 #' @examples
 pd_L1_plotDevianceVsLambda <- function(pd, ...) {
   d <- pd_L1_preparePlottingData(pd)
-  pl <- conveniencefunctions::cfggplot(d, aes(lambda, estDeviance, color = parameterId)) + 
+  pl <- conveniencefunctions::cfggplot(d, aes(lambdaL1, estDeviance, color = parameterId)) + 
     facet_wrap(~parameterType + isL1Parameter, scales = "free") + 
     geom_line() + 
     scale_color_viridis_d() + 
@@ -725,7 +736,7 @@ pd_L1_plotDevianceVsLambda <- function(pd, ...) {
 #' @examples
 pd_L1_plotIsConvergedVsLambda <- function(pd, ...) {
   d <- pd_L1_preparePlottingData(pd)
-  pl <- conveniencefunctions::cfggplot(unique(d[,list(isconverged = as.numeric(converged), lambda)]), aes(lambda, isconverged)) + 
+  pl <- conveniencefunctions::cfggplot(unique(d[,list(isconverged = as.numeric(converged), lambdaL1)]), aes(lambdaL1, isconverged)) + 
     geom_point() + 
     scale_x_log10()
   conveniencefunctions::cf_outputFigure(pl, ...)
@@ -746,10 +757,36 @@ pd_L1_plotIsConvergedVsLambda <- function(pd, ...) {
 #' @examples
 pd_L1_plotValueVsLambda <- function(pd, ...) {
   d <- pd_L1_preparePlottingData(pd)
-  pl <- conveniencefunctions::cfggplot(unique(d[,list(value, lambda)]), aes(lambda, value)) + 
-    geom_point() + 
+  dbounds <- pd_L1_getObjBounds(pd)
+  dbounds <- unique(d[,list(value, lambdaL1)])[dbounds, on = "lambdaL1"]
+  dbounds[,`:=`(valuePlot = min(value) + chis)]
+  pl <- conveniencefunctions::cfggplot() + 
+    geom_point(aes(lambdaL1, value), data = unique(d[,list(value, lambdaL1)])) + 
+    geom_line(aes(lambdaL1, valuePlot), data = dbounds) + 
     scale_x_log10()
   conveniencefunctions::cf_outputFigure(pl, ...)
+}
+
+
+#' Title
+#'
+#' @param pd 
+#' @param ... 
+#'
+#' @return ggplot
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family L1
+#' @importFrom conveniencefunctions cfggplot cf_outputFigure
+#'
+#' @examples
+pd_L1_getUnbiasedValues <- function(pd, ...) {
+  ncores <- 6
+  values <- parallel::mclapply(X = seq_len(nrow(pd$result$L1)), mc.cores = ncores, FUN = function(i) {
+    pd$obj_data(as.parvec(pd$result$L1,i), fixed = pd$fixed, deriv = FALSE)})
+  pd$result$L1$valueUnbiased <- values
+  pd
 }
 
 
