@@ -39,7 +39,7 @@ pe <- readPetab(pe_file)
 
 
 # Apparently, the scale is not found
-pd <- importPEtabSBML_indiv(pe_file, .compiledFolder = .compiledFolder, NFLAGcompile = 0, SFLAGbrowser = "2")
+pd <- importPEtabSBML_indiv(pe_file, .compiledFolder = .compiledFolder, NFLAGcompile = 0, SFLAGbrowser = "5")
 
 
 # -------------------------------------------------------------------------#

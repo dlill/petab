@@ -36,7 +36,7 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
 )
 {
   ## load required packages
-
+  
   require(libSBML)
   require(dplyr)
   require(rlang)
@@ -45,7 +45,7 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
   require(ggplot2)
   require(trust)
   ## Define path to SBML and PEtab files --------------------
-
+  
   starttime <- Sys.time()
   if(testCases == FALSE){
     if(is.null(SBML_file))       SBML_file       <- paste0(path2model, modelname, "/model_", modelname, ".xml")
@@ -66,10 +66,10 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
   if(!file.exists(condition_file)){  cat(paste0("The file ",mywd,condition_file, " does not exist. Please check spelling or provide the file name via the condition_file argument.")); return(NULL)}
   if(!file.exists(data_file)){       cat(paste0("The file ",mywd,data_file, " does not exist. Please check spelling or provide the file name via the data_file argument.")); return(NULL)}
   if(!file.exists(parameter_file)){  cat(paste0("The file ",mywd,parameter_file, " does not exist. Please check spelling or provide the file name via the parameter_file argument.")); return(NULL)}
-
+  
   if(is.null(modelname)) modelname <- "mymodel"
   ## Load shared objects --------------------
-
+  
   dir.create(paste0(mywd,"/CompiledObjects/"), showWarnings = FALSE)
   setwd(paste0(mywd,"/CompiledObjects/"))
   files_loaded <- FALSE
@@ -78,9 +78,9 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
     files_loaded <- TRUE
   }
   setwd(mywd)
-
+  
   ## Model Definition - Equations --------------------
-
+  
   cat("Reading SBML file ...\n")
   mylist <- getReactionsSBML(SBML_file, condition_file)
   myreactions <- mylist$reactions
@@ -89,15 +89,15 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
   mypreeqEvents <- mylist$preeqEvents
   mystates <- mylist$mystates
   reactions <<- myreactions
-
-
+  
+  
   ## g - Model Definition - Observables --------------------
-
+  
   cat("Reading observables ...\n")
   myobservables <- getObservablesSBML(observable_file)
   observables <<- myobservables
-
-
+  
+  
   cat("Compiling observable function ...\n")
   if(!files_loaded) {
     setwd(paste0(mywd,"/CompiledObjects/"))
@@ -105,34 +105,34 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
     setwd(mywd)
   }
   g <<- myg
-
-
+  
+  
   ## data - Get Data ------------
-
+  
   cat("Reading data file ...\n")
   mydataSBML <- getDataPEtabSBML(data_file, observable_file)
   mydata <- mydataSBML$data
   mydata <<- mydata
-
-
+  
+  
   ## x - Model Generation ---------------------
-
+  
   cat("Compiling ODE model ...\n")
-
+  
   if(!files_loaded) {
     setwd(paste0(mywd,"/CompiledObjects/"))
     myodemodel <- odemodel(myreactions, forcings = NULL, events = myevents, fixed=NULL, modelname = paste0("odemodel_", modelname), jacobian = "inz.lsodes", compile = TRUE)
     setwd(mywd)
   }
   ODEmodel <<- myodemodel
-
-
+  
+  
   ## err -  Check and define error model ------------
-
+  
   cat("Check and compile error model ...\n")
   myerrors <- mydataSBML$errors
   errors <<- myerrors
-
+  
   myerr <- NULL
   if(!files_loaded) {
     if(!is_empty(getSymbols(myerrors))){
@@ -142,9 +142,9 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
     }
   }
   err <<- myerr
-
+  
   ## Define constraints, initials, parameters and compartments --------------
-
+  
   cat("Reading parameters and initials ...\n")
   myparameters <- getParametersSBML(parameter_file, SBML_file)
   myconstraints <- myparameters$constraints
@@ -153,14 +153,14 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
   myinitialsSBML <- getInitialsSBML(SBML_file, condition_file)
   mycompartments <- myinitialsSBML$compartments
   myinitials <- myinitialsSBML$initials
-
+  
   ## p - Parameter transformations -----------
-
+  
   # Generate condition.grid
   grid <- getConditionsSBML(conditions = condition_file, data = data_file, observables_file = observable_file)
   mypreeqCons <- grid$preeqCons
   mycondition.grid <- grid$condition_grid
-
+  
   if(!is.null(SBMLfixedpars)){
     for (i in 1:length(SBMLfixedpars)) {
       if(!names(SBMLfixedpars)[i] %in% names(mycondition.grid))  mycondition.grid[names(SBMLfixedpars)[i]] <- SBMLfixedpars[i]
@@ -168,7 +168,7 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
   }
   condi_pars <- names(mycondition.grid)[!names(mycondition.grid) %in% c("conditionName","conditionId")]
   condition.grid <<- mycondition.grid
-
+  
   cat("Generate parameter transformations ...\n")
   myinnerpars <- unique(c(getParameters(myodemodel), getParameters(myg), getSymbols(myerrors)))
   names(myinnerpars) <- myinnerpars
@@ -181,7 +181,7 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
     }
   }
   trafo <- replaceSymbols(names(myconstraints), myconstraints, trafo)
-
+  
   # branch trafo for different conditions
   mytrafoL <- branch(trafo, table=mycondition.grid)
   # set preequilibration event initials to corresponding values
@@ -191,7 +191,7 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
   }
   # set remaining event initial to 0
   mytrafoL <- repar("x~0", mytrafoL , x = setdiff(unique(myevents$var), unique(mypreeqEvents$var)))
-
+  
   # condition-specific assignment of parameters from condition grid
   if(length(condi_pars) > 0){
     for (j in 1:length(names(mytrafoL))) {
@@ -200,8 +200,8 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
       }
     }
   }
-
-
+  
+  
   # transform parameters according to scale defined in the parameter PEtab file
   parscales <- attr(myfit_values,"parscale")
   mynames <- names(parscales)
@@ -214,10 +214,10 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
     mytrafoL <- repar(paste0("x~",par,"(x)"), mytrafoL, x = parameter)
   }
   trafoL <<- mytrafoL
-
-
+  
+  
   ## Specify prediction functions ------
-
+  
   # Get numeric steady state for preequilibration conditions
   if(!is.null(mypreeqCons)){
     myf <- as.eqnvec(myreactions_orig)[mystates]
@@ -231,7 +231,7 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
     pSS <- P(myf, condition = "c0", method = "implicit", compile = TRUE, modelname = paste0("preeq_", modelname))
     setwd(mywd)
   } else pSS <- NULL
-
+  
   cat("Generate prediction function ...\n")
   tolerances <- 1e-7
   myp0 <- myx <- NULL
@@ -245,51 +245,51 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
                     optionsSens = list(method = "lsodes", lrw=200000, rtol = tolerances, atol = tolerances),
                     condition = C)
   }
-
+  
   p0 <<- myp0
   x <<- myx
-
+  
   ## Generate objective function and initial parameter set -------
-
+  
   myouterpars <- getParameters(myp0)
   mypouter <- structure(rep(NA,length(myouterpars)), names = myouterpars)
-
+  
   common <- intersect(names(mypouter),names(myfit_values))
   mypouter[common] <- myfit_values[common]
   attr(mypouter, "parscales") <- parscales[which(names(myfit_values)%in%names(mypouter))]
   attr(mypouter, "lowerBound") <- attr(myfit_values,"lowerBound")[which(names(myfit_values)%in%names(mypouter))]
   attr(mypouter, "upperBound") <- attr(myfit_values,"upperBound")[which(names(myfit_values)%in%names(mypouter))]
   pouter <<- mypouter
-
-
+  
+  
   ## Define objective function -------
-
+  
   cat("Generate objective function ...\n")
   if(!is.null(myerrors)){
     myobj <- normL2(mydata, myg*myx*myp0, errmodel = myerr) #+ constraintL2(prior, sigma=16)
   } else myobj <- normL2(mydata, myg*myx*myp0)
   obj <<- myobj
-
+  
   mytimes <- seq(0,max(do.call(c, lapply(1:length(mydata), function(i) max(mydata[[i]]$time)))), len=501)
   times <<- mytimes
-
+  
   if(!files_loaded){
     setwd(paste0(mywd,"/CompiledObjects/"))
     save(list = c("myg","myodemodel","myerr"),file = paste0(modelname,".RData"))
     setwd(mywd)
   }
-
+  
   model_name <<- modelname
-
+  
   endtime <- Sys.time()
   mytimediff <- as.numeric(difftime(endtime, starttime, unit="secs"))
   if(mytimediff > 3600) cat(paste0(modelname, " imported in ",as.character(format(as.numeric(difftime(endtime, starttime, unit="hours")), digits=3)), " hours.\n")) else
     if(mytimediff > 60) cat(paste0(modelname, " imported in ",as.character(format(as.numeric(difftime(endtime, starttime, unit="mins")), digits=3)), " minutes.\n")) else
       cat(paste0(modelname, " imported in ",as.character(format(as.numeric(difftime(endtime, starttime, unit="secs")), digits=3)), " seconds.\n"))
   # return(modelname)
-
-
-
+  
+  
+  
   # .. Collect list -----
   symbolicEquations <- list(
     reactions   = myreactions,
@@ -305,7 +305,7 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
   prd <- (myg*myx*myp0)
   obj_data <- normL2(mydata, prd, errmodel = myerr,
                      times = seq(0,max(as.data.frame(mydata)$time), len=501))
-
+  
   filenameParts = list(modelname = modelname, .currentFolder = mywd,
                        .compiledFolder = "CompiledObjects",type = "classic")
   pe <- readPetab(filename = file.path(path2model, modelname))
@@ -332,9 +332,9 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
     prd                = prd,
     obj_data           = obj_data
   )
-
-
-
+  
+  
+  
   pd
 }
 
@@ -526,7 +526,7 @@ testPEtabSBML <- function(models = c(
         dev.off()
         plottest <- T
         cat(green("Import and plot test for ", fgh, " successful!\n\n\n"))
-
+        
         output <- rbind(output, data.frame(
           modelname = model, import = importtest,
           # fitting_time = format(as.numeric(difftime(fitendtime, fitstarttime, unit = "mins")), digits = 3),
@@ -555,12 +555,12 @@ testPEtabSBML <- function(models = c(
       output[which(output$modelname == model), "tol_chi2_sol"] <- mysolution$tol_chi2
       output[which(output$modelname == model), "LL_sol"] <- mysolution$llh
       output[which(output$modelname == model), "tol_LL_sol"] <- mysolution$tol_llh
-
+      
       # extract simulation values
       simu_output[which(simu_output$modelname == model), "tol_simus_sol"] <- mysolution$tol_simulations
       mysimulations <- read.csv(paste0("PEtabTests/", model, "/_simulations.tsv"), sep = "\t")
       simu_prediction <- subset(predictions, modelname == model)
-
+      
       # iterate through simulation points
       for (nrow in 1:nrow(mysimulations)) {
         simu_row <- mysimulations[nrow,]
@@ -568,7 +568,7 @@ testPEtabSBML <- function(models = c(
         simu_obs <- simu_row$observableId %>% as.character()
         simu_condi <- simu_row$simulationConditionId %>% as.character()
         simu_obspars <- simu_row$observableParameters
-
+        
         if(!is.null(simu_obspars) & length(unique(simu_prediction$pred.condition)) > 1){
           simu_condi <- paste0(simu_condi, "_", simu_obspars)
         }
@@ -577,13 +577,13 @@ testPEtabSBML <- function(models = c(
         if(pred_row$obs.transformation == "log10") pred_row$pred.value <- 10**pred_row$pred.value
         if(pred_row$obs.transformation == "log") pred_row$pred.value <- exp(pred_row$pred.value)
         simu_value <- pred_row$pred.value
-
+        
         simu_output[which(simu_output$modelname == model), paste0("simu_", nrow)] <- simu_value
         simu_output[which(simu_output$modelname == model), paste0("simu_", nrow,"_sol")] <- mysimulations$simulation[nrow]
       }
     }
   }
-
+  
   testendtime <- Sys.time()
   mytimediff <- as.numeric(difftime(testendtime, teststarttime, unit = "secs"))
   if (mytimediff > 3600) {
@@ -594,9 +594,9 @@ testPEtabSBML <- function(models = c(
     } else {
       cat(green(paste0("Test done in ", as.character(format(as.numeric(difftime(testendtime, teststarttime, unit = "secs")), digits = 3)), " seconds.\n")))
     }
-
+  
   if (testCases) {
-
+    
     # check simulations
     for (model in models) {
       correctORnot <- NULL
@@ -611,13 +611,13 @@ testPEtabSBML <- function(models = c(
       } else SimuPassed <- FALSE
       simu_output[which(simu_output$modelname == model), "Passed"] <- SimuPassed
     }
-
+    
     output <- cbind(output,
                     X2Passed = (abs(output$chi2 - output$chi2_sol) < output$tol_chi2_sol),
                     LLPassed = (abs(output$LL - output$LL_sol) < output$tol_LL_sol)
     )
   }
-
+  
   if (!testCases) simu_output <- NULL
   return(list(output = output,simu_output = simu_output))
 }
@@ -642,19 +642,19 @@ getConditionsSBML <- function(conditions,data, observables_file, FLAGnormalImpor
   condition.grid_orig <- read.csv(file = conditions, sep = "\t")
   mydata <- read.csv(file = data, sep = "\t")
   myobservables <- read.csv(file = observables_file, sep = "\t")
-
+  
   # handle preequilibration conditions
   myCons <- condition.grid_orig$conditionId
   mypreeqCons <- NULL
   for (con in myCons){if(paste0("preeq_", con)%in%myCons) mypreeqCons <- c(mypreeqCons, con)}
   condition.grid_orig <- dplyr::filter(condition.grid_orig, !conditionId%in%mypreeqCons)
   condition.grid_orig$conditionId <- sub("preeq_", "", condition.grid_orig$conditionId)
-
+  
   # check which conditions are observed
   condis_obs <- mydata$simulationConditionId %>% unique()
   # check which observables exist
   observables <- mydata$observableId %>% unique()
-
+  
   # replace "" by NA
   if(!is.null(mydata$observableParameters)){
     mydata$observableParameters <- mydata$observableParameters %>% as.character()
@@ -697,7 +697,7 @@ getConditionsSBML <- function(conditions,data, observables_file, FLAGnormalImpor
             condition.grid_obs[which(condition.grid_obs$conditionId==condition),col_name] <- obs_par
             condition.grid_obs$conditionId <- as.character(condition.grid_obs$conditionId)
             condition.grid_obs$conditionId[which(condition.grid_obs$conditionId==condition)] <- paste0(condition,"_", obs_par)
-
+            
             condition.grid_orig <- rbind(condition.grid_orig, add)
             condition.grid_orig$conditionId <- as.character(condition.grid_orig$conditionId)
             condition.grid_orig$conditionId[which(condition.grid_orig$conditionId==condition)] <- paste0(condition,"_", obs_par)
@@ -708,8 +708,8 @@ getConditionsSBML <- function(conditions,data, observables_file, FLAGnormalImpor
     mycondition.grid <- suppressWarnings(dplyr::inner_join(condition.grid_orig,condition.grid_obs, by = "conditionId"))
     # avoid warning if not all conditions are observed
   } else mycondition.grid <- condition.grid_orig
-
-
+  
+  
   # Error parameters: Need to cover the four cases
   # 1. err = noiseParameter1_obs, noiseParameter1_obs = c(1)              => No columns in condition.grid
   # 2. err = noiseParameter1_obs, noiseParameter1_obs = c("sigma1")       => Need Column in condition.grid
@@ -747,25 +747,25 @@ getConditionsSBML <- function(conditions,data, observables_file, FLAGnormalImpor
           }
         }
       }
-
+      
     }
     mycondition.grid <- suppressWarnings(dplyr::inner_join(condition.grid_orig,condition.grid_noise, by = "conditionId"))
     # avoid warning if not all conditions are observed
   }
-
+  
   if(!exists("mycondition.grid")) mycondition.grid <- condition.grid_orig
   rownames(mycondition.grid) <- mycondition.grid$conditionId
   # mycondition.grid$conditionId <- NULL ## we need this column in cases with just one condition!
-
+  
   # check if all conditions are observed
   if(nrow(mycondition.grid) < nrow(condition.grid_orig)) print("There exist non-observed conditions!")
-
+  
   for(i in 1:nrow(mycondition.grid)){
     for(j in 1:ncol(mycondition.grid)){
       if(is.na(mycondition.grid[i,j])) mycondition.grid[i,j] <- "1"
     }
   }
-
+  
   return(list(condition_grid=mycondition.grid, preeqCons=mypreeqCons))
 }
 
@@ -784,21 +784,21 @@ getConditionsSBML <- function(conditions,data, observables_file, FLAGnormalImpor
 #' @export
 #'
 getInitialsSBML <- function(model, conditions){
-
+  
   condition.grid <- read.csv(file = conditions, sep = "\t")
   model = readSBML(model)$getModel()
   # model = libSBML::readSBML(model)$getModel()
   initials <- NULL
   species <- NULL
-
+  
   # now we can go through all species
   for ( i in 0:(model$getNumSpecies()-1) ){
     current <- model$getSpecies(i)
-
+    
     # now the species can have several cases that determine
     # their initial value
-
-    # it could be that the species is fully determined by an assignment rule
+    
+    # CASE 1: it could be that the species is fully determined by an assignment rule
     # (that apply at all times), so we have to check rules first
     rule <- model$getRule(current$getId())
     if (!is.null(rule))
@@ -807,41 +807,41 @@ getInitialsSBML <- function(model, conditions){
       # is as that determines whether it applies at t0
       rule_type <- rule$getTypeCode()
       type_name <- SBMLTypeCode_toString(rule_type, 'core')
-      # type_name <- libSBML::SBMLTypeCode_toString(rule_type, 'core')
-      if (type_name == "AssignmentRule")
-      {
+      
+      # CASE 1.1: Assignment rule
+      if (type_name == "AssignmentRule"){
         # the initial value is determined by the formula
         math <- rule$getMath()
-        if (!is.null(math))
-        {
+        if (!is.null(math)){
           formula <- formulaToL3String(math)
-          # formula <- libSBML::formulaToL3String(math)
           # print(paste('Species: ', current$getId(), ' is determined at all times by formula: ', formula))
           initials <- c(initials,formula)
           species <- c(species,current$getId())
-
-          # no need to look at other values so continue for another one
+          
+          # no need to look at other values so continue with next species
           next
         }
       }
-
+      
+      # CASE 1.2: Rate rule
       if (type_name == "RateRule")
       {
         math <- rule$getMath()
         if (!is.null(math))
         {
           formula <- formulaToL3String(math)
-          # formula <- libSBML::formulaToL3String(math)
           # print(paste('Species: ', current$getId(), ' has an ode rule with formula: ', formula))
           initials <- c(initials,formula)
           species <- c(species,current$getId())
-
-          # even though there is an ODE attached to the species, its initial value is needed
+          
+          # there is an ODE attached to the species, its initial value is needed
         }
       }
     }
-
-
+    
+    
+    # CASE 2 (or subcase of 1?): Initial assignment
+    
     # it could have an initial assignment
     ia <- model$getInitialAssignment(current$getId())
     if (!is.null(ia))
@@ -854,14 +854,14 @@ getInitialsSBML <- function(model, conditions){
         # print(paste("Species: ", current$getId(), " has an initial assignment with formula: ", formula))
         initials <- c(initials,formula)
         species <- c(species,current$getId())
-
+        
         # as soon as you have that formula, no initial concentration / amount applies
         # so we don't have to look at anything else for this species
         next
       }
     }
-
-
+    
+    # CASE 3 (or subcase of 1?): Inital amount
     # it could have an initial amount
     if (current$isSetInitialAmount())
     {
@@ -869,7 +869,8 @@ getInitialsSBML <- function(model, conditions){
       initials <- c(initials,current$getInitialAmount())
       species <- c(species,current$getId())
     }
-
+    
+    # CASE 4 (or subcase of 1?): Inital Concentration
     # it could have an initial concentration
     if (current$isSetInitialConcentration())
     {
@@ -878,38 +879,46 @@ getInitialsSBML <- function(model, conditions){
       species <- c(species,current$getId())
     }
   }
-
   names(initials) <- species
-
-
+  
+  
   ## extract compartments
+  compartments <- sbmlImport_extractCompartments(model, condition.grid)
+  
+  return(list(initials = initials, compartments = compartments))
+}
 
+
+sbmlImport_extractCompartments <- function(model, condition.grid) {
+  
+  # better refactoring: arguments should be turned into modelfile (currently takes the model already read in) and experimentalConditions (file)
+  
   # check if compartments exist
-  if(model$getNumCompartments()>0)
-  {
-
+  if(model$getNumCompartments()>0) {
+    
     #initialize vectors
     comp_name <- NULL
     comp_size <- NULL
-
-    for ( i in 0:(model$getNumCompartments()-1) )
-    {
+    
+    for ( i in 0:(model$getNumCompartments()-1) ) {
+      
       # get compartment name and size
-      which <- model$getCompartment(i)$getId()
-      if(which %in% names(condition.grid)){
-        size <- condition.grid[which] %>% as.numeric()
+      
+      compartmentId <- model$getCompartment(i)$getId()
+      if(compartmentId %in% names(condition.grid)){
+        size <- condition.grid[compartmentId] %>% as.numeric()
       } else size <- model$getCompartment(i)$getSize()
-
-      comp_name <- c(comp_name,which)
+      
+      comp_name <- c(comp_name,compartmentId)
       comp_size <- c(comp_size,size)
-
+      
     }
     compartments <- comp_size
     names(compartments) <- comp_name
   }
-
-  return(list(initials = initials, compartments = compartments))
+  compartments
 }
+
 
 
 #' Import observables from PEtab.
@@ -928,21 +937,21 @@ getObservablesSBML <- function(observables){
   ## Load observables
   myobs <- read.csv(file = observables, sep = "\t") %>% as.data.frame()
   obsNames <- myobs$observableId %>% as.character()
-
+  
   # # rename observables with _obs
   # obsNames <- paste0(obsNames,"_obs")
-
+  
   obsFormula <- myobs$observableFormula %>% as.character()
   obsFormula[which(myobs$observableTransformation=="log")] <- paste0("log(", obsFormula[which(myobs$observableTransformation=="log")], ")")
   obsFormula[which(myobs$observableTransformation=="log10")] <- paste0("log10(", obsFormula[which(myobs$observableTransformation=="log10")], ")")
   names(obsFormula) <- obsNames
   observables <- obsFormula %>% as.eqnvec()
-
+  
   # collect observable transformations as attribute
   if(!is.null(myobs$observableTransformation)){
     obsscales <- myobs$observableTransformation %>% as.character()
   } else obsscales <- rep("lin", length(obsNames))
-
+  
   attr(observables,"obsscales") <- obsscales
   return(observables)
 }
@@ -1015,7 +1024,7 @@ getParametersSBML <- function(parameters, model){
     attr(pouter,"lowerBound") <- parlower
     attr(pouter,"upperBound") <- parupper
   }
-
+  
   # check if additional parameters exist in SBML file
   model = readSBML(model)$getModel()
   n_pars <- model$getNumParameters()
@@ -1030,7 +1039,7 @@ getParametersSBML <- function(parameters, model){
       count <- count + 1
     }
   }
-
+  
   return(list(constraints=constraints, pouter=pouter, SBMLfixedpars = SBMLfixedpars))
 }
 
@@ -1053,28 +1062,28 @@ getParametersSBML <- function(parameters, model){
 getReactionsSBML <- function(model, conditions){
   # m = libSBML::readSBML(model)$getModel()
   m = readSBML(model)$getModel()
-
+  
   # .. Initialization -----
   reactions <- NULL
   events <- NULL
   compartments <- NULL
-
+  
   # .. import compartments -----
   N_species <- m$getNumSpecies()
   compartments <- do.call(c, lapply(0:(N_species-1), function(i){ m$getSpecies(i)$getCompartment()}))
   names_compartments <- do.call(c, lapply(0:(N_species-1), function(i){ m$getSpecies(i)$getId() }))
   names(compartments) <- names_compartments
-
+  
   # if(unique(compartments)[1]=="default") compartments <- NULL
-
+  
   # .. import reactions -----
   N_reactions <- m$getNumReactions()
   for (reaction in 0:(N_reactions-1)){
     reactionDetails <- sbmlImport_getReactionDetails(m, reaction, compartments)
     reactions <- do.call(dMod::addReaction, c(list(eqnlist = reactions), reactionDetails))
   }
-
-
+  
+  
   # .. import functions -----
   N_fundefs <- m$getNumFunctionDefinitions()
   if (N_fundefs > 0){
@@ -1084,7 +1093,7 @@ getReactionsSBML <- function(model, conditions){
       #print(formulaToL3String(mymath$getChild(mymath$getNumChildren()-1)))
     }
   }
-
+  
   # .. import inputs -----
   N_rules <- m$getNumRules()
   if (N_rules > 0){
@@ -1095,7 +1104,7 @@ getReactionsSBML <- function(model, conditions){
     }
   }
   reactions$rates <- gsub(" ","",reactions$rates)
-
+  
   # .. Events by piecewise functions -----
   # replace function based inputs by events (done in reactions)
   events <- sbmlImport_getEventStrings(reactions, events = events)
@@ -1110,7 +1119,7 @@ getReactionsSBML <- function(model, conditions){
   # replace mathematical expressions
   reactions$rates <- replaceSymbols(c("t", "TIME", "T"), "time", reactions$rates)
   events <- TransformEvents(events)
-
+  
   # .. ## check for preequilibration conditions and handle them via events -----
   preeqEvents <- NULL
   myconditions <- read.csv(file = conditions, sep = "\t")
@@ -1141,8 +1150,8 @@ getReactionsSBML <- function(model, conditions){
     events <- rbind(events, preeqEvents[i,])
     reactions <- reactions %>% dMod::addReaction("", preeqEvents[[i,"var"]], "0")
   }
-
-
+  
+  
   # for(i in 1:length(reactions$rates)){
   #   reaction <- reactions$rates[i]
   #   if(stringr::str_detect(reaction, "pow")){
@@ -1152,10 +1161,10 @@ getReactionsSBML <- function(model, conditions){
   #     reactions$rates[i] <- reaction_new
   #   } else reactions$rates[i] <- reaction
   # }
-
+  
   mydata <- as.data.frame(reactions)
   reactions <- as.eqnlist(mydata, compartments)
-
+  
   return(list(reactions=reactions, events=events, reactions_orig=reactions_orig, preeqEvents=preeqEvents, mystates=mystates))
 }
 # ..  -----
@@ -1166,36 +1175,36 @@ function_def_to_string <- function(fun)
 {
   if (is.null(fun)) return;
   id <- fun$getId()
-
+  
   math <- fun$getMath()
   if (is.null(math)) return;
-
+  
   # the function will be of the form lambda(a, b, formula)
   # so the last child of the AST_Node is the actual math everything in front of it
   # the arguments
   #
   # So to generate the desired output function_definition_id(args) = math
   # we use:
-
-
+  
+  
   num_children <- math$getNumChildren()
-
+  
   result <- paste(id, '(', sep="")
   for (i in 1:(num_children-1) ) # this leaves out the last one
   {
     # result <- paste(result, libSBML::formulaToL3String(math$getChild(i-1)), sep="")
     result <- paste(result, formulaToL3String(math$getChild(i-1)), sep="")
-
+    
     if (i < (num_children-1))
       result <- paste(result, ', ', sep="")
-
+    
   }
-
+  
   # result <- paste(result, ') = ', libSBML::formulaToL3String(math$getChild(num_children - 1)), sep="")
   result <- paste(result, ') = ', formulaToL3String(math$getChild(num_children - 1)), sep="")
-
+  
   return (result)
-
+  
 }
 
 #' Import Data from PEtab
@@ -1216,7 +1225,7 @@ getDataPEtabSBML <- function(data, observables){
   myobs <- read.csv(file = observables, sep = "\t") %>% as.data.frame()
   obs <- myobs$observableId %>% as.character()
   errors <- NULL
-
+  
   # if(!is.null(mydata$noiseParameters) & !is.null(myobs$noiseFormula)) cat(red("Warning: errors specified in data and observable file.\n"))
   if(!mydata$noiseParameters %>% is.numeric) {
     # define errors
@@ -1230,7 +1239,7 @@ getDataPEtabSBML <- function(data, observables){
       mydata$noiseParameters <- errors %>% as.numeric()
     } else mydata$noiseParameters <- NA
   }
-
+  
   # # rename observables with _obs
   # obs <- mydata$observableId %>% as.character() %>% paste0("_obs")
   # mydata$observableId <- obs
@@ -1249,7 +1258,7 @@ getDataPEtabSBML <- function(data, observables){
       }
     }
   }
-
+  
   # select necessary data columns
   data <- data.frame(name = mydata$observableId, time = mydata$time,
                      value = mydata$measurement, sigma = mydata$noiseParameters,
@@ -1259,7 +1268,7 @@ getDataPEtabSBML <- function(data, observables){
   obs2log10 <- myobs$observableId[which(myobs$observableTransformation=="log10")]
   data$value[which(data$name%in%obs2log10)] <- log10(data$value[which(data$name%in%obs2log10)])
   data <- data %>% as.datalist()
-
+  
   return(list(data=data,errors=errors))
 }
 
@@ -1304,7 +1313,7 @@ plotPEtabSBML <- function(..., g1 = g,
   }
   print(P1)
   # plotPrediction(prediction)
-
+  
   # return(modelname)
 }
 
@@ -1354,9 +1363,9 @@ sbmlImport_getReactionDetails <- function(m, reaction, compartments) {
       # rate <- substr(rate,pos+1,length(strsplit(rate, "")[[1]]=="*")) # Fixed by DanielL: compartment is not always at beginning
     }
   }
-
+  
   rate <- gsub(" ", "", rate)
-
+  
   list(from = Reactantstring, to = Productstring,rate = rate)
 }
 
@@ -1417,6 +1426,120 @@ TransformEvents <- function(events){
   } else return(NULL)
 }
 
+
+
+
+
+#' Import Parameters from PEtab
+#'
+#' @description This function imports fixed and fitted parameters from the PEtab parameter file as named vectors.
+#'
+#' @param parameters PEtab parameter file as .tsv
+#'
+#' @return constraints and pouter as list of named vectros.
+#'
+#' @author Marcus Rosenblatt and Svenja Kemmer
+#' @importFrom dplyr filter "%>%"
+#' @export
+#'
+getParametersSBML <- function(pe, model){
+  mypars <- read.csv(file = parameters, sep = "\t")
+  fixed <- mypars %>% dplyr::filter(estimate == 0)
+  constraints <- NULL
+  if(nrow(fixed)>0){
+    for(i in 1:length(fixed$parameterScale)) {
+      parscale <- fixed$parameterScale[i]
+      par <- fixed$parameterId[i] %>% as.character()
+      value <- fixed$nominalValue[i]
+      if(parscale == "lin") constraints <- c(constraints, value)
+      if(parscale == "log10") constraints <- c(constraints, log10(value))
+      if(parscale == "log") constraints <- c(constraints, log(value))
+      else paste("This type of parameterScale is not supported.")
+      names(constraints)[i] <- par
+    }
+    parscales <- fixed$parameterScale %>% as.character()
+    pars <- fixed$parameterId %>% as.character()
+    names(parscales) <- pars
+    attr(constraints,"parscale") <- parscales
+  }
+  
+  estimated <- mypars %>% filter(estimate == 1)
+  pouter <- NULL
+  parlower <- NULL
+  parupper <- NULL
+  if(nrow(estimated)>0){
+    for(i in 1:length(estimated$parameterScale)) {
+      parscale <- estimated$parameterScale[i]
+      par <- estimated$parameterId[i] %>% as.character()
+      value <- estimated$nominalValue[i]
+      lowervalue <- estimated$lowerBound[i]
+      uppervalue <- estimated$upperBound[i]
+      if(parscale == "lin"){
+        pouter <- c(pouter, value)
+        parlower <- c(parlower, lowervalue)
+        parupper <- c(parupper, uppervalue)
+      } else if(parscale == "log10"){
+        pouter <- c(pouter, log10(value))
+        parlower <- c(parlower, log10(lowervalue))
+        parupper <- c(parupper, log10(uppervalue))
+      } else if(parscale == "log"){
+        pouter <- c(pouter, log(value))
+        parlower <- c(parlower, log(lowervalue))
+        parupper <- c(parupper, log(uppervalue))
+      } else paste("This type of parameterScale is not supported.")
+      names(pouter)[i] <- par
+      names(parlower)[i] <- par
+      names(parupper)[i] <- par
+    }
+    parscales <- estimated$parameterScale %>% as.character()
+    pars <- estimated$parameterId %>% as.character()
+    names(parscales) <- pars
+    attr(pouter,"parscale") <- parscales
+    attr(pouter,"lowerBound") <- parlower
+    attr(pouter,"upperBound") <- parupper
+  }
+  
+  # check if additional parameters exist in SBML file
+  SBMLfixedpars <- sbmlImport_getParametersFromSBML(model, pouter, constraints)
+  
+  return(list(constraints=constraints, pouter=pouter, SBMLfixedpars = SBMLfixedpars))
+}
+
+
+
+#' Extract parameters from SBML
+#' 
+#' @param modelfile 
+#' @param pouter 
+#' @param constraints 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+sbmlImport_getParametersFromSBML <- function(modelfile, pouter, constraints) {
+  # could be made nicer
+  # Should return same structure as "myconstraints" and "myfit_values" 
+  #   and it also needs to be checked whether there are any inner parameters mapping to the 
+  
+  model = readSBML(modelfile)$getModel()
+  n_pars <- model$getNumParameters()
+  SBMLfixedpars <- NULL
+  count <- 1
+  for (i in (seq_len(n_pars)-1)) {
+    mypar <- model$getParameter(i)$getId()
+    if(!mypar %in% names(pouter) & !mypar %in% names(constraints)){
+      value <- model$getParameter(i)$getValue()
+      SBMLfixedpars <- c(SBMLfixedpars, value)
+      names(SBMLfixedpars)[count] <- mypar
+      count <- count + 1
+    }
+  }
+  SBMLfixedpars
+}
+
+
+
 # -------------------------------------------------------------------------#
 # PETabIndiv ----
 # -------------------------------------------------------------------------#
@@ -1463,15 +1586,15 @@ TransformEvents <- function(events){
 #' updateParscalesToBaseTrafo(scales_outer, est.grid)
 updateParscalesToBaseTrafo <- function(scales_outer, est.grid) {
   # parscales = c(outername = scaleouter)
-
+  
   # Get name mapping between est.grid pars and outer pars
   pars_inner_outer <- getEstGridParameterMapping(est.grid) # c(inner = outer)
   pars_inner_outer <- pars_inner_outer[!is.na(pars_inner_outer)]
   pars_outer_inner <- setNames(names(pars_inner_outer), pars_inner_outer) # c(outer = inner)
-
+  
   # Get scales for inner pars
   scales_inner <- setNames(scales_outer[pars_inner_outer], names(pars_inner_outer))
-
+  
   # Determine if there are outer parameters mapping to the same inner parameter with different scales
   dupes <- names(scales_inner)[duplicated(names(scales_inner))]
   dupes <- unique(dupes)
@@ -1512,7 +1635,7 @@ updateParscalesToBaseTrafo <- function(scales_outer, est.grid) {
 getTrafoType <- function(trafo_string) {
   opt.keep.source <- getOption("keep.source") # important for Rscript --vanilla
   options(keep.source = TRUE)
-
+  
   out <- vapply(names(trafo_string), function(nm) {
     ts <- trafo_string[nm]
     pd <- getParseData(parse(text = ts))
@@ -1524,9 +1647,9 @@ getTrafoType <- function(trafo_string) {
     if (pd[1,"token"] == "NUM_CONST") return("NUMBER")
     stop("Unkown trafo type: ", ts)
   }, FUN.VALUE = "TYPE")
-
+  
   options(keep.source = opt.keep.source)
-
+  
   out
 }
 
@@ -1574,7 +1697,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   # .. Set exit behaviour -----
   mywd <- getwd()
   on.exit({setwd(mywd)})
-
+  
   # .. Define path to SBML, PEtab and pd files -----
   filename  <- path.expand(filename)
   path      <- petab_modelname_path(filename)$path
@@ -1582,23 +1705,23 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   files     <- petab_files(filename, FLAGTestCase = testCases, FLAGreturnList = TRUE)
   filenameParts = list(modelname = modelname,.currentFolder = mywd,.compiledFolder = .compiledFolder,type = "indiv")
   rdsfile   <- pd_files(filenameParts)$rdsfile
-
+  
   # .. Read previously imported files -----
   dir.create(.compiledFolder, showWarnings = FALSE)
   if (NFLAGcompile == 3)
     NFLAGcompile <- as.numeric(!inputFileChanged(files[[1]], rdsfile))*2 # Um die Ecke wegen suboptimaler NFLAGcompile Definition
-
+  
   if(NFLAGcompile > 0) {
     pd <- readPd(rdsfile)
     if (NFLAGcompile == 2) return(pd)
   }
-
+  
   ## load required packages
   require(libSBML) # => Not very nice, better explicitly import the required functions
-
+  
   # .. Read PEtab tables -----
   pe <- readPetab(filename)
-
+  
   # .. Model Definition - Equations -----
   mylist           <- getReactionsSBML(files$modelXML, files$experimentalCondition)
   myreactions      <- mylist$reactions
@@ -1607,13 +1730,13 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   mypreeqEvents    <- mylist$preeqEvents
   mystates         <- mylist$mystates
   myobservables    <- getObservablesSBML(files$observables)
-
+  
   # .. Get Data -----
   mydataSBML <- getDataPEtabSBML(files$measurementData, files$observables)
   mydata     <- mydataSBML$data
   myerrors   <- mydataSBML$errors
   myerr <- NULL
-
+  
   # .. Define constraints, initials, parameters and compartments -----
   myparameters   <- getParametersSBML(files$parameters, files$modelXML)
   # [ ] Check constraints
@@ -1627,7 +1750,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   inits_events <- setdiff(unique(myevents$var), unique(mypreeqEvents$var))
   inits_events <- setNames(rep(0, length(inits_events)), inits_events)
   pars_est <- setNames(nm = names(myfit_values))
-
+  
   # .. Parameter transformations -----
   # .. Generate condition.grid -----
   grid <- getConditionsSBML(conditions = files$experimentalCondition,
@@ -1637,7 +1760,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   mypreeqCons      <- grid$preeqCons
   mycondition.grid <- grid$condition_grid
   attr(mydata, "condition.grid") <- mycondition.grid
-
+  
   # .. Build fix.grid, est.grid and trafo -----
   if (grepl(SFLAGbrowser, "2BuildGrids")) browser()
   # Copy condition.grid, take unique identifying column only
@@ -1663,25 +1786,25 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   est.grid[,(names(est.grid)[-1]) := lapply(.SD, function(x) {replace(x, !is.na(as.numeric(x)), NA)}), .SDcols = -1]
   est.grid[,`:=`(ID = 1:.N)]
   gl <- list(est.grid = est.grid, fix.grid = fix.grid)
-
+  
   # .. Initialize Trafo -----
   trafo <- setNames(nm = unique(c(getParameters(myreactions),
                                   getSymbols(myobservables),
                                   setdiff(getSymbols(myerrors), names(myobservables)),
                                   getSymbols(as.character(myevents$value)))))
   trafo <- trafo[trafo != "time"]
-
+  
   # .. MeasurementParameter mappings  -----
   obsParMapping <- petab_getMeasurementParsMapping(pe, column = "observableParameters")
   errParMapping <- petab_getMeasurementParsMapping(pe, column = "noiseParameters")
-
+  
   # Can't remember why I put FLAGoverwrite to TRUE here.
   # For my TGFB model, FLAGoverwrite FALSE would actually work.
   # The condition.grid is correct from the beginning.
   # Todo: Test for several benchmark models, if FLAGoverwrite should be TRUE or can be FALSE
   gl <- indiv_addLocalParsToGridList(pars = obsParMapping, gridlist = gl, FLAGoverwrite = TRUE)
   gl <- indiv_addLocalParsToGridList(pars = errParMapping, gridlist = gl, FLAGoverwrite = TRUE)
-
+  
   # .. Fill values into grid and trafo -----
   cat("fixed inits are taken from SBML, not from pe$parameters (if you have time, change this) ...\n")
   parameterlist <- list(
@@ -1692,7 +1815,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
     list(par = inits_events, overwrite = FALSE),
     list(par = pars_est, overwrite = FALSE)
   )
-
+  
   # Ugly solution, but need to remove the measurementPars from the parameterlist.
   #   They were dealt with in the step before
   parameterlist <- lapply(parameterlist, function(x) {
@@ -1700,10 +1823,10 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
     x$par <- x$par[setdiff(names(x$par), alreadyAvailable)]
     x
   })
-
+  
   # Only keep elements in the list which have at least one parameter
   parameterlist <- parameterlist[vapply(parameterlist, function(pl) as.logical(length(pl$par)), TRUE)]
-
+  
   for (pl in parameterlist) {
     par <- pl$par
     trafoType <- getTrafoType(par)
@@ -1713,12 +1836,12 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
     if (any(!is_symbolic_trafo)) gl <- indiv_addGlobalParsToGridlist(pars = par_grid, gridlist = gl, FLAGoverwrite = pl$overwrite)
     if (any( is_symbolic_trafo)) trafo <- dMod::repar("x~y", trafo, x = names(par_traf), y = par_traf)
   }
-
+  
   # [ ] Pre-Equi Events
   if(!is.null(mypreeqEvents))
     warning("Pre-Equilibration is not yet implemented")
   # [ ] Need example for preeqEvents
-
+  
   # .. Parscales -----
   if (grepl(SFLAGbrowser, "5Scales")) browser()
   # 1 adjust symbolic trafo
@@ -1726,7 +1849,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   parscales <- updateParscalesToBaseTrafo(scales_outer = parscales, est.grid = gl$est.grid)
   trafo <- repar("x ~ 10**(x)", trafo = trafo, x = names(which(parscales=="log10")))
   trafo <- repar("x ~ exp(x)" , trafo = trafo, x = names(which(parscales=="log")))
-
+  
   # 2 Adjust fix.grid
   fg <- gl$fix.grid
   for (nm in intersect(names(fg), names(parscales))) {
@@ -1736,7 +1859,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
     fg[[nm]][!is.finite(fg[[nm]]) & !is.na(fg[[nm]])] <- -1000
   }
   gl$fix.grid <- fg
-
+  
   # .. ParameterFormulaInjection -----
   if (grepl(SFLAGbrowser, "6ParameterFormulaInjection")) browser()
   trafoInjected <- NULL
@@ -1751,7 +1874,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
     # trafoInjected
     trafoInjected <- setNames(pfi$parameterFormula, pfi$parameterId)
   }
-
+  
   # -------------------------------------------------------------------------#
   # .. Model Compilation -----
   # -------------------------------------------------------------------------#
@@ -1760,39 +1883,39 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
     setwd(.compiledFolder)
     cat("Compiling g --- Parallelize with future?\n")
     myg <- dMod::Y(myobservables, myreactions, compile=TRUE, modelname=paste0("g_",modelname))
-
+    
     cat("Compiling odemodel\n")
     myodemodel <- dMod::odemodel(myreactions, forcings = NULL, events = myevents, fixed=NULL,
                                  estimate = c(dMod::getParametersToEstimate(est.grid = gl$est.grid,
-                                                                          trafo = c(trafo, trafoInjected),
-                                                                          reactions = myreactions),
+                                                                            trafo = c(trafo, trafoInjected),
+                                                                            reactions = myreactions),
                                               pe$meta$parameterFormulaInjection$parameterId),
                                  modelname = paste0("odemodel_", modelname),
                                  jacobian = "inz.lsodes", compile = TRUE)
-
+    
     myx <- dMod::Xs(myodemodel,
                     optionsOde = list(method = "lsoda", rtol = 1e-7, atol = 1e-7, maxsteps = 5000),
                     optionsSens = list(method = "lsodes", lrw=200000, rtol = 1e-7, atol = 1e-7))
-
+    
     cat("Compiling errormodel\n")
     if(length(cOde::getSymbols(myerrors)))
       myerr <- dMod::Y(myerrors, f = c(as.eqnvec(myreactions), myobservables), states = names(myobservables),
                        attach.input = FALSE, compile = TRUE, modelname = paste0("errfn_", modelname))
-
+    
     # [ ] Pre-equilibration
     # mypSS <- Id()
-
+    
     p1 <- dMod::Id()
     if (length(trafoInjected)){
       cat("Compiling pInjected\n")
       p1 <- dMod::P(trafoInjected, compile = TRUE, modelname = paste0("PInjected_", modelname),
                     attach.input = TRUE)
     }
-
+    
     cat("Compiling p\n")
     p0 <- dMod::P(trafo, compile = TRUE, modelname = paste0("P_", modelname))
     setwd(mywd)
-
+    
   } else if (NFLAGcompile == 1) {
     myg        <- pd$dModAtoms$fns$g
     myx        <- pd$dModAtoms$fns$x
@@ -1801,7 +1924,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
     myodemodel <- pd$dModAtoms$odemodel
     myerr      <- pd$dModAtoms$e
   }
-
+  
   # -------------------------------------------------------------------------#
   # Collect list ----
   # -------------------------------------------------------------------------#
@@ -1819,10 +1942,10 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
     errors  = myerrors,
     trafo = trafo,
     trafoInjected = trafoInjected)
-
+  
   pars <- dMod::unclass_parvec(myfit_values)
   pars <- pars[setdiff(names(pars), names(trafoInjected))]
-
+  
   # .. Collect final list -----
   pd <- list(
     # petab
@@ -1845,10 +1968,10 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   )
   # High level prediction function
   pd <- pdIndiv_rebuildPrdObj(pd = pd,Nobjtimes = 100)
-
+  
   # .. Save and return -----
   saveRDS(pd, rdsfile)
-
+  
   pd
 }
 
