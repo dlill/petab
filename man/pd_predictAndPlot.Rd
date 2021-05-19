@@ -35,6 +35,12 @@ pd_predictAndPlot(
 \description{
 Title
 }
+\seealso{
+Other Plotting: 
+\code{\link{pd_plot}()},
+\code{\link{pd_predictAndPlot2}()}
+}
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }
+\concept{Plotting}

@@ -4,13 +4,7 @@
 \alias{pd_fit}
 \title{Run a fit only for observation parameters}
 \usage{
-pd_fit(
-  pd,
-  NFLAGsavePd = 1,
-  iterlim = 1000,
-  printIter = TRUE,
-  traceFile = pd_files(pd)$traceFile
-)
+pd_fit(pd, NFLAGsavePd = 1, iterlim = 1000, printIter = TRUE, traceFile = NULL)
 }
 \arguments{
 \item{NFLAGsavePd}{3 as an option doesn't make sense hre}

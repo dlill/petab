@@ -36,6 +36,12 @@ Predicts with "pars" and "times"
 pdx <- petab_exampleRead("01", "pd")
 pd_plot(pdx)
 }
+\seealso{
+Other Plotting: 
+\code{\link{pd_predictAndPlot2}()},
+\code{\link{pd_predictAndPlot}()}
+}
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }
+\concept{Plotting}

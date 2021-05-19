@@ -778,13 +778,18 @@ pd_L1_plotValueVsLambda <- function(pd, ...) {
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family L1
-#' @importFrom conveniencefunctions cfggplot cf_outputFigure
+#' @importFrom parallel mclapply
+#' @importFrom dMod as.parvec
 #'
 #' @examples
 pd_L1_getUnbiasedValues <- function(pd, ...) {
   ncores <- 6
   values <- parallel::mclapply(X = seq_len(nrow(pd$result$L1)), mc.cores = ncores, FUN = function(i) {
-    pd$obj_data(as.parvec(pd$result$L1,i), fixed = pd$fixed, deriv = FALSE)})
+    # add L1-fixed parameters to "fixed"
+    # Fit unbiased
+    # Calculate unbiased obj value
+    pd$obj_data(dMod::as.parvec(pd$result$L1,i), fixed = pd$fixed, deriv = FALSE)
+  })
   pd$result$L1$valueUnbiased <- values
   pd
 }
@@ -809,6 +814,10 @@ pd_L1_getUnbiasedValues <- function(pd, ...) {
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
+#' @family Plotting
+#' @importFrom dMod plotCombined
+#' @importFrom ggforce facet_wrap_paginate
+#' @importFrom conveniencefunctions theme_cf scale_color_cf cf_outputFigure
 #'
 #' @examples
 #' pdx <- petab_exampleRead("01", "pd")
@@ -844,6 +853,9 @@ pd_plot <- function(pd, ..., page = 1, nrow = 3, ncol = 4, filename = NULL, widt
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
+#' @family Plotting
+#' @importFrom conveniencefunctions cf_predict cfggplot scale_color_cf cf_outputFigure
+#' @importFrom ggforce facet_wrap_paginate
 #'
 #' @examples
 pd_predictAndPlot <- function(pd, i,
@@ -926,6 +938,7 @@ pd_predictAndPlot <- function(pd, i,
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
+#' @family Plotting
 #' @importFrom conveniencefunctions cf_predict cfggplot cfgg_getAllAesthetics scale_color_cf cf_outputFigure
 #' @importFrom data.table setnames
 #' @importFrom ggforce n_pages

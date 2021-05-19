@@ -23,7 +23,8 @@
 #
 rm(list = ls(all.names = TRUE))
 try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
-library(petab)
+# library(petab)
+devtools::load_all("~/Promotion/Promotion/Projects/petab")
 
 .outputFolder <- paste0("Output/")
 .compiledFolder <- file.path(.outputFolder, "Compiled")

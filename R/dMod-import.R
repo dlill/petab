@@ -1432,6 +1432,7 @@ TransformEvents <- function(events){
 #' @export
 #'
 #' @examples
+#' # Example 1: k1_A and k1_B are duplicated to two inner parameters 
 #' est.grid <- data.frame(ID = 1:2,
 #'                        condition = c("A", "B"),
 #'                        k1 = c("k1_A", "k1_B"),
@@ -1440,8 +1441,28 @@ TransformEvents <- function(events){
 #'                        stringsAsFactors = FALSE)
 #' scales_outer <- c(k1_A = "log", k1_B = "log", k3outer = "lin")
 #' updateParscalesToBaseTrafo(scales_outer, est.grid)
+#' 
+#' # Example 2: SHOULD FAIL k1_A and k1_B map to same inner parameter, but have idfferent scales
+#' est.grid <- data.frame(ID = 1:2,
+#'                        condition = c("A", "B"),
+#'                        k1 = c("k1_A", "k1_B"),
+#'                        k1DUPE = c("k1_A", "k1_B"),
+#'                        k3 = c("k3outer", NA),
+#'                        stringsAsFactors = FALSE)
+#' scales_outer <- c(k1_A = "log", k1_B = "log10", k3outer = "lin")
+#' updateParscalesToBaseTrafo(scales_outer, est.grid)
+#' 
+#' # Example 3: k4 is a parameter not in est.grid. It might be a parameter in fix.grid and should be returned as is
+#' est.grid <- data.frame(ID = 1:2,
+#'                        condition = c("A", "B"),
+#'                        k1 = c("k1_A", "k1_B"),
+#'                        k1DUPE = c("k1_A", "k1_B"),
+#'                        k3 = c("k3outer", NA),
+#'                        stringsAsFactors = FALSE)
+#' scales_outer <- c(k1_A = "log", k1_B = "log", k3outer = "lin", k4 = "log")
+#' updateParscalesToBaseTrafo(scales_outer, est.grid)
 updateParscalesToBaseTrafo <- function(scales_outer, est.grid) {
-  # parscales = c(outer = scaleouter)
+  # parscales = c(outername = scaleouter)
 
   # Get name mapping between est.grid pars and outer pars
   pars_inner_outer <- getEstGridParameterMapping(est.grid) # c(inner = outer)
@@ -1451,20 +1472,24 @@ updateParscalesToBaseTrafo <- function(scales_outer, est.grid) {
   # Get scales for inner pars
   scales_inner <- setNames(scales_outer[pars_inner_outer], names(pars_inner_outer))
 
-  # Determine if there are any duplicated outer pars with different scales.
+  # Determine if there are outer parameters mapping to the same inner parameter with different scales
   dupes <- names(scales_inner)[duplicated(names(scales_inner))]
   dupes <- unique(dupes)
   for (d in dupes) {
-    if (length(unique(scales_inner[d])) > 1)
+    if (length(unique(scales_inner[names(scales_inner) == d])) > 1)
       stop("The following parameter refers to the same structural model parameter, but has different ",
            "scales in different conditions. This is not allowed. \n",
            "Parameter: ", d , "\n",
-           "Outer pars: ", paste0(names(unique(scales_inner[d])), collapse = ", "))
+           "Outer pars: ", paste0(names(pars_outer_inner[pars_outer_inner == d]), collapse = ", "))
   }
-
-  # If all went fine, remove the duplicates and return updated parscales
+  
+  # Remove the duplicates and return updated parscales
   scales_inner <- scales_inner[!duplicated(names(scales_inner))]
-  scales_inner
+  
+  # Append scales which did not appear in est.grid
+  scales_fix <- scales_outer[setdiff(names(scales_outer),names(pars_outer_inner))]
+  
+  c(scales_inner, scales_fix)
 }
 
 #' Determine the type of trafo for each element of a vector
@@ -1697,7 +1722,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   # .. Parscales -----
   if (grepl(SFLAGbrowser, "5Scales")) browser()
   # 1 adjust symbolic trafo
-  parscales <- attr(myfit_values,"parscale")
+  parscales <- c(attr(myfit_values,"parscale"), attr(myconstraints, "parscale"))
   parscales <- updateParscalesToBaseTrafo(scales_outer = parscales, est.grid = gl$est.grid)
   trafo <- repar("x ~ 10**(x)", trafo = trafo, x = names(which(parscales=="log10")))
   trafo <- repar("x ~ exp(x)" , trafo = trafo, x = names(which(parscales=="log")))
