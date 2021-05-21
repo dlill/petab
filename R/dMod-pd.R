@@ -263,7 +263,7 @@ pd_updateEstPars <- function(pd, parsEst, FLAGupdatePE = TRUE, FLAGsavePd = FALS
 #'
 #' @examples
 pd_parf_collectPars <- function(pd, parameterSetId = "Base") {
-  if (!is.null(pd$result$base)) 
+  if (is.null(pd$result$base)) 
     pd <- pd_updateEstPars(pd, pd$pars, FLAGupdatePE = FALSE)
   pd$result$base
 }

@@ -1,6 +1,6 @@
 #include <R.h>
  #include <math.h>
- void P_Bachmann_MSB2011_uglj8vv4 ( double * x, double * y, double * p, int * n, int * k, int * l ) {
+ void P_Bachmann_MSB2011_sr4kzypn ( double * x, double * y, double * p, int * n, int * k, int * l ) {
  for(int i = 0; i< *n; i++) {
  y[0+i**l] = pow(10.0,(p[0])) ;
 y[1+i**l] = p[1] ;
@@ -45,7 +45,7 @@ y[39+i**l] = pow(10.0,(p[42])) ;
 y[40+i**l] = pow(10.0,(p[20])) ;
 y[41+i**l] = pow(10.0,(p[43])) ;
 y[42+i**l] = pow(10.0,(p[44])) ;
-y[43+i**l] = p[45] ;
+y[43+i**l] = pow(10.0,(p[45])) ;
 y[44+i**l] = pow(10.0,(p[46])) ;
 y[45+i**l] = p[47] ;
 y[46+i**l] = pow(10.0,(p[10])) ;
@@ -53,7 +53,7 @@ y[47+i**l] = pow(10.0,(p[48])) ;
 y[48+i**l] = pow(10.0,(p[49])) ;
 y[49+i**l] = pow(10.0,(p[21])) ;
 y[50+i**l] = p[50] ;
-y[51+i**l] = p[51] ;
+y[51+i**l] = pow(10.0,(p[51])) ;
 y[52+i**l] = pow(10.0,(p[52])) ;
 y[53+i**l] = pow(10.0,(p[53])) ;
 y[54+i**l] = pow(10.0,(p[54])) ;

@@ -1,6 +1,6 @@
 #include <R.h>
  #include <math.h>
- void errfn_Bachmann_MSB2011_32n0m4id ( double * x, double * y, double * p, int * n, int * k, int * l ) {
+ void errfn_Bachmann_MSB2011_6mxrd01s ( double * x, double * y, double * p, int * n, int * k, int * l ) {
  for(int i = 0; i< *n; i++) {
  y[0+i**l] = p[0] ;
 y[1+i**l] = p[1] ;

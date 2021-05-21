@@ -1,6 +1,6 @@
 #include <R.h>
  #include <math.h>
- void errfn_Bachmann_MSB2011_deriv_v10znxea ( double * x, double * y, double * p, int * n, int * k, int * l ) {
+ void errfn_Bachmann_MSB2011_deriv_4s7oi2yh ( double * x, double * y, double * p, int * n, int * k, int * l ) {
  for(int i = 0; i< *n; i++) {
  y[400+i**l] = 1.0 ;
 y[421+i**l] = 1.0 ;

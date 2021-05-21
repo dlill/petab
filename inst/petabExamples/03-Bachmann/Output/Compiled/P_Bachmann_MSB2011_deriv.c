@@ -1,6 +1,6 @@
 #include <R.h>
  #include <math.h>
- void P_Bachmann_MSB2011_deriv_rg350z0g ( double * x, double * y, double * p, int * n, int * k, int * l ) {
+ void P_Bachmann_MSB2011_deriv_88swai5h ( double * x, double * y, double * p, int * n, int * k, int * l ) {
  for(int i = 0; i< *n; i++) {
  y[0+i**l] = pow(10.0,(p[0]))*log(10.0) ;
 y[34+i**l] = pow(10.0,(p[0]))*log(10.0) ;
@@ -54,13 +54,13 @@ y[4179+i**l] = pow(10.0,(p[41]))*log(10.0) ;
 y[4281+i**l] = pow(10.0,(p[42]))*log(10.0) ;
 y[4384+i**l] = pow(10.0,(p[43]))*log(10.0) ;
 y[4486+i**l] = pow(10.0,(p[44]))*log(10.0) ;
-y[4588+i**l] = 1.0 ;
+y[4588+i**l] = pow(10.0,(p[45]))*log(10.0) ;
 y[4690+i**l] = pow(10.0,(p[46]))*log(10.0) ;
 y[4792+i**l] = 1.0 ;
 y[4895+i**l] = pow(10.0,(p[48]))*log(10.0) ;
 y[4997+i**l] = pow(10.0,(p[49]))*log(10.0) ;
 y[5100+i**l] = 1.0 ;
-y[5202+i**l] = 1.0 ;
+y[5202+i**l] = pow(10.0,(p[51]))*log(10.0) ;
 y[5304+i**l] = pow(10.0,(p[52]))*log(10.0) ;
 y[5406+i**l] = pow(10.0,(p[53]))*log(10.0) ;
 y[5508+i**l] = pow(10.0,(p[54]))*log(10.0) ;
