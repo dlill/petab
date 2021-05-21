@@ -40,13 +40,13 @@ pe <- readPetab(pe_file)
 petab_overviewObsPerCond(pe)
 
 pd <- importPEtabSBML_indiv(pe_file, .compiledFolder = .compiledFolder, NFLAGcompile = 3, SFLAGbrowser = "0")
-pd <- pd_updateEstPars(pd, pd$pars, FLAGupdatePE = FALSE, FLAGsavePd = TRUE)
+# pd <- pd_updateEstPars(pd, pd$pars, FLAGupdatePE = FALSE, FLAGsavePd = TRUE)
 
 # -------------------------------------------------------------------------#
 # 2 Predict and plot ----
 # -------------------------------------------------------------------------#
 pd_predictAndPlot2(pd, opt.base = pd_parf_opt.base(T))
-
+pd$obj_data(pd$pars)
 
 
 

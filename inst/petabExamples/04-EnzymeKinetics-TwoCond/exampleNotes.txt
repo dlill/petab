@@ -1,1 +1,2 @@
-* Classic enzyme kinetics in mass-action equations
+* Condition specific fixed parameters which are defined in pe$parameters
+* Other condition specific parameters

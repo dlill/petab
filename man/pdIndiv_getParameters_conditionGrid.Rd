@@ -17,7 +17,7 @@ Title
 }
 \seealso{
 Other SBML Import: 
-\code{\link{getBaseScales}()},
+\code{\link{pdIndiv_getBaseScales}()},
 \code{\link{pdIndiv_initializeGridlist}()}
 }
 \author{

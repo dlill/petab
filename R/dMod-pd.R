@@ -28,7 +28,7 @@ readPd <- function(filename) {
   pd <- readRDS(filename)
   # 2 Load DLLs
   setwd(dirname(filename))
-  dMod::loadDLL(pd$obj_data)
+  dMod::loadDLL(pd$objfns$obj_data)
   setwd(wd)
 
   # 3 Read potential results if not yet in pd
@@ -111,7 +111,7 @@ pdIndiv_updateControls <- function(pd,
   # Set integrator controls
   if (!is.null(optionsOde))  dMod::controls(pd$dModAtoms$fns$x, name = "optionsOde") <- optionsOde
   if (!is.null(optionsSens)) dMod::controls(pd$dModAtoms$fns$x, name = "optionsSens") <- optionsSens
-  if (!is.null(objtimes))    dMod::controls(pd$obj_data, "times") <- objtimes
+  if (!is.null(objtimes))    dMod::controls(pd$objfns$obj_data, "times") <- objtimes
 
   pdIndiv_rebuildPrdObj(pd)
 
@@ -138,7 +138,7 @@ pdIndiv_rebuildPrdObj <- function(pd, Nobjtimes = 100) {
   prd <- PRD_indiv(prd0, pd$dModAtoms$gridlist$est.grid, pd$dModAtoms$gridlist$fix.grid)
 
   # Rebuild obj_data
-  tobj <- if (!is.null(pd$obj_data)) dMod::controls(pd$obj_data, name = "times") else dMod::objtimes(pd$pe$measurementData$time, Nobjtimes = Nobjtimes)
+  tobj <- if (!is.null(pd$objfns$obj_data)) dMod::controls(pd$objfns$obj_data, name = "times") else dMod::objtimes(pd$pe$measurementData$time, Nobjtimes = Nobjtimes)
   obj_data <- normL2_indiv(pd$dModAtoms$data, prd0,
                            pd$dModAtoms$e,
                            est.grid = pd$dModAtoms$gridlist$est.grid,
@@ -148,7 +148,10 @@ pdIndiv_rebuildPrdObj <- function(pd, Nobjtimes = 100) {
   # Update p, prd and obj_data
   pd$p        <- p
   pd$prd      <- prd
-  pd$obj_data <- obj_data
+  pd$objfns$obj_data <- obj_data
+  
+  # Rebuild obj
+  pd$obj <- Reduce("+", pd$objfns)
 
   pd
 }
@@ -170,8 +173,8 @@ pd_addObjPrior <- function(pd, parameters, FLAGuseNominalValueAsCenter) {
   
   pe_aux <- copy(pd$pe)
   pe_aux$parameters <-pe_aux$parameters[parameterId %in% parameters]
-  pd$obj_prior <- petab_createObjPrior(pe_aux, FLAGuseNominalValueAsCenter = FLAGuseNominalValueAsCenter)
-  pd$obj <- pd$obj_data + pd$obj_prior
+  pd$objfns$obj_prior <- petab_createObjPrior(pe_aux, FLAGuseNominalValueAsCenter = FLAGuseNominalValueAsCenter)
+  pd$obj <- Reduce("+", pd$objfns)
   pd
 }
 
@@ -237,7 +240,7 @@ pd_objtimes <- function(pd, N = 100) {
 pd_updateEstPars <- function(pd, parsEst, FLAGupdatePE = TRUE, FLAGsavePd = FALSE) {
   pd$pars[names(parsEst)] <- parsEst
   
-  pd$result$base <- conveniencefunctions::pars2parframe(pd$pars, parameterSetId = "Base", obj = pd$obj_data)
+  pd$result$base <- conveniencefunctions::pars2parframe(pd$pars, parameterSetId = "Base", obj = pd$obj)
   
   if (FLAGupdatePE) {
     cat("pd$pe pars have been *set*")
@@ -378,10 +381,10 @@ pd_parf_collectL1 <- function(pd, rows = NULL) {
 #' @family parframe handling
 #' @importFrom conveniencefunctions cf_parf_rbindlist
 pd_parf_collect <- function(pd,
-                            opt.base =    pd_parf_opt.base(include = TRUE, parameterSetId = "Base"),
-                            opt.mstrust = pd_parf_opt.mstrust(include = TRUE, fitrankRange = 1:20, tol = 1),
+                            opt.base =    pd_parf_opt.base(   include = TRUE , parameterSetId = "Base"),
+                            opt.mstrust = pd_parf_opt.mstrust(include = TRUE , fitrankRange = 1:20, tol = 1),
                             opt.profile = pd_parf_opt.profile(include = FALSE, rows = "profile_endpoints", parameters = NULL),
-                            opt.L1 =      pd_parf_opt.L1(include = FALSE, rows = 1:nrow(pd$result$L1))
+                            opt.L1 =      pd_parf_opt.L1(     include = FALSE, rows = 1:nrow(pd$result$L1))
                             ) {
 
   parf_base <- parf_fit <- parf_profile <- parf_L1 <- NULL
@@ -493,7 +496,7 @@ pd_fitObsPars <- function(pd, NFLAGsavePd = 3) {
   parlower <- petab_getParameterBoundaries(pd$pe, "lower")[obspars]
   parupper <- petab_getParameterBoundaries(pd$pe, "upper")[obspars]
 
-  fit <- dMod::trust(pd$obj_data, fit_par, 1,10, iterlim = 1000, fixed = fit_fix, parlower = parlower, parupper = parupper)
+  fit <- dMod::trust(pd$obj, fit_par, 1,10, iterlim = 1000, fixed = fit_fix, parlower = parlower, parupper = parupper)
 
   pd <- pd_updateEstPars(pd, parsEst = fit$argument, FLAGupdatePE = TRUE, FLAGsavePd = NFLAGsavePd > 0)
   if (NFLAGsavePd > 0) writeLines("obsPars fitted", logfile)
@@ -527,7 +530,7 @@ pd_fit <- function(pd, NFLAGsavePd = 1, iterlim = 1000, printIter = TRUE, traceF
 
   cat("dig into bad fitting of S302 of TGFb...\n")
 
-  fit <- dMod::trust(pd$obj_data, fit_par, 1,10, iterlim = iterlim, fixed = fit_fix,
+  fit <- dMod::trust(pd$obj, fit_par, 1,10, iterlim = iterlim, fixed = fit_fix,
                parlower = parlower, parupper = parupper, printIter = printIter, traceFile = traceFile)
   if (!fit$converged) warning("Fit not converged, please try increasing 'iterlim' (was ", iterlim,")")
 
@@ -788,7 +791,7 @@ pd_L1_getUnbiasedValues <- function(pd, ...) {
     # add L1-fixed parameters to "fixed"
     # Fit unbiased
     # Calculate unbiased obj value
-    pd$obj_data(dMod::as.parvec(pd$result$L1,i), fixed = pd$fixed, deriv = FALSE)
+    pd$obj(dMod::as.parvec(pd$result$L1,i), fixed = pd$fixed, deriv = FALSE)
   })
   pd$result$L1$valueUnbiased <- values
   pd
@@ -1241,7 +1244,7 @@ pd_tests <- function(pd, page = 1, cn = 1, whichTests = c("plot" = 1, "objData" 
   }
   # Test obj
   if (2 %in% whichTests){
-  objval <- pd$obj_data(pd$pars)
+  objval <- pd$obj(pd$pars)
   cat("\n===================================================\n")
   cat("02-objData: Objective function\n")
   cat("===================================================\n")
@@ -1262,11 +1265,11 @@ pd_tests <- function(pd, page = 1, cn = 1, whichTests = c("plot" = 1, "objData" 
 
   if (4 %in% whichTests){
   cat("\n===================================================\n")
-  cat("04-summaryRprof of obj_data")
+  cat("04-summaryRprof of obj")
   cat("===================================================\n")
   rp <- tempfile()
   Rprof(rp)
-  pd$obj_data(pd$pars)
+  pd$obj(pd$pars)
   Rprof(NULL)
   rp <- summaryRprof(rp)
   print(rp$by.total)
