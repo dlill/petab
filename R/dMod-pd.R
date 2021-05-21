@@ -687,6 +687,16 @@ pd_L1_preparePlottingData <- function(pd) {
   d
 }
 
+#' Title
+#'
+#' @param pd pd with pd$result$L1
+#' @param tol Tolerance 
+#'
+#' @return data.table(lambdaL1 = lambda, Ntotal = Total parameters which were L1'd, NFree = Remaining free parameters, df = degrees of freedom, chis = The quantile value which corresponds to significance level alpha = 0.5)
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family L1
 pd_L1_getObjBounds <- function(pd,tol = 1e-4) {
   d <- pd_L1_preparePlottingData(pd)
   d <- d[isL1Parameter == TRUE]
@@ -710,8 +720,6 @@ pd_L1_getObjBounds <- function(pd,tol = 1e-4) {
 #' @md
 #' @family L1
 #' @importFrom conveniencefunctions cfggplot cf_outputFigure
-#'
-#' @examples
 pd_L1_plotDevianceVsLambda <- function(pd, ...) {
   d <- pd_L1_preparePlottingData(pd)
   pl <- conveniencefunctions::cfggplot(d, aes(lambdaL1, estDeviance, color = parameterId)) + 

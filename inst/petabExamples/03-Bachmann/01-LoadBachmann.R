@@ -16,10 +16,6 @@
 # Mon May 17 23:08:36 2021
 #
 # [Template Info]
-# .. Template name TGFB_PETABEXPORT -----
-# .. Template name TGFB_MSTRUST -----
-# .. Template name TGFB_PROFILE -----
-# .. Template version 0.0.1 -----
 #
 rm(list = ls(all.names = TRUE))
 try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
@@ -40,13 +36,13 @@ pe <- readPetab(pe_file)
 petab_overviewObsPerCond(pe)
 
 pd <- importPEtabSBML_indiv(pe_file, .compiledFolder = .compiledFolder, NFLAGcompile = 3, SFLAGbrowser = "0")
-# pd <- pd_updateEstPars(pd, pd$pars, FLAGupdatePE = FALSE, FLAGsavePd = TRUE)
+pd <- pd_updateEstPars(pd, pd$pars, FLAGupdatePE = FALSE, FLAGsavePd = TRUE)
 
 # -------------------------------------------------------------------------#
 # 2 Predict and plot ----
 # -------------------------------------------------------------------------#
 pd_predictAndPlot2(pd, opt.base = pd_parf_opt.base(T))
-pd$obj_data(pd$pars)
+pd$obj(pd$pars)
 
 
 

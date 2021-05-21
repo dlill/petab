@@ -1,6 +1,6 @@
 #include <R.h>
  #include <math.h>
- void P_Bachmann_MSB2011_deriv_88swai5h ( double * x, double * y, double * p, int * n, int * k, int * l ) {
+ void P_Bachmann_MSB2011_deriv_bg5sj1mc ( double * x, double * y, double * p, int * n, int * k, int * l ) {
  for(int i = 0; i< *n; i++) {
  y[0+i**l] = pow(10.0,(p[0]))*log(10.0) ;
 y[34+i**l] = pow(10.0,(p[0]))*log(10.0) ;
