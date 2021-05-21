@@ -1,7 +1,7 @@
 Package: petab
 Type: Package
 Title: PEtab support for R
-Version: 0.1.1
+Version: 0.2.1
 Author: Daniel Lill
 Maintainer: Daniel Lill <daniel.lill@physik.uni-freiburg.de>
 Description: Convenient handling of petab problems in R.
