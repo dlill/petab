@@ -79,7 +79,7 @@ pe_ex <- petab_experimentalCondition(conditionId = c("C1", "C2"), conditionName 
                                      koff = c(0.1, 0.2))
 pe_ob <- petab_observables(observableId = c("obsE","obsS","obsES","obsP"),
                            observableName = c("obsE","obsS","obsES","obsP"),
-                           observableFormula = c("E + observableParameter1_E","S + observableParameter1_S","ES","P"),
+                           observableFormula = c("E + observableParameter1_obsE","S + observableParameter1_obsS","ES","P"),
                            observableTransformation = "log",
                            noiseFormula = c("0.1"),
                            noiseDistribution = c("normal"))
@@ -106,7 +106,7 @@ pe_me[observableId == "obsE",`:=`(observableParameters = "offset_E")]
 # Condition specific observable parameters and error parameters
 pe_me[observableId == "obsS",`:=`(observableParameters = "offset_S")]
 pe_me[observableId == "obsS" & simulationConditionId == "C2",`:=`(noiseParameters = paste0("sigma_", observableId, "_C2"),
-                                                        observableParameters = "offset_S_C2")]
+                                                                  observableParameters = "offset_S_C2")]
 
 
 pe_mo <- petab_model(el,events = NULL,parInfo = parInfo, speciesInfo = speciesInfo)

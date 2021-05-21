@@ -2023,6 +2023,8 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   trafo <- repar("x ~ 10**(x)", trafo = trafo, x = names(which(scalesBase=="log10")))
   trafo <- repar("x ~ exp(x)" , trafo = trafo, x = names(which(scalesBase=="log")))
   
+  if (grepl(SFLAGbrowser,"5InspectTrafo")) browser()
+  
   
   # .. ParameterFormulaInjection -----
   if (grepl(SFLAGbrowser, "6ParameterFormulaInjection")) browser()

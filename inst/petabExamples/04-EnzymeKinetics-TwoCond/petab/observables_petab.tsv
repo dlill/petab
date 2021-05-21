@@ -1,5 +1,5 @@
 observableId	observableName	observableFormula	observableTransformation	noiseFormula	noiseDistribution
-obsE	obsE	E + observableParameter1_E	log	noiseParameter1_obsE*obsE + noiseParameter2_obsE	normal
+obsE	obsE	E + observableParameter1_obsE	log	noiseParameter1_obsE*obsE + noiseParameter2_obsE	normal
 obsES	obsES	ES	log	noiseParameter1_obsES	normal
 obsP	obsP	P	log	noiseParameter1_obsP	normal
-obsS	obsS	S + observableParameter1_S	log	noiseParameter1_obsS	normal
+obsS	obsS	S + observableParameter1_obsS	log	noiseParameter1_obsS	normal
