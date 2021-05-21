@@ -862,7 +862,7 @@ petab_lint <- function(pe) {
   # measurementData
   dupes <- which(duplicated(pe$measurementData))
   if(length(dupes)) {
-    warning("These rows are duplicates in measurementData: ", paste0(head(dupes,10), collapse = ","), "...")
+    warning("These rows are duplicates in measurementData: ", paste0(dupes, collapse = ","))
     errlist <- c(errlist, list(measurementDataDupes = dupes))}
 
   if (any(is.na(pe$measurementData$time)))
@@ -885,7 +885,6 @@ petab_lint <- function(pe) {
 
     parsNotEstimatedNotLin <- pe$parameters[estimate == 0 & parameterScale != "lin"]
     if (nrow(parsNotEstimatedNotLin)) {
-      warning("Fixed parameters not on lin scale: ", paste0(parsNotEstimatedNotLin$parameterId, collapse = ","))
       logscale_but_zero <- parsNotEstimatedNotLin$nominalValue == 0
       if (any(logscale_but_zero)) stop("Fixed parameters on log-scale, but their nominal value is zero: ",
                                        paste0(parsNotEstimatedNotLin$parameterId[logscale_but_zero], collapse = ","))
@@ -1038,38 +1037,38 @@ petab_getMeasurementParsMapping <- function(pe, column = c("observableParameters
   parameters <- measurementData[[column]]
   parameterString <- gsub("Parameters", "Parameter", column)
 
-  if (all(is.na(parameters))) return(data.table(condition = unique(measurementData$simulationConditionId)))
+  if (all(is.na(parameters))) return(data.table(conditionId = unique(measurementData$simulationConditionId)))
 
   # Pipeline of death
   mp <- strsplit(parameters, ";")
   mp <- lapply(mp, function(x) {if(length(x)) return(as.data.table(as.list(x))) else data.table(NA)})
   mp <- rbindlist(mp, fill = TRUE)
   setnames(mp, paste0(parameterString, 1:length(mp), "_"))
-  mp <- data.table(observableId = measurementData$observableId, condition = measurementData$simulationConditionId, mp)
-  mp <- melt(mp, id.vars = c("observableId", "condition"), variable.name = "INNERPARAMETER", variable.factor = FALSE, value.name = "OUTERPARAMETER")
+  mp <- data.table(observableId = measurementData$observableId, conditionId = measurementData$simulationConditionId, mp)
+  mp <- melt(mp, id.vars = c("observableId", "conditionId"), variable.name = "INNERPARAMETER", variable.factor = FALSE, value.name = "OUTERPARAMETER")
   mp <- unique(mp)
   mp <- mp[!is.na(OUTERPARAMETER)]
   mp[,`:=`(INNERPARAMETER = paste0(INNERPARAMETER, observableId))]
-  mp <- mp[,list(condition, INNERPARAMETER, OUTERPARAMETER)]
-  dupes <- duplicated(mp[,list(condition,INNERPARAMETER)])
+  mp <- mp[,list(conditionId, INNERPARAMETER, OUTERPARAMETER)]
+  dupes <- duplicated(mp[,list(conditionId,INNERPARAMETER)])
   if (any(dupes)) {
-    print(mp[dupes, list(condition,INNERPARAMETER)])
-    stop(column, "contain non-unique values in some conditions (see print output above)")}
-  mp <- dcast(mp, condition ~ INNERPARAMETER, value.var = "OUTERPARAMETER")
+    print(mp[dupes, list(conditionId,INNERPARAMETER)])
+    stop(column, "contain non-unique values in some conditionIds (see print output above)")}
+  mp <- dcast(mp, conditionId ~ INNERPARAMETER, value.var = "OUTERPARAMETER")
 
-  # Check that all conditions are specified, and if not, create empty row
+  # Check that all conditionIds are specified, and if not, create empty row
   experimentalCondition <- copy(pe$experimentalCondition)
-  if (length(setdiff(experimentalCondition$conditionId, mp$condition))) {
-    mp <- mp[data.table(condition = experimentalCondition$conditionId), on = "condition"]
+  if (length(setdiff(experimentalCondition$conditionId, mp$conditionId))) {
+    mp <- mp[data.table(conditionId = experimentalCondition$conditionId), on = "conditionId"]
   }
 
   # Replace NAs with dummy value 1
   colsWithNa <- vapply(mp, function(x) any(is.na(x)), FALSE)
   colsWithNa <- names(colsWithNa)[colsWithNa]
   if (length(colsWithNa)) {
-    warning("The following parameters are not specified in all conditions. ",
-            "In the unspecified conditions, they are set to 1 (should not make a difference):\n",
-            paste0(colsWithNa, collapse = ","))
+    # warning("The following parameters are not specified in all conditionIds. ",
+    #         "In the unspecified conditionIds, they are set to 1 (should not make a difference):\n",
+    #         paste0(colsWithNa, collapse = ","))
     mp[,(colsWithNa):=lapply(.SD, function(x) replace(x, is.na(x),1)), .SDcols = colsWithNa]
   }
 

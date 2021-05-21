@@ -1,9 +1,20 @@
-library(petab)
+# library(petab)
+devtools::load_all("~/Promotion/Promotion/Projects/petab")
 try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 # -------------------------------------------------------------------------#
 # Create enzyme kinetics model and data ----
 # -------------------------------------------------------------------------#
-pd <- importPEtabSBML_indiv("petab", NFLAGcompile = 1, .compiledFolder = "Compiled", SFLAGbrowser = "1")
+filename <- "petab"
+NFLAGcompile = 1
+.compiledFolder = "Compiled"
+SFLAGbrowser = "1"
+
+testCases = FALSE
+path2TestCases = "PEtabTests/"
+
+# ..  -----
+
+pd <- importPEtabSBML_indiv(filename, NFLAGcompile = 1, .compiledFolder = "Compiled", SFLAGbrowser = "1")
 
 # Test model
 pred <- pd$prd(seq(0,100), pd$pars)
