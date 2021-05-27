@@ -15,6 +15,7 @@
 #' @family SBML export
 #'
 #' @examples
+#' # see getReactionInfo
 eqnlist_addDefaultCompartment <- function(equationList, compName) {
   as.eqnlist(as.data.frame(equationList), 
              volumes = setNames(rep(compName, length(equationList$states)), equationList$states))
@@ -29,12 +30,13 @@ eqnlist_addDefaultCompartment <- function(equationList, compName) {
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
+#' @importFrom data.table data.table
 #' @family SBML export
 #'
 #' @examples
 getParInfo <- function(equationList) {
   parName <- setdiff(getParameters(equationList), c(equationList$states, equationList$volumes))
-  parInfo <- data.table(parName = parName)
+  parInfo <- data.table::data.table(parName = parName)
   parInfo[,`:=`(parValue = seq(0.1,1,length.out = .N))]
   parInfo[,`:=`(parUnit = "per_second")]
   parInfo
