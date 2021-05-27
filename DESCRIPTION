@@ -18,6 +18,7 @@ Depends:
 Imports:
   ggforce,
   dplyr,
+  tibble,
   reticulate,
   cOde,
   tools,

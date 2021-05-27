@@ -1,1 +1,1 @@
-* Implements the L1 workflow
+* Shows how to setup a L1 analysis

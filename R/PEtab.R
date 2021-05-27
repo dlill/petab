@@ -1640,18 +1640,6 @@ lin <- function(x) {
 #   * Tables contain e.g. units, other annotations etc
 #   * Could be used for programming on the DCO,
 #     e.g. with meta_measurementData$cellline, it's easy to parameterize by cell line
-# [ ] petab_simulate,
-# [ ] petab_fit(FLAGrunbg,FLAGslurm)
-# [ ] petab_updateParameters Incorporate fit values
-# [ ] petab_addFitResults
-#   * Elegant way to deal with waterfalls needed
-# [ ] petab_profile(opt.runbg = NULL or runbg_list())
-#   * petab_addProfileResults Elegant way to deal with profiles needed
-# [ ] runbg_list()
-#   * Machine: c("knecht1", "knecht2") or "cluster"
-#   * nodes
-#   * cores
-#   * jobname
 # [ ] sbml - getSpeciesInfo: speciesUnit
 # [ ] sbml - initialAssignments
 # [ ] sbml - assignmentRules

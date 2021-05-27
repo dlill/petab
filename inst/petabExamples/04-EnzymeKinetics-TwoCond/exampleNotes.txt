@@ -1,2 +1,4 @@
-* Condition specific fixed parameters which are defined in pe$parameters
-* Other condition specific parameters
+* Condition specific parameters
+  * Fixed and defined in pe$experimentalCondition as names, values defined in pe$parameters: kon
+  * Fixed and defined in pe$experimentalCondition as values: koff
+  * Estimated parameters and defined in pe$experimentalCondition as names, base values defined in pe$parameters: kcat

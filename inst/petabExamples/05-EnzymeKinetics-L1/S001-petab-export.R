@@ -1,4 +1,6 @@
 library(petab)
+setwd(tempdir())
+petab_python_setup()
 try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 
 # -------------------------------------------------------------------------#
@@ -32,21 +34,15 @@ speciesInfo <- data.table(tibble::tribble(
 # compartmentInfo is left as the default getCompartmentInfo(el)
 # unitInfo is left as the default getUnitInfo(): If you need other units, you need to add them
 
-# .. Could be solved with a parameterFormula injection -----
-# ...
-
-
-
 # .. Simulate Data -----
 compiled <- odemodel(f = el,modelname = modelname)
 x <- Xs(compiled, condition = "C1")
 pars <- c(setNames(parInfo$parValue, parInfo$parName),
           setNames(speciesInfo$initialAmount, speciesInfo$speciesName))
-
 # .... Condition 1 ------
-parsC1 <- pars
-pred <- as.data.table(x(seq(0,100), pars)[[1]])
-pred <- x(seq(0,100, 10), pars)
+parsC1 <- c(kon = 1, koff = 0.1, kcat = 0.1, E = 1, S = 100, ES = 1e-12, P = 1e-12)
+
+pred <- x(seq(0,100, 10), parsC1)
 pred <- data.table(as.data.frame(pred))
 pred <- pred[time > 0]
 pred[,`:=`(sigma = 0.1)]
@@ -56,13 +52,13 @@ pred[,`:=`(name = paste0("obs", name))]
 predC1 <- pred
 
 # .... Condition 2 ------
-parsC2 <- pars
+parsC1 <- c(kon = 1, koff = 0.1, kcat = 0.1, E = 1, S = 100, ES = 1e-12, P = 1e-12)
 parsC2["kcat"] <- 0.5
-parsC2["kon"] <- 0.5
+parsC2["kon"]  <- 0.5
 parsC2["koff"] <- 0.2
+parsC2["E"]    <- 1.3
 
-pred <- as.data.table(x(seq(0,100), pars)[[1]])
-pred <- x(seq(0,100, 10), pars)
+pred <- x(seq(0,100, 10), parsC2)
 pred <- data.table(as.data.frame(pred))
 pred <- pred[time > 0]
 pred[,`:=`(sigma = 0.1)]
@@ -79,13 +75,10 @@ pred <- rbindlist(list(predC1,predC2))
 # Export Petab ----
 # -------------------------------------------------------------------------#
 # .. Create petab tables -----
-pe_ex <- petab_experimentalCondition(conditionId = c("C1", "C2"), conditionName = c("C1", "C2"),
-                                     kcat = c("kcat_C1", "kcat_C2"),
-                                     kon  = c("kon_C1", "kon_C2"), # will have estimate = 0 to capture this case
-                                     koff = c(0.1, 0.2))
+pe_ex <- petab_experimentalCondition(conditionId = c("C1", "C2"), conditionName = c("C1", "C2"))
 pe_ob <- petab_observables(observableId = c("obsE","obsS","obsES","obsP"),
                            observableName = c("obsE","obsS","obsES","obsP"),
-                           observableFormula = c("E + observableParameter1_obsE","S + observableParameter1_obsS","ES","P"),
+                           observableFormula = c("E","S","ES","P"),
                            observableTransformation = "log",
                            noiseFormula = c("0.1"),
                            noiseDistribution = c("normal"))
@@ -126,7 +119,7 @@ pe <- petab(model = pe_mo,
 pe$parameters <- petab_create_parameter_df(pe)
 pe$parameters[grep("kon", parameterId),`:=`(estimate = 0)]
 
-filename <- "petab"
+filename <- "basemodel"
 writePetab(pe, filename)
 unlink(list.files(".", "\\.o$|\\.so$|\\.c$"))
 # Exit ----

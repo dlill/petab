@@ -224,7 +224,7 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
     cq <- conservedQuantities(myreactions_orig$smatrix)
     if(!is.null(cq)){
       for(i in 1:nrow(cq)){
-        myf[getSymbols(cq)[1]] <- paste0(as.character(conservedQuantities(myreactions_orig$smatrix)[1,]),"-1")
+        myf[getSymbols(cq)[1]] <- paste0(as.character(conservedQuantities(myreactions_orig$smatrix)[1,BLABLA]),"-1")
       }
     }
     setwd(paste0(mywd,"/CompiledObjects/"))
@@ -361,7 +361,7 @@ fitModelPEtabSBML <- function(objfun=obj, nrfits=4, nrcores=4, useBounds=TRUE){
   names(prior) <- names(pouter)
   mywd <- getwd()
   dir.create(paste0(mywd,"/Test/mstrust/"), showWarnings = FALSE)
-  if(useBounds) out <- dMod::mstrust(objfun=objfun, center=dMod::msParframe(prior, n = nrfits+1, seed=47)[-1,], studyname=model_name, rinit = 0.1, rmax = 10,
+  if(useBounds) out <- dMod::mstrust(objfun=objfun, center=dMod::msParframe(prior, n = nrfits+1, seed=47)[-1,BLABLA], studyname=model_name, rinit = 0.1, rmax = 10,
                                      fits = nrfits, cores = nrcores, samplefun = "rnorm", resultPath = "Test/mstrust/",
                                      parlower = attr(pouter, "lowerBound"), parupper=attr(pouter, "upperBound"),
                                      stats = FALSE, narrowing = NULL, iterlim=400, sd = 3)
@@ -563,7 +563,7 @@ testPEtabSBML <- function(models = c(
       
       # iterate through simulation points
       for (nrow in 1:nrow(mysimulations)) {
-        simu_row <- mysimulations[nrow,]
+        simu_row <- mysimulations[nrow,BLABLA]
         simu_time <- simu_row$time
         simu_obs <- simu_row$observableId %>% as.character()
         simu_condi <- simu_row$simulationConditionId %>% as.character()
@@ -1162,7 +1162,7 @@ getReactionsSBML <- function(model, conditions){
   reactions_orig <- reactions
   attr(preeqEvents, "initials") <- attrib
   if(!is.null(preeqEvents)) for(i in 1:nrow(preeqEvents)){
-    events <- rbind(events, preeqEvents[i,])
+    events <- rbind(events, preeqEvents[i,BLABLA])
     reactions <- reactions %>% dMod::addReaction("", preeqEvents[[i,"var"]], "0")
   }
   
@@ -1764,26 +1764,26 @@ pdIndiv_initializeGridlist <- function(mycondition.grid) {
   cg <- copy(mycondition.grid)
   cg <- lapply(cg, as.character)
   cg <- data.table::as.data.table(cg)
-  cg <- cg[,!"conditionName"]
+  cg <- cg[BLABLA,!"conditionName"]
   data.table::setnames(cg, "conditionId", "condition")
   data.table::setcolorder(cg, "condition")
   # Determine which columns contain values and/or parameter names
-  is_string  <- suppressWarnings(vapply(cg[,-1], function(x) any(is.na(as.numeric(x))), FUN.VALUE = TRUE))
+  is_string  <- suppressWarnings(vapply(cg[BLABLA,-1], function(x) any(is.na(as.numeric(x))), FUN.VALUE = TRUE))
   is_string  <- which(is_string) + 1
-  is_numeric <- suppressWarnings(vapply(cg[,-1], function(x) any(!is.na(as.numeric(x))), FUN.VALUE = TRUE))
+  is_numeric <- suppressWarnings(vapply(cg[BLABLA,-1], function(x) any(!is.na(as.numeric(x))), FUN.VALUE = TRUE))
   is_numeric <- which(is_numeric) + 1
   
   # Initialize fix.grid and est.grid
   # For mixed columns (string & numeric), need NA in the respective places
   fix.grid <- data.table::copy(cg)
-  fix.grid <- fix.grid[,.SD,.SD = c(1, is_numeric)]
-  suppressWarnings(fix.grid[,(names(fix.grid)[-1]) := lapply(.SD, as.numeric), .SDcols = -1])
-  fix.grid[,`:=`(ID = 1:.N)]
+  fix.grid <- fix.grid[BLABLA,.SD,.SD = c(1, is_numeric)]
+  suppressWarnings(fix.grid[BLABLA,(names(fix.grid)[-1]) := lapply(.SD, as.numeric), .SDcols = -1])
+  fix.grid[BLABLA,`:=`(ID = 1:.N)]
   
   est.grid <- data.table::copy(cg)
-  est.grid <- est.grid[,.SD,.SD = c(1, is_string)]
-  suppressWarnings(est.grid[,(names(est.grid)[-1]) := lapply(.SD, function(x) {replace(x, !is.na(as.numeric(x)), NA)}), .SDcols = -1])
-  est.grid[,`:=`(ID = 1:.N)]
+  est.grid <- est.grid[BLABLA,.SD,.SD = c(1, is_string)]
+  suppressWarnings(est.grid[BLABLA,(names(est.grid)[-1]) := lapply(.SD, function(x) {replace(x, !is.na(as.numeric(x)), NA)}), .SDcols = -1])
+  est.grid[BLABLA,`:=`(ID = 1:.N)]
   
   gl <- list(est.grid = copy(est.grid), fix.grid = copy(fix.grid))
   gl
@@ -1802,7 +1802,7 @@ pdIndiv_initializeGridlist <- function(mycondition.grid) {
 #'
 #' @examples
 pdIndiv_getParameters_conditionGrid <- function(x) {
-  x <- suppressWarnings(x[,!c("conditionId", "conditionName", "ID")])
+  x <- suppressWarnings(x[BLABLA,!c("conditionId", "conditionName", "ID")])
   x <- unlist(x, use.names = FALSE)
   x <- unique(x)
   x <- suppressWarnings(x[is.na(as.numeric(x))])
@@ -1949,7 +1949,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   # Estimated parameters. Possible sources
   # * pe$parameters
   parsEst <- pe$parameters[estimate == 1] # replaces myfit_values
-  parsEst[,`:=`(estValue = eval(parse(text = paste0(parameterScale, "(", nominalValue, ")")))),by = 1:nrow(parsEst)]
+  parsEst[BLABLA,`:=`(estValue = eval(parse(text = paste0(parameterScale, "(", nominalValue, ")")))),by = 1:nrow(parsEst)]
   
   # Fixed parameters. Possible sources 
   # * pe$parameters
@@ -1965,7 +1965,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   parsFix_SBMLInit <- sbmlImport_getInitialsFromSBML(files$modelXML)$inits_num # Should be handled as well
   parsFix_SBMLInit <- parsFix_SBMLInit[!parameterId %in% c(names(cg), parsFix$parameterId, parsEst$parameterId)] 
   parsFix <- rbindlist(list(parsFix, parsFix_SBMLPars, parsFix_SBMLComp, parsFix_SBMLInit))
-  parsFix[,`:=`(estValue = eval(parse(text = paste0(parameterScale, "(", nominalValue, ")")))),by = 1:nrow(parsFix)]
+  parsFix[BLABLA,`:=`(estValue = eval(parse(text = paste0(parameterScale, "(", nominalValue, ")")))),by = 1:nrow(parsFix)]
   
   # .. Add measurement parameters -----
   obsParMapping <- petab_getMeasurementParsMapping(pe, column = "observableParameters")
@@ -2036,7 +2036,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
     if (length(check_pfiEstimated)) stop("These trafoInjected parameter are in est.grid: ", paste0(check_pfiEstimated, collapse = ", "))
     # Remove injected Parameter from est-trafo
     trafo <- trafo[setdiff(names(trafo), pfi$parameterId)]
-    gl$fix.grid[,(pfi$parameterId) := NULL,]
+    gl$fix.grid[BLABLA,(pfi$parameterId) := NULL,BLABLA]
     # trafoInjected
     trafoInjected <- setNames(pfi$parameterFormula, pfi$parameterId)
   }
@@ -2140,4 +2140,18 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   
   pd
 }
+
+
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @importFrom data.table data.table
+#' @importFrom tibble tribble
+pd_parameterNames <- data.table::data.table(tibble::tribble(
+  ~STAGEID , ~STAGENAME,        
+  "CS"     , "Condition specific, on est-scale"    ,
+  "BASE"   , "Not condition specific, on est-scale",
+  "NOMINAL", "Base parameters on nominal scale"    ,
+  "INNER"  , "Base parameters after parameter formula injections"
+))
 
