@@ -61,26 +61,42 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
     # Collect ec_pars
     par_ec <- petab_parameters(parameterId = parnamesOuter,
                                parameterName = parnamesOuter)
-    message("Please check parameter scale of parameter names occuring in experimentalCondition or implement the scale matching in this function: ",
-            paste(parnamesOuter, collapse = ", "))
-    # [ ] Note: If you implement the scale-matching, refactor this function. Put all par_ec handling into another function
+    
+    # Adjust scales according to inner parameters
+    parnamesInner <- setdiff(colnames(experimentalCondition), c("conditionId", "conditionName"))
+    for (pxinner in parnamesInner) {
+      pxouter <- getSymbols(experimentalCondition[[pxinner]])
+      parameterScales <- par[parameterId == pxinner,parameterScale]
+      par_ec[parameterId %in% pxouter,`:=`(parameterScale = parameterScales)]
+    }
 
     # Remove base parameters from par
-    parnamesInner <- setdiff(colnames(experimentalCondition), c("conditionId", "conditionName"))
     par <- par[!parameterId %in% parnamesInner]
 
     # Append par_ec
     par <- rbindlist(list(par, par_ec))
   }
 
-
-  # parameterFormulaInjection
-  # Ensure all parameters set by injection are set to estimate  0,
-  # then they will be handled correctly by
   pfi <- pe$meta$parameterFormulaInjection
-  if (!is.null(pfi))
-    par[parameterId %in% pfi$parameterId,`:=`(estimate=0, parameterScale = "lin")]
-
+  if (!is.null(pfi)) {
+    # parameterFormulaInjection which is not L1
+    # Ensure all parameters set by injection are set to estimate  0
+    pfi_noL1 <- pfi[trafoType != "L1" | is.na(trafoType)]
+    if (nrow(pfi_noL1))
+      par[parameterId %in% pfi_noL1$parameterId,`:=`(estimate=0, parameterScale = "lin")]
+    
+    # parameterFormulaInjection by L1
+    # Ensure parameterScale and nominalValue is set correctly for L1 parameters
+    pfi_L1 <- pfi[trafoType == "L1"]
+    if (nrow(pfi_L1)) {
+      for (px in pfi_L1$parameterId) {
+        pxscale <- par[parameterID == px, parameterScale]
+        par[grepl(paste0("L1_", px), parameterId),`:=`(parameterScale = pxscale)]}
+        par[grepl(paste0("L1_", px), parameterId) & parameterScale != "lin",`:=`(nominalValue = 1)]
+        par[grepl(paste0("L1_", px), parameterId) & parameterScale == "lin",`:=`(nominalValue = 0)]
+    }
+    }
+  
   par
 }
 
@@ -396,9 +412,8 @@ petab_parameters <- function(
 #' @param equationList eqnlist
 #' @param events eventlist
 #' @param ... not used, but could be used in the future for imitating assignment rules etc
-#' @param parInfo
-#' @param speciesInfo
-#' @param parameterFormulaInjection
+#' @param parInfo [getParInfo()]
+#' @param speciesInfo [getSpeciesInfo()]
 #'
 #' @return list
 #'
@@ -419,12 +434,13 @@ petab_model <- function(equationList, events = NA,
 # -------------------------------------------------------------------------#
 
 
-#' Title
+#' Additional Information
 #'
-#' @param parameterFormulaInjection
+#' @param parameterFormulaInjection data.table(parameterId, parameterFormula)
+#' @param variableOrder vector of stateIds and observableIds in the order which you want for plotting
 #' @param ...
 #'
-#' @return
+#' @return named list of supplied arguments
 #' @export
 #'
 #' @examples

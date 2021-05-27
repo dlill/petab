@@ -75,7 +75,10 @@ pred <- rbindlist(list(predC1,predC2))
 # Export Petab ----
 # -------------------------------------------------------------------------#
 # .. Create petab tables -----
-pe_ex <- petab_experimentalCondition(conditionId = c("C1", "C2"), conditionName = c("C1", "C2"))
+pe_ex <- petab_experimentalCondition(conditionId = c("C1", "C2"), conditionName = c("C1", "C2"),
+                                     kon  = c("kon_C1", "kon_C2"), # will have estimate = 0 to capture this case
+                                     koff = c(0.1, 0.2))
+
 pe_ob <- petab_observables(observableId = c("obsE","obsS","obsES","obsP"),
                            observableName = c("obsE","obsS","obsES","obsP"),
                            observableFormula = c("E","S","ES","P"),

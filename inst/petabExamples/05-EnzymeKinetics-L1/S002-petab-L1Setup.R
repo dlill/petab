@@ -27,8 +27,37 @@ pe <- pe0 <- readPetab("basemodel")
 #   * => Augment petab_create_parameters_df: recognize fcL1_*-parameters as L1-parameters, look up the base parameter for scale, use priorScale Laplace, set sensible defaults
 
 
+parameterId_base <- c("kcat","E")
+L1_getParameterFormulaInjection <- function(pe, parameterId_base) {
+  p <- pe$parameters[parameterId %in% parameterId_base]
+  p[,`:=`(parameterIdL1 = paste0("L1_", parameterId))]
+  p[,`:=`(parameterFormula = paste0(parameterId, ifelse(grepl("lin", parameterScale), " + ", " * "), parameterIdL1))]
+  p[,list(parameterId, parameterFormula, trafoType = "L1")]
+}
+
+L1_pe_updateParameterFormulaInjection <- function(pe, parameterId_base) {
+  pfi <- L1_getParameterFormulaInjection(pe, parameterId_base)
+  pe$meta$parameterFormulaInjection <- data.table::rbindlist(list(pe$meta$parameterFormulaInjection, pfi), use.names = TRUE, fill = TRUE)
+  pe
+}
 
 
+parameterId_base <- c("kcat","E")
+conditionSpecL1_reference <- "C1"
+L1_addL1ParsToExperimentalCondition <- function(pe, parameterId_base, conditionSpecL1_reference, j_conditionSpecL1 = conditionId) {
+  sj <- substitute(j_conditionSpecL1)
+  pe$experimentalCondition[,`:=`(L1Spec = eval(sj))]
+  pe$experimentalCondition[,(paste0("L1_", parameterId_base)) := lapply(parameterId_base, function(px) paste0("L1_", px, "_", L1Spec))]
+  pe$experimentalCondition[L1Spec %in% conditionSpecL1_reference,(paste0("L1_", parameterId_base)) := 0]
+  pe$experimentalCondition[,`:=`(L1Spec = NULL)]
+  pe
+}
+
+
+pe <- L1_pe_updateParameterFormulaInjection(pe, parameterId_base)
+pe <- L1_addL1ParsToExperimentalCondition(pe, parameterId_base, conditionSpecL1_reference, j_conditionSpecL1 = conditionId)
+
+pepa <- petab_create_parameter_df(pe)
 
 
 # Exit ---- 
