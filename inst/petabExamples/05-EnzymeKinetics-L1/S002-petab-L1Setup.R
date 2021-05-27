@@ -1,4 +1,5 @@
-library(petab)
+# library(petab)
+devtools::load_all("~/Promotion/Promotion/Projects/petab")
 setwd(tempdir())
 petab_python_setup()
 try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
@@ -42,11 +43,7 @@ L1_pe_updateParameterFormulaInjection <- function(pe, parameterId_base) {
 }
 
 
-parameterId_base <- c("kcat","E")
-conditionSpecL1_reference <- "C1"
-L1_addL1ParsToExperimentalCondition <- function(pe, parameterId_base, conditionSpecL1_reference, j_conditionSpecL1 = conditionId) {
-  sj <- substitute(j_conditionSpecL1)
-  pe$experimentalCondition[,`:=`(L1Spec = eval(sj))]
+L1_addL1ParsToExperimentalCondition <- function(pe, parameterId_base, conditionSpecL1_reference) {
   pe$experimentalCondition[,(paste0("L1_", parameterId_base)) := lapply(parameterId_base, function(px) paste0("L1_", px, "_", L1Spec))]
   pe$experimentalCondition[L1Spec %in% conditionSpecL1_reference,(paste0("L1_", parameterId_base)) := 0]
   pe$experimentalCondition[,`:=`(L1Spec = NULL)]
@@ -54,10 +51,22 @@ L1_addL1ParsToExperimentalCondition <- function(pe, parameterId_base, conditionS
 }
 
 
-pe <- L1_pe_updateParameterFormulaInjection(pe, parameterId_base)
-pe <- L1_addL1ParsToExperimentalCondition(pe, parameterId_base, conditionSpecL1_reference, j_conditionSpecL1 = conditionId)
-
-pepa <- petab_create_parameter_df(pe)
 
 
+L1_createL1Problem <- function(pe, parameterId_base, conditionSpecL1_reference, j_conditionSpecL1 = conditionId) {
+  # 1 Create parameterFormulaInjection
+  pe <- L1_pe_updateParameterFormulaInjection(pe, parameterId_base)
+  # 2 Add columns of L1 parameters to experimentalCondition
+  sj <- substitute(j_conditionSpecL1)
+  pe$experimentalCondition[,`:=`(L1Spec = eval(eval(sj)))]
+  pe <- L1_addL1ParsToExperimentalCondition(pe, parameterId_base, conditionSpecL1_reference)
+  # 3 Re-create parameters_df including L1 parameters
+  pepaL1 <- petab_create_parameter_df(pe)
+  pe$parameters <- petab_parameters_mergeParameters(pepaL1, pe$parameters)
+  pe
+}
+
+parameterId_base <- c("kcat","E")
+conditionSpecL1_reference <- "C1"
+L1_createL1Problem(pe, parameterId_base, conditionSpecL1_reference, j_conditionSpecL1 = conditionId)
 # Exit ---- 

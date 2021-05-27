@@ -1,4 +1,5 @@
-library(petab)
+# library(petab)
+devtools::load_all("~/Promotion/Promotion/Projects/petab")
 setwd(tempdir())
 petab_python_setup()
 try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
@@ -119,6 +120,7 @@ pe <- petab(model = pe_mo,
             measurementData = pe_me,
             observables = pe_ob)
 
+debugonce(petab_create_parameter_df)
 pe$parameters <- petab_create_parameter_df(pe)
 pe$parameters[grep("kon", parameterId),`:=`(estimate = 0)]
 

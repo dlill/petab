@@ -13,7 +13,7 @@
 #' @export
 #'
 #' @examples
-petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
+petab_create_parameter_df <- function(pe, observableParameterScale = "lin") {
 
   model                 <- pe$model
   measurementData       <- pe$measurementData
@@ -67,6 +67,7 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
     for (pxinner in parnamesInner) {
       pxouter <- getSymbols(experimentalCondition[[pxinner]])
       parameterScales <- par[parameterId == pxinner,parameterScale]
+      if (!length(parameterScales)) next # In this case it's probably a L1-parameter which is dealt with later
       par_ec[parameterId %in% pxouter,`:=`(parameterScale = parameterScales)]
     }
 
@@ -90,11 +91,11 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
     pfi_L1 <- pfi[trafoType == "L1"]
     if (nrow(pfi_L1)) {
       for (px in pfi_L1$parameterId) {
-        pxscale <- par[parameterID == px, parameterScale]
-        par[grepl(paste0("L1_", px), parameterId),`:=`(parameterScale = pxscale)]}
+        pxscale <- par[parameterId == px, parameterScale]
+        par[grepl(paste0("L1_", px), parameterId),`:=`(parameterScale = pxscale)]
         par[grepl(paste0("L1_", px), parameterId) & parameterScale != "lin",`:=`(nominalValue = 1)]
         par[grepl(paste0("L1_", px), parameterId) & parameterScale == "lin",`:=`(nominalValue = 0)]
-    }
+    }}
     }
   
   par
