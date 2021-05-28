@@ -1,6 +1,6 @@
 #include <R.h>
  #include <math.h>
- void P_petab_deriv_m801yme3 ( double * x, double * y, double * p, int * n, int * k, int * l ) {
+ void P_petab_deriv_dlfw84zv ( double * x, double * y, double * p, int * n, int * k, int * l ) {
  for(int i = 0; i< *n; i++) {
  y[0+i**l] = pow(10.0,(p[0]))*log(10.0) ;
 y[16+i**l] = pow(10.0,(p[1]))*log(10.0) ;

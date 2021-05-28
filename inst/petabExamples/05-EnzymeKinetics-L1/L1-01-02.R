@@ -1,0 +1,6 @@
+list(lambdaL1 = 13593.5639087853, value = 5523.29774144274, argument = c(L1_E_C2 = 5.82076605461657e-12, 
+L1_kcat_C2 = 0, L1Ref_E = 0.0563032616920105, L1Ref_kcat = -0.642246418631539, 
+offset_E = 0.0274016608988262, offset_S = 3.92130123012305, offset_S_C2 = 0.996985016097728, 
+S = 2.04014175568585, sigma_obsS = -1.01670743462811, sigma_obsS_C2 = -0.283036005776509, 
+sigmaAbs_obsE = 1.21385275839776, sigmaRel_obsE = 0.449582415116459
+), iterations = 18L, converged = TRUE)

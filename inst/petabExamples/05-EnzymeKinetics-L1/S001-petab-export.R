@@ -53,7 +53,7 @@ pred[,`:=`(name = paste0("obs", name))]
 predC1 <- pred
 
 # .... Condition 2 ------
-parsC1 <- c(kon = 1, koff = 0.1, kcat = 0.1, E = 1, S = 100, ES = 1e-12, P = 1e-12)
+parsC2 <- c(kon = 1, koff = 0.1, kcat = 0.1, E = 1, S = 100, ES = 1e-12, P = 1e-12)
 parsC2["kcat"] <- 0.5
 parsC2["kon"]  <- 0.5
 parsC2["koff"] <- 0.2
@@ -120,9 +120,14 @@ pe <- petab(model = pe_mo,
             measurementData = pe_me,
             observables = pe_ob)
 
-debugonce(petab_create_parameter_df)
 pe$parameters <- petab_create_parameter_df(pe)
+
 pe$parameters[grep("kon", parameterId),`:=`(estimate = 0)]
+pe$parameters[grep("ES|P", parameterId),`:=`(estimate = 0)]
+
+
+
+
 
 filename <- "basemodel"
 writePetab(pe, filename)

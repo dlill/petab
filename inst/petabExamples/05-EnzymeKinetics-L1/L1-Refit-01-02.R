@@ -1,0 +1,6 @@
+list(value = 1800.98746251858, argument = c(L1_E_C2 = 0.489998318789368, 
+L1Ref_E = -0.190336942068952, L1Ref_kcat = -0.640665012812261, 
+offset_E = 3.22606783630481, offset_S = 2.07356166375249, offset_S_C2 = 1.14983351574232, 
+S = 2.01148758967225, sigma_obsS = -1.06542616571182, sigma_obsS_C2 = -0.557002072717643, 
+sigmaAbs_obsE = 0.47321401850485, sigmaRel_obsE = -0.329274541086701
+), iterations = 107L, converged = TRUE)

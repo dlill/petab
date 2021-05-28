@@ -541,118 +541,118 @@ pd_fit <- function(pd, NFLAGsavePd = 1, iterlim = 1000, printIter = TRUE, traceF
 
 # fit_hierarchical -----
 # could be implemented as objective function which automatically fits observable parameters
-pd_normHierarchical <- function(pd){
-pd <- petab_exampleRead("01", "pd")
-# normIndiv_hierarchical <- function (pd) {
-  force(pd)
-
-  # Get Objects from pd
-  est.grid <- data.table(pd$dModAtoms$gridlist$est.grid)
-  fix.grid <- data.table(pd$dModAtoms$gridlist$fix.grid)
-  setkeyv(est.grid, c("ID", "condition"))
-  setkeyv(fix.grid, c("ID", "condition"))
-  xp0      <- (pd$dModAtoms$fns$x * pd$dModAtoms$fns$p0)
-  gxp0     <- (pd$dModAtoms$fns$g * pd$dModAtoms$fns$x * pd$dModAtoms$fns$p0)
-  g0       <- pd$dModAtoms$fns$g
-  data     <- pd$dModAtoms$data
-  errmodel <- pd$dModAtoms$e
-
-  # Parameter types
-  pepa <- pd$pe$parameters
-  pepa <- pepa[petab_getParameterType(pd$pe), on = "parameterId"]
-  pepa <- pepa[estimate == 1]
-  parametersObsErr <- pepa[parameterType != "other", parameterId]
-  parametersOther  <- pepa[parameterType != "other", parameterId]
-  parsObsErr <- pd$pars[parametersObsErr]
-
-  # Salat from dMod
-  timesD          <- pd$times
-  x.conditions    <- est.grid$condition
-  data.conditions <- names(data)
-  e.conditions    <- names(attr(errmodel, "mappings"))
-  controls        <- list(times = timesD, attr.name = attr.name, conditions = intersect(x.conditions, data.conditions))
-
-  myfn <- function(..., fixed = NULL, deriv = TRUE, conditions = controls$conditions,
-                   simcores = 1,
-                   NFLAGbrowser = 0,
-                   FLAGverbose = FALSE,
-                   FLAGNaNInfwarnings = FALSE) {
-
-    arglist <- list(...)
-    arglist <- arglist[match.fnargs(arglist, "pars")]
-    pars <- arglist[[1]]
-
-    # Logic
-    # * pars_optObs <- c(parsObsErr); fixed <- c(pars, fixed)
-    # * predictionXP0 <- xp0(times, pars_optObs)
-    # * normObsParsErr <- function(parsObsParsErr, predictionXP0) norm(g(predictionXP0, pars_optObs), data)
-    # * fit <- trust(normObsParsErr, parsObsErr)
-    # * parsObsErr <<- fit$argument
-    # * pars_optOuter <- c(pars, parsObsErr); fixed <- fixed
-    # * norm(g*x*p0, pars_optOuter), data)
-
-
-    cn <- (setNames(nm = conditions))[[1]]
-    objlists <- lapply(setNames(nm = conditions), function(cn) {
-
-      if (FLAGbrowser) browser()
-
-      ID <- est.grid[condition == cn, ID]
-      if (FLAGverbose) cat(ID, cn, "\n", sep = " ---- ")
-      dummy <- make_pars(pars, fixed, est.grid, fix.grid, ID)
-      pars_ <- dummy$pars
-      fixed_ <- dummy$fixed
-
-      if (!length(pars_)) return(init_empty_objlist(pars, deriv = deriv, FLAGchisquare = TRUE)) # No pars_ can happen if one fits only condition specific parameters and in this condition there are none
-
-      prediction <- try(prd0(times = controls$times, pars = pars_, fixed = fixed_, deriv = deriv))
-
-      if (inherits(prediction, "try-error"))
-        stop("Prediction failed in \n>>>condition = ", cn, "\n>>>ID = ", ID, "\n\nTry iterating p(pars), (x*p)(pars), ... to find the problem.")
-
-      prediction <- prediction[[1]]
-      prediction <- check_and_sanitize_prediction(prediction, data, cn, FLAGNaNInfwarnings)
-
-      err <- NULL
-      if (any(is.na(data[[cn]]$sigma))) {
-        err <- errmodel(out = prediction, pars = getParameters(prediction), conditions = cn, deriv=deriv)
-        mywrss <- nll(res(data[[cn]], prediction, err[[1]]), deriv = deriv, pars = pars)
-      } else {
-        mywrss <- nll(res(data[[cn]], prediction), deriv = deriv, pars = pars)
-      }
-
-      if (deriv) mywrss <- renameDerivParsInObjlist(mywrss, dummy$parnames)
-
-      mywrss
-    })
-
-    # Sum all objlists
-    out <- Reduce("+", objlists)
-
-    # Consider fixed: return only derivs wrt pouter
-    out$gradient <- out$gradient[names(pars)]
-    out$hessian <- out$hessian[names(pars), names(pars)]
-
-    # Populate attributes
-    attr(out, controls$attr.name) <- out$value
-    ll_conditions <- data.frame(
-      logl = vapply(setNames(objlists, conditions), function(.x) .x$value, 1),
-      chi2 = vapply(setNames(objlists, conditions), function(.x) attr(.x, "chisquare"), 1))
-    ll_sum <- data.frame(logl = sum(ll_conditions$logl),
-                         chi2 = sum(ll_conditions$chi2))
-    attributes(out) <- c(attributes(out), list(ll_cond_df = ll_conditions))
-    attributes(out) <- c(attributes(out), list(ll_sum_df = ll_sum))
-    # attr(out, "AIC") <- out$value + length(pars) * 2
-    # attr(out, "BIC") <- out$value + length(pars) * log(nrow(as.data.frame(data)))
-    return(out)
-  }
-
-  class(myfn) <- c("objfn", "fn")
-  attr(myfn, "conditions") <- data.conditions
-  attr(myfn, "parameters") <- attr(prd0, "parameters")
-  attr(myfn, "modelname") <- modelname(prd0, errmodel)
-  return(myfn)
-}
+# pd_normHierarchical <- function(pd){
+# pd <- petab_exampleRead("01", "pd")
+# # normIndiv_hierarchical <- function (pd) {
+#   force(pd)
+# 
+#   # Get Objects from pd
+#   est.grid <- data.table(pd$dModAtoms$gridlist$est.grid)
+#   fix.grid <- data.table(pd$dModAtoms$gridlist$fix.grid)
+#   setkeyv(est.grid, c("ID", "condition"))
+#   setkeyv(fix.grid, c("ID", "condition"))
+#   xp0      <- (pd$dModAtoms$fns$x * pd$dModAtoms$fns$p0)
+#   gxp0     <- (pd$dModAtoms$fns$g * pd$dModAtoms$fns$x * pd$dModAtoms$fns$p0)
+#   g0       <- pd$dModAtoms$fns$g
+#   data     <- pd$dModAtoms$data
+#   errmodel <- pd$dModAtoms$e
+# 
+#   # Parameter types
+#   pepa <- pd$pe$parameters
+#   pepa <- pepa[petab_getParameterType(pd$pe), on = "parameterId"]
+#   pepa <- pepa[estimate == 1]
+#   parametersObsErr <- pepa[parameterType != "other", parameterId]
+#   parametersOther  <- pepa[parameterType != "other", parameterId]
+#   parsObsErr <- pd$pars[parametersObsErr]
+# 
+#   # Salat from dMod
+#   timesD          <- pd$times
+#   x.conditions    <- est.grid$condition
+#   data.conditions <- names(data)
+#   e.conditions    <- names(attr(errmodel, "mappings"))
+#   controls        <- list(times = timesD, attr.name = attr.name, conditions = intersect(x.conditions, data.conditions))
+# 
+#   myfn <- function(..., fixed = NULL, deriv = TRUE, conditions = controls$conditions,
+#                    simcores = 1,
+#                    NFLAGbrowser = 0,
+#                    FLAGverbose = FALSE,
+#                    FLAGNaNInfwarnings = FALSE) {
+# 
+#     arglist <- list(...)
+#     arglist <- arglist[match.fnargs(arglist, "pars")]
+#     pars <- arglist[[1]]
+# 
+#     # Logic
+#     # * pars_optObs <- c(parsObsErr); fixed <- c(pars, fixed)
+#     # * predictionXP0 <- xp0(times, pars_optObs)
+#     # * normObsParsErr <- function(parsObsParsErr, predictionXP0) norm(g(predictionXP0, pars_optObs), data)
+#     # * fit <- trust(normObsParsErr, parsObsErr)
+#     # * parsObsErr <<- fit$argument
+#     # * pars_optOuter <- c(pars, parsObsErr); fixed <- fixed
+#     # * norm(g*x*p0, pars_optOuter), data)
+# 
+# 
+#     cn <- (setNames(nm = conditions))[[1]]
+#     objlists <- lapply(setNames(nm = conditions), function(cn) {
+# 
+#       if (FLAGbrowser) browser()
+# 
+#       ID <- est.grid[condition == cn, ID]
+#       if (FLAGverbose) cat(ID, cn, "\n", sep = " ---- ")
+#       dummy <- make_pars(pars, fixed, est.grid, fix.grid, ID)
+#       pars_ <- dummy$pars
+#       fixed_ <- dummy$fixed
+# 
+#       if (!length(pars_)) return(init_empty_objlist(pars, deriv = deriv, FLAGchisquare = TRUE)) # No pars_ can happen if one fits only condition specific parameters and in this condition there are none
+# 
+#       prediction <- try(prd0(times = controls$times, pars = pars_, fixed = fixed_, deriv = deriv))
+# 
+#       if (inherits(prediction, "try-error"))
+#         stop("Prediction failed in \n>>>condition = ", cn, "\n>>>ID = ", ID, "\n\nTry iterating p(pars), (x*p)(pars), ... to find the problem.")
+# 
+#       prediction <- prediction[[1]]
+#       prediction <- check_and_sanitize_prediction(prediction, data, cn, FLAGNaNInfwarnings)
+# 
+#       err <- NULL
+#       if (any(is.na(data[[cn]]$sigma))) {
+#         err <- errmodel(out = prediction, pars = getParameters(prediction), conditions = cn, deriv=deriv)
+#         mywrss <- nll(res(data[[cn]], prediction, err[[1]]), deriv = deriv, pars = pars)
+#       } else {
+#         mywrss <- nll(res(data[[cn]], prediction), deriv = deriv, pars = pars)
+#       }
+# 
+#       if (deriv) mywrss <- renameDerivParsInObjlist(mywrss, dummy$parnames)
+# 
+#       mywrss
+#     })
+# 
+#     # Sum all objlists
+#     out <- Reduce("+", objlists)
+# 
+#     # Consider fixed: return only derivs wrt pouter
+#     out$gradient <- out$gradient[names(pars)]
+#     out$hessian <- out$hessian[names(pars), names(pars)]
+# 
+#     # Populate attributes
+#     attr(out, controls$attr.name) <- out$value
+#     ll_conditions <- data.frame(
+#       logl = vapply(setNames(objlists, conditions), function(.x) .x$value, 1),
+#       chi2 = vapply(setNames(objlists, conditions), function(.x) attr(.x, "chisquare"), 1))
+#     ll_sum <- data.frame(logl = sum(ll_conditions$logl),
+#                          chi2 = sum(ll_conditions$chi2))
+#     attributes(out) <- c(attributes(out), list(ll_cond_df = ll_conditions))
+#     attributes(out) <- c(attributes(out), list(ll_sum_df = ll_sum))
+#     # attr(out, "AIC") <- out$value + length(pars) * 2
+#     # attr(out, "BIC") <- out$value + length(pars) * log(nrow(as.data.frame(data)))
+#     return(out)
+#   }
+# 
+#   class(myfn) <- c("objfn", "fn")
+#   attr(myfn, "conditions") <- data.conditions
+#   attr(myfn, "parameters") <- attr(prd0, "parameters")
+#   attr(myfn, "modelname") <- modelname(prd0, errmodel)
+#   return(myfn)
+# }
 
 
 # -------------------------------------------------------------------------#

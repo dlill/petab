@@ -2,7 +2,7 @@
 #include <R.h> 
  #include <math.h> 
 
-static double parms[24];
+static double parms[23];
 static double forc[0];
 static double cons[0];
 static double range[2];
@@ -34,13 +34,12 @@ static double range[2];
  #define y17_0 parms[20] 
  #define y18_0 parms[21] 
  #define y19_0 parms[22] 
- #define y20_0 parms[23] 
 #define tmin range[0]
 #define tmax range[1]
 
 
 void odemodel_petab_s_initmod(void (* odeparms)(int *, double *)) {
-	 int N=24;
+	 int N=23;
 	 odeparms(&N, parms);
 }
 
@@ -70,12 +69,10 @@ void odemodel_petab_s_derivs (int *n, double *t, double *y, double *ydot, double
  	 ydot[13] = (-(kon*y[1]))*(y[12])+(-(kon*y[0]))*(y[13])+(koff)*(y[14]);
  	 ydot[14] = (kon*y[1])*(y[12])+(kon*y[0])*(y[13])+(-(koff+kcat))*(y[14]);
  	 ydot[15] = (kcat)*(y[14]);
- 	 ydot[16] = (kcat)*(0.0);
- 	 ydot[17] = (-(kon*y[1]))*(y[17])+(-(kon*y[0]))*(y[18])+(koff+kcat)*(y[19])+y[2];
- 	 ydot[18] = (-(kon*y[1]))*(y[17])+(-(kon*y[0]))*(y[18])+(koff)*(y[19]);
- 	 ydot[19] = (kon*y[1])*(y[17])+(kon*y[0])*(y[18])+(-(koff+kcat))*(y[19])-y[2];
- 	 ydot[20] = (kcat)*(y[19])+y[2];
+ 	 ydot[16] = (-(kon*y[1]))*(y[16])+(-(kon*y[0]))*(y[17])+(koff+kcat)*(y[18])+y[2];
+ 	 ydot[17] = (-(kon*y[1]))*(y[16])+(-(kon*y[0]))*(y[17])+(koff)*(y[18]);
+ 	 ydot[18] = (kon*y[1])*(y[16])+(kon*y[0])*(y[17])+(-(koff+kcat))*(y[18])-y[2];
+ 	 ydot[19] = (kcat)*(y[18])+y[2];
 
-	 for(int i=  0 ; i <  3 ; ++i) RPAR[i] = 0;
 }
 

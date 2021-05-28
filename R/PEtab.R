@@ -1727,7 +1727,7 @@ pe_L1_updateParameterFormulaInjection <- function(pe, parameterId_base) {
 #' pe_L1_addL1ParsToExperimentalCondition(pe, parameterId_base = c("kcat", "E"), conditionSpecL1_reference = "C1")
 pe_L1_addL1ParsToExperimentalCondition <- function(pe, parameterId_base, conditionSpecL1_reference) {
   # Checks
-  if (!"L1Spec" %in% names(pe$experimentalCondition)) stop("Please add column 'L1Spec' to pe$experimentalCondition before calling this function")
+  if (is.null(pe$meta$L1$L1Spec)) stop("Please add pe$meta$L1Spec")  
   
   p_isSet <- parameterId_base %in% names(pe$experimentalCondition)
   if (any(p_isSet)) stop("L1'd parameters already used as colname in experimentalCondition: ", paste0(parameterId_base[p_isSet], collapse = ","), "\n",
@@ -1736,6 +1736,7 @@ pe_L1_addL1ParsToExperimentalCondition <- function(pe, parameterId_base, conditi
   if (any(p_isSet)) stop("L1'd parameters already used as entry in experimentalCondition: ", paste0(parameterId_base[p_isSet], collapse = ","), "\n",
                          "If you need this feature, it needs to be implemented.")
   
+  pe$experimentalCondition <- pe$meta$L1$L1Spec[pe$experimentalCondition, on = "conditionId"]
   pe$experimentalCondition[,(paste0("L1_", parameterId_base)) := lapply(parameterId_base, function(px) paste0("L1_", px, "_", L1Spec))]
   pe$experimentalCondition[L1Spec %in% conditionSpecL1_reference,(paste0("L1_", parameterId_base)) := 0]
   pe$experimentalCondition[,`:=`(L1Spec = NULL)]
@@ -1755,6 +1756,7 @@ pe_L1_addL1ParsToExperimentalCondition <- function(pe, parameterId_base, conditi
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family petab L1
+#' @importFrom data.table copy
 #'
 #' @examples
 #' pe <- petab_exampleRead("04")
@@ -1762,12 +1764,17 @@ pe_L1_addL1ParsToExperimentalCondition <- function(pe, parameterId_base, conditi
 pe_L1_createL1Problem <- function(pe, parameterId_base, conditionSpecL1_reference, j_conditionSpecL1 = conditionId) {
   # 1 Create parameterFormulaInjection
   pe <- pe_L1_updateParameterFormulaInjection(pe, parameterId_base)
-  # 2 Add columns of L1 parameters to experimentalCondition
-  # Don't know how 
+  # 2 Add L1 spec and add other information to pe$meta$L1
+  pe$meta$L1$L1Spec <- data.table::copy(pe$experimentalCondition[,list(conditionId = conditionId)])
   sj <- substitute(j_conditionSpecL1)
-  pe$experimentalCondition[,`:=`(L1Spec = eval(eval(sj)))]
+  pe$meta$L1$L1Spec[,`:=`(L1Spec = eval(sj))]
+  
+  pe$meta$L1$parameterId_base <- parameterId_base
+  pe$meta$L1$conditionSpecL1_reference <- conditionSpecL1_reference
+  
+  # 3 Add L1 parameters to experimentalCondition
   pe <- pe_L1_addL1ParsToExperimentalCondition(pe, parameterId_base, conditionSpecL1_reference)
-  # 3 Re-create parameters_df including L1 parameters
+  # 4 Re-create parameters_df including L1 parameters
   pepaL1 <- petab_create_parameter_df(pe)
   pepaOld <- pe$parameters
   pepaOld[parameterId %in% parameterId_base,`:=`(parameterId = paste0("L1Ref_", parameterId))]
