@@ -19,6 +19,7 @@ path2TestCases = "PEtabTests/"
 pd <- importPEtabSBML_indiv("petab", NFLAGcompile = 0, .compiledFolder = "Compiled", SFLAGbrowser = "0")
 pd$pe
 
+pd$prd(pd$times, pd$pars)
 
 
 # Exit ----
