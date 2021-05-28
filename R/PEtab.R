@@ -95,6 +95,7 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "lin") {
         par[grepl(paste0("L1_", px), parameterId),`:=`(parameterScale = pxscale)]
         par[grepl(paste0("L1_", px), parameterId) & parameterScale != "lin",`:=`(nominalValue = 1)]
         par[grepl(paste0("L1_", px), parameterId) & parameterScale == "lin",`:=`(nominalValue = 0)]
+        par[grepl(paste0("L1_", px), parameterId),`:=`(objectivePriorType = "parameterScaleLaplace")]
     }}
     }
   

@@ -28,7 +28,23 @@ pe <- pe0 <- readPetab("basemodel")
 #   * => Augment petab_create_parameters_df: recognize fcL1_*-parameters as L1-parameters, look up the base parameter for scale, use priorScale Laplace, set sensible defaults
 
 
-parameterId_base <- c("kcat","E")
+#' Create L1 Trafo, depending on parameterScale
+#'
+#' * For logpars: par * L1_par
+#' * For linpars: par + L1_par
+#' 
+#' @param pe 
+#' @param parameterId_base vector of parameterId which should be L1'd.
+#'
+#' @return data.table(parameterId, parameterFormula, trafoType = "L1")
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family petab L1
+#'
+#' @examples
+#' pe <- petab_exampleRead("05")
+#' L1_getParameterFormulaInjection(pe, c("kcat", "E"))
 L1_getParameterFormulaInjection <- function(pe, parameterId_base) {
   p <- pe$parameters[parameterId %in% parameterId_base]
   p[,`:=`(parameterIdL1 = paste0("L1_", parameterId))]
@@ -36,14 +52,43 @@ L1_getParameterFormulaInjection <- function(pe, parameterId_base) {
   p[,list(parameterId, parameterFormula, trafoType = "L1")]
 }
 
-L1_pe_updateParameterFormulaInjection <- function(pe, parameterId_base) {
+#' Title
+#'
+#' @inheritParams L1_getParameterFormulaInjection
+#' @return petab with updated parameterFormulaInjection, see [L1_getParameterFormulaInjection()]
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family petab L1
+#' @importFrom data.table rbindlist
+#'
+#' @examples
+#' pe <- petab_exampleRead("05")
+#' pe_L1_updateParameterFormulaInjection(pe, c("kcat", "E"))
+pe_L1_updateParameterFormulaInjection <- function(pe, parameterId_base) {
   pfi <- L1_getParameterFormulaInjection(pe, parameterId_base)
   pe$meta$parameterFormulaInjection <- data.table::rbindlist(list(pe$meta$parameterFormulaInjection, pfi), use.names = TRUE, fill = TRUE)
   pe
 }
 
 
-L1_addL1ParsToExperimentalCondition <- function(pe, parameterId_base, conditionSpecL1_reference) {
+#' Add parameter columns to experimentalCondition
+#' 
+#' @param pe petab with non-Null pe$experimentalCondition$L1Spec column which serves a) subsetting and b) creating parameter names
+#' @inheritParams pe_L1_createL1Problem
+#' 
+#' @return petab with updated experimentalCondition: L1Spec is removed, L1 parameter columns are added
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family petab L1
+#'
+#' @examples
+#' pe <- petab_exampleRead("04")
+#' pe$experimentalCondition$L1Spec <- pe$experimentalCondition$conditionId
+#' pe_L1_addL1ParsToExperimentalCondition(pe, parameterId_base = c("kcat", "E"), conditionSpecL1_reference = "C1")
+pe_L1_addL1ParsToExperimentalCondition <- function(pe, parameterId_base, conditionSpecL1_reference) {
+  if (!"L1Spec" %in% names(pe$experimentalCondition)) stop("Please add column 'L1Spec' to pe$experimentalCondition before calling this function")
   pe$experimentalCondition[,(paste0("L1_", parameterId_base)) := lapply(parameterId_base, function(px) paste0("L1_", px, "_", L1Spec))]
   pe$experimentalCondition[L1Spec %in% conditionSpecL1_reference,(paste0("L1_", parameterId_base)) := 0]
   pe$experimentalCondition[,`:=`(L1Spec = NULL)]
@@ -51,15 +96,30 @@ L1_addL1ParsToExperimentalCondition <- function(pe, parameterId_base, conditionS
 }
 
 
-
-
-L1_createL1Problem <- function(pe, parameterId_base, conditionSpecL1_reference, j_conditionSpecL1 = conditionId) {
+#' From a petab, create a petab which encodes an L1 problem
+#'
+#' @param pe petab
+#' @param parameterId_base parameterIds to be L1'd
+#' @param conditionSpecL1_reference Vector of entries referring to L1Spec which are deemed the base condition
+#' @param j_conditionSpecL1 data.table-j argument to create L1Spec within pe$experimentalCondition. E.g. conditionId (as symbol, will be substitute-eval'd)
+#'
+#' @return [petab()] with L1 parameters
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family petab L1
+#'
+#' @examples
+#' pe <- petab_exampleRead("04")
+#' pe_L1_createL1Problem(pe, c("kcat", "E"), conditionSpecL1_reference = "C1", j_conditionSpecL1 = conditionId)
+pe_L1_createL1Problem <- function(pe, parameterId_base, conditionSpecL1_reference, j_conditionSpecL1 = conditionId) {
   # 1 Create parameterFormulaInjection
-  pe <- L1_pe_updateParameterFormulaInjection(pe, parameterId_base)
+  pe <- pe_L1_updateParameterFormulaInjection(pe, parameterId_base)
   # 2 Add columns of L1 parameters to experimentalCondition
+  # Don't know how 
   sj <- substitute(j_conditionSpecL1)
   pe$experimentalCondition[,`:=`(L1Spec = eval(eval(sj)))]
-  pe <- L1_addL1ParsToExperimentalCondition(pe, parameterId_base, conditionSpecL1_reference)
+  pe <- pe_L1_addL1ParsToExperimentalCondition(pe, parameterId_base, conditionSpecL1_reference)
   # 3 Re-create parameters_df including L1 parameters
   pepaL1 <- petab_create_parameter_df(pe)
   pe$parameters <- petab_parameters_mergeParameters(pepaL1, pe$parameters)
@@ -68,5 +128,7 @@ L1_createL1Problem <- function(pe, parameterId_base, conditionSpecL1_reference, 
 
 parameterId_base <- c("kcat","E")
 conditionSpecL1_reference <- "C1"
-L1_createL1Problem(pe, parameterId_base, conditionSpecL1_reference, j_conditionSpecL1 = conditionId)
+pe_L1_createL1Problem(pe, parameterId_base, conditionSpecL1_reference, j_conditionSpecL1 = conditionId)
+
+
 # Exit ---- 
