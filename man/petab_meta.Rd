@@ -2,16 +2,20 @@
 % Please edit documentation in R/PEtab.R
 \name{petab_meta}
 \alias{petab_meta}
-\title{Title}
+\title{Additional Information}
 \usage{
 petab_meta(parameterFormulaInjection = NULL, variableOrder = NULL, ...)
 }
 \arguments{
+\item{parameterFormulaInjection}{data.table(parameterId, parameterFormula)}
+
+\item{variableOrder}{vector of stateIds and observableIds in the order which you want for plotting}
+
 \item{...}{}
 }
 \value{
-
+named list of supplied arguments
 }
 \description{
-Title
+Additional Information
 }

@@ -17,9 +17,11 @@ petab_model(
 
 \item{events}{eventlist}
 
-\item{...}{not used, but could be used in the future for imitating assignment rules etc}
+\item{parInfo}{\code{\link[=getParInfo]{getParInfo()}}}
 
-\item{parameterFormulaInjection}{}
+\item{speciesInfo}{\code{\link[=getSpeciesInfo]{getSpeciesInfo()}}}
+
+\item{...}{not used, but could be used in the future for imitating assignment rules etc}
 }
 \value{
 list

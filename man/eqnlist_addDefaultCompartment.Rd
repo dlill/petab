@@ -17,6 +17,9 @@ eqnlist_addDefaultCompartment(equationList, compName)
 \description{
 Title
 }
+\examples{
+# see getReactionInfo
+}
 \seealso{
 Other SBML export: 
 \code{\link{getCompartmentInfo}()},
