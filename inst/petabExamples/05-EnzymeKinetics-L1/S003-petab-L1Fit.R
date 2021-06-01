@@ -11,10 +11,17 @@ pd_predictAndPlot2(pd,i = time > 0.5)
 
 
 # -------------------------------------------------------------------------#
+# L1 Workflow Bernie ----
+# -------------------------------------------------------------------------#
+
+# * For parameter estimation, all three cell types CFU-E, H838 and H838-HA-hEPOR were initially implemented separately 
+# * The parameters were estimated independently for CFU-E and H838 & H838-HA-hEPOR cells, and the corresponding fold-change was L 1 -regularized.
+# * The re-parameterization to decouple modules of the signaling network was performed with CFU-E as reference point for H838 & H838-HA-hEPOR. 
+# * For generating theregularization path, the regularization strength was scanned in log-space from 10 −4 to 10 4 .
+# * Regularization was only used for selection of parameter differences, while for model selection the un-regularization solution was used for unbiased parameter estimates
+
+# -------------------------------------------------------------------------#
 # L1 Workflow new ----
-# -------------------------------------------------------------------------#
-# -------------------------------------------------------------------------#
-# L1 Workflow ----
 # -------------------------------------------------------------------------#
 
 # * Fit all, no L1
@@ -49,8 +56,6 @@ if (!fit$converged) warning("Fit not converged, please try increasing 'iterlim' 
 pd <- pd_updateEstPars(pd, parsEst = fit$argument, FLAGupdatePE = TRUE, FLAGsavePd = NFLAGsavePd > 0)
 
 pd
-
-pd_predictAndPlot2(pd, i = time > 0.05)
 
 # .. Run L1 for all conditions -----
 iterlim = 1000

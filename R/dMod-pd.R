@@ -26,6 +26,9 @@ readPd <- function(filename) {
   on.exit({setwd(wd)})
   # 1 Read RDS
   pd <- readRDS(filename)
+  # Backwards compatibility
+  if (is.null(pd$objfns))
+    pd$objfns$obj_data <- pd$obj_data
   # 2 Load DLLs
   setwd(dirname(filename))
   dMod::loadDLL(pd$objfns$obj_data)
