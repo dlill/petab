@@ -15,3 +15,16 @@ pd_updateEstPars(pd, parsEst, FLAGupdatePE = TRUE, FLAGsavePd = FALSE)
 \description{
 Update parameters
 }
+\seealso{
+Other parframe handling: 
+\code{\link{pd_parf_collectL1}()},
+\code{\link{pd_parf_collectMstrust}()},
+\code{\link{pd_parf_collectPars}()},
+\code{\link{pd_parf_collectProfile}()},
+\code{\link{pd_parf_collect}()},
+\code{\link{readPd}()}
+}
+\author{
+Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+}
+\concept{parframe handling}

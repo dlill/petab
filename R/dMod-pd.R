@@ -17,6 +17,10 @@
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
+#' @family Cluster
+#' @family L1
+#' @family pd helpers
+#' @family parframe handling
 #' @importFrom dMod loadDLL
 #' @importFrom conveniencefunctions dMod_readProfiles dMod_readMstrust
 #' @examples
@@ -33,18 +37,34 @@ readPd <- function(filename) {
   setwd(dirname(filename))
   dMod::loadDLL(pd$objfns$obj_data)
   setwd(wd)
-
+  
   # 3 Read potential results if not yet in pd
   # If in pd already, some filenameParts variable might have been derived from them,
   #   so it would be dangerous to reload them if they were postprocessed
+  
+  # [ ] Would be better to use pd_files rather than dMod-files
+  # mstrust
   path <- dirname(dirname(filename))
-  if (is.null(pd$result$fits) && dir.exists(file.path(path, "Results", "mstrust")))
-    pd$result$fits <- conveniencefunctions::dMod_readMstrust(path)
-  if (is.null(pd$result$profile) && dir.exists(file.path(path, "Results", "profile")))
+  if (is.null(pd$result$fits) && file.exists(conveniencefunctions::dMod_files(path, "mstrust")$mstrust))
+    pd$result$fits <- conveniencefunctions::dMod_readMstrust(path, "mstrust")
+  # Backwards compatibility ugly ugly: If identifier!="mstrust", it might have been "1"
+  if (is.null(pd$result$fits) && file.exists(conveniencefunctions::dMod_files(path, "1")$mstrust))
+    pd$result$fits <- conveniencefunctions::dMod_readMstrust(path, "1")
+  
+  # profiles
+  if (is.null(pd$result$profile) && dir.exists(dirname(conveniencefunctions::dMod_files(path)$profile)))
     pd$result$profiles <- conveniencefunctions::dMod_readProfiles(path)
-
+  
+  # [ ] L1 results
+  # [ ] Would be good instead of pd_fitObsPars overwriting pd, rather have it save the parameters in a file and load them
+  #     Then, one can call pd_updateEstPars(pd) which looks for available parameters among
+  #     base, base-fitted, base-fittedObsPars, mstrust
+  
+  
   pd
 }
+
+
 
 #' Title
 #'
@@ -79,9 +99,9 @@ pd_files <- function(filenameParts) {
                                  filenameParts$.compiledFolder,
                                  paste0(".obsparsfitted")),
        traceFile = file.path(filenameParts$.currentFolder,
-                                 filenameParts$.compiledFolder,
-                                 paste0("traceFile.txt"))
-       )
+                             filenameParts$.compiledFolder,
+                             paste0("traceFile.txt"))
+  )
 }
 
 
@@ -110,14 +130,14 @@ pdIndiv_updateControls <- function(pd,
                                    optionsOde = NULL,
                                    optionsSens = NULL,
                                    objtimes = NULL) {
-
+  
   # Set integrator controls
   if (!is.null(optionsOde))  dMod::controls(pd$dModAtoms$fns$x, name = "optionsOde") <- optionsOde
   if (!is.null(optionsSens)) dMod::controls(pd$dModAtoms$fns$x, name = "optionsSens") <- optionsSens
   if (!is.null(objtimes))    dMod::controls(pd$objfns$obj_data, "times") <- objtimes
-
+  
   pdIndiv_rebuildPrdObj(pd)
-
+  
 }
 
 #' Rebuild the high-level prediction and objective function
@@ -132,14 +152,14 @@ pdIndiv_updateControls <- function(pd,
 #'
 #' @examples
 pdIndiv_rebuildPrdObj <- function(pd, Nobjtimes = 100) {
-
+  
   # Rebuild p
   p <- dMod::P_indiv((pd$dModAtoms$fns$p1 * pd$dModAtoms$fns$p0), pd$dModAtoms$gridlist$est.grid, pd$dModAtoms$gridlist$fix.grid)
-
+  
   # Rebuild high-level prediction function
   prd0 <- Reduce("*", pd$dModAtoms$fns)
   prd <- PRD_indiv(prd0, pd$dModAtoms$gridlist$est.grid, pd$dModAtoms$gridlist$fix.grid)
-
+  
   # Rebuild obj_data
   tobj <- if (!is.null(pd$objfns$obj_data)) dMod::controls(pd$objfns$obj_data, name = "times") else dMod::objtimes(pd$pe$measurementData$time, Nobjtimes = Nobjtimes)
   obj_data <- normL2_indiv(pd$dModAtoms$data, prd0,
@@ -147,7 +167,7 @@ pdIndiv_rebuildPrdObj <- function(pd, Nobjtimes = 100) {
                            est.grid = pd$dModAtoms$gridlist$est.grid,
                            fix.grid = pd$dModAtoms$gridlist$fix.grid,
                            times = tobj)
-
+  
   # Update p, prd and obj_data
   pd$p        <- p
   pd$prd      <- prd
@@ -155,7 +175,7 @@ pdIndiv_rebuildPrdObj <- function(pd, Nobjtimes = 100) {
   
   # Rebuild obj
   pd$obj <- Reduce("+", pd$objfns)
-
+  
   pd
 }
 
@@ -238,9 +258,14 @@ pd_objtimes <- function(pd, N = 100) {
 #'
 #' @return
 #' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family parframe handling
+#' @importFrom conveniencefunctions pars2parframe
 #'
 #' @examples
 pd_updateEstPars <- function(pd, parsEst, FLAGupdatePE = TRUE, FLAGsavePd = FALSE) {
+  # [ ] don't overwrite, just load from Results
   pd$pars[names(parsEst)] <- parsEst
   
   pd$result$base <- conveniencefunctions::pars2parframe(pd$pars, parameterSetId = "Base", obj = pd$obj)
@@ -318,27 +343,27 @@ pd_parf_collectMstrust <- function(pd, fitrankRange = 1:15, tol = 1) {
 #'
 #' @examples
 pd_parf_collectProfile <- function(pd, rows = c("profile_endpoints", "optimum"), parameters = NULL) {
-
+  
   parameternames <- attr(pd$result$profiles, "parameters")
   if (!length(parameters)) parameters <- unique(pd$result$profiles$whichPar)
-
+  
   pars <- copy(pd$result$profiles)
   pars <- data.table::as.data.table(pars)
   pars <- pars[whichPar %in% parameters]
   pars[,`:=`(profileDirection = if(constraint < 0) "left" else if (constraint > 0) "right" else "optimum"), by = 1:nrow(pars)]
-
+  
   parsEnd <- parsOpt <- NULL
   if ("profile_endpoints" %in% rows){
     parsEnd <- pars[profileDirection != "optimum",.SD[which.max(abs(constraint))], by = c("whichPar", "profileDirection")]
     parsEnd[,`:=`(parameterSetId = "profile_endpoints")]
     data.table::setcolorder(parsEnd, c(names(pars), "parameterSetId"))
-    }
+  }
   if ("optimum" %in% rows){
     parsOpt <- pars[which(profileDirection == "optimum")[1]]
     parsOpt[,`:=`(parameterSetId = "optimum")]
     data.table::setcolorder(parsOpt, c(names(pars), "parameterSetId"))
-    }
-
+  }
+  
   pars <- data.table::rbindlist(list(parsEnd, parsOpt))
   # [ ] Idea: return whichPar as well. Then, when summarizing profiles in pd_predictAndPlot2 by min and max,
   #   one could have a look in which profile the minimum/maximum values occured, i.e. which profiles contribute most to prediction uncertainty
@@ -388,31 +413,31 @@ pd_parf_collect <- function(pd,
                             opt.mstrust = pd_parf_opt.mstrust(include = TRUE , fitrankRange = 1:20, tol = 1),
                             opt.profile = pd_parf_opt.profile(include = FALSE, rows = "profile_endpoints", parameters = NULL),
                             opt.L1 =      pd_parf_opt.L1(     include = FALSE, rows = 1:nrow(pd$result$L1))
-                            ) {
-
+) {
+  
   parf_base <- parf_fit <- parf_profile <- parf_L1 <- NULL
-
+  
   if (opt.base$include) {
     args <- c(list(pd = pd), opt.base[setdiff(names(opt.base), "include")])
     parf_base <- do.call(pd_parf_collectPars, args)}
-
+  
   if (opt.mstrust$include && !is.null(pd$result$fits)) {
     args <- c(list(pd = pd), opt.mstrust[setdiff(names(opt.mstrust), "include")])
     parf_fit <- do.call(pd_parf_collectMstrust, args)}
-
+  
   if (opt.profile$include) {
     args <- c(list(pd = pd), opt.profile[setdiff(names(opt.profile), "include")])
     parf_profile <- do.call(pd_parf_collectProfile, args)}
-
+  
   if (opt.L1$include && !is.null(pd$result$L1)) {
     args <- c(list(pd = pd), opt.L1[setdiff(names(opt.L1), "include")])
     parf_L1 <- do.call(pd_parf_collectL1, args)}
-
+  
   parf <- conveniencefunctions::cf_parf_rbindlist(list(parf_base, parf_fit, parf_profile, parf_L1))
   
   # debatable
   parf <- parf[order(parf$value)]
-
+  
   parf
 }
 
@@ -452,11 +477,11 @@ pd_pars_getFixedOnBoundary <- function(pd, tol = 1e-2) {
   if (!identical(names(parlower), names(pd$pars))) stop("parameter names and boundaries do not match")
   parlower <- pd$pars - parlower
   parlower <- parlower[parlower <= tol]
-
+  
   parupper <- petab_getParameterBoundaries(pd$pe, "upper")
   parupper <- -(pd$pars - parupper)
   parupper <- parupper[parupper <= tol]
-
+  
   fixedOnBoundary <- pd$pars[c(names(parlower), names(parupper))]
   fixedOnBoundary
 }
@@ -484,23 +509,25 @@ pd_pars_getFixedOnBoundary <- function(pd, tol = 1e-2) {
 #'
 #' @examples
 pd_fitObsPars <- function(pd, NFLAGsavePd = 3) {
+  # [ ] dont save pd, save a parframe in Results instead
+  
   logfile <- pd_files(pd$filenameParts)$obsParsFitted
   if (file.exists(logfile) &&
       !inputFileChanged(pd_files(pd$filenameParts)$rdsfile, logfile) &&
       NFLAGsavePd == 3)
     return(pd)
-
+  
   obspars <- petab_getParameterType(pd$pe)
   obspars <- obspars[parameterType %in% c("observableParameters", "noiseParameters"), parameterId]
-
+  
   fit_par <- pd$pars[obspars]
   fit_fix <- pd$pars[setdiff(names(pd$pars), obspars)]
-
+  
   parlower <- petab_getParameterBoundaries(pd$pe, "lower")[obspars]
   parupper <- petab_getParameterBoundaries(pd$pe, "upper")[obspars]
-
+  
   fit <- dMod::trust(pd$obj, fit_par, 1,10, iterlim = 1000, fixed = fit_fix, parlower = parlower, parupper = parupper)
-
+  
   pd <- pd_updateEstPars(pd, parsEst = fit$argument, FLAGupdatePE = TRUE, FLAGsavePd = NFLAGsavePd > 0)
   if (NFLAGsavePd > 0) writeLines("obsPars fitted", logfile)
   pd
@@ -524,19 +551,20 @@ pd_fitObsPars <- function(pd, NFLAGsavePd = 3) {
 #'
 #' @examples
 pd_fit <- function(pd, NFLAGsavePd = 1, iterlim = 1000, printIter = TRUE, traceFile = NULL) {
-
+  # [ ] dont save pd, save a parframe in Results instead
+  
   fit_par <- pd$pars
   fit_fix <- pd$fixed
-
+  
   parlower <- petab_getParameterBoundaries(pd$pe, "lower")
   parupper <- petab_getParameterBoundaries(pd$pe, "upper")
-
+  
   cat("dig into bad fitting of S302 of TGFb...\n")
-
+  
   fit <- dMod::trust(pd$obj, fit_par, 1,10, iterlim = iterlim, fixed = fit_fix,
-               parlower = parlower, parupper = parupper, printIter = printIter, traceFile = traceFile)
+                     parlower = parlower, parupper = parupper, printIter = printIter, traceFile = traceFile)
   if (!fit$converged) warning("Fit not converged, please try increasing 'iterlim' (was ", iterlim,")")
-
+  
   pd <- pd_updateEstPars(pd, parsEst = fit$argument, FLAGupdatePE = TRUE, FLAGsavePd = NFLAGsavePd > 0)
   pd
 }
@@ -659,8 +687,131 @@ pd_fit <- function(pd, NFLAGsavePd = 1, iterlim = 1000, printIter = TRUE, traceF
 
 
 # -------------------------------------------------------------------------#
-# Profiles ----
+# Cluster ----
 # -------------------------------------------------------------------------#
+
+#' Title
+#'
+#' @param FLAGjobDone 
+#' @param FLAGjobPurged 
+#' @param FLAGjobRecover 
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family Cluster
+#'
+#' @examples
+clusterStatusMessage <- function(FLAGjobDone, FLAGjobPurged, FLAGjobRecover) {
+  if (FLAGjobPurged)   return("Job is done and purged")
+  if (FLAGjobDone)     return("Job is done")
+  if (FLAGjobRecover)  return("Job is running")
+  if (!FLAGjobRecover) return("Job is not yet started")
+}
+
+
+#' Fit model on cluster
+#'
+#' @param pd 
+#' @param .outputFolder 
+#' @param n_startsPerNode 
+#' @param n_nodes 
+#' @param id 
+#' @param type 
+#'
+#' @return Characters
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family Cluster
+#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust
+#'
+#' @examples
+pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_nodes = 10, identifier = "mstrust", FLAGforcePurge = FALSE) {
+  
+  # .. General job handling -----
+  jobnm <- paste0("mstrust_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))
+  
+  fileJobDone    <- conveniencefunctions::dMod_files(.outputFolder, identifier)[["mstrust"]]
+  fileJobPurged  <- file.path(dirname(fileJobDone), paste0(".", jobnm, "jobPurged"))
+  fileJobRecover <- file.path(paste0(jobnm, "_folder"), paste0(jobnm, ".R"))
+  
+  FLAGjobDone    <- file.exists(fileJobDone)
+  FLAGjobPurged  <- file.exists(fileJobPurged)
+  FLAGjobRecover <- file.exists(fileJobRecover) | FLAGjobDone | FLAGjobPurged
+  
+  cat(clusterStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
+  
+  # Assign Global variables: Important, in future, this might be a source of bugs, if other cluster-functions are written
+  assign("n_startsPerNode",n_startsPerNode,.GlobalEnv)
+  
+  # Start mstrust job
+  file.copy(file.path(pd$filenameParts$.currentFolder, pd$filenameParts$.compiledFolder, "/"), ".", recursive = TRUE)
+  job <- distributed_computing(
+    {
+      loadDLL(pd$obj_data);
+      
+      seed <- as.numeric(Sys.getenv('SLURM_ARRAY_TASK_ID')) + 1
+      FLAGincludeCurrent <- seed == 1
+      
+      center <- pepy_sample_parameter_startpoints(pd$pe, n_starts = n_startsPerNode, seed = seed, 
+                                                  FLAGincludeCurrent = FLAGincludeCurrent)
+      
+      parlower <- petab_getParameterBoundaries(pd$pe, "lower")
+      parupper <- petab_getParameterBoundaries(pd$pe, "upper")
+      
+      mstrust(objfun = pd$obj, center = center, studyname = paste0("fit", seed),
+              rinit = 0.1, rmax = 10, cores = 16,
+              iterlim = 500, 
+              optmethod = "trust", 
+              output = TRUE, cautiousMode = TRUE,
+              stats = FALSE, 
+              parlower = parlower, parupper = parupper)
+    },
+    jobname = jobnm, 
+    partition = "single", cores = 16, nodes = 1, walltime = "12:00:00",
+    ssh_passwd = Sys.getenv("hurensohn"), machine = "cluster", 
+    var_values = NULL, no_rep = n_nodes, 
+    recover = FLAGjobRecover,
+    compile = F
+  )
+  unlink(list.files(".", "\\.o$|\\.so$|\\.c$|\\.rds$"))
+  
+  if (!FLAGjobRecover) return("Job submitted")
+  if (FLAGforcePurge) {
+    # bit ugly code duplication...
+    job$purge(purge_local = TRUE)
+    return("Job was purged")
+  }
+  # .. Get results -----
+  if (!FLAGjobDone & !FLAGjobPurged) {
+    if (job$check()) {
+      job$get()
+      fitlist  <- if (exists("cluster_result")) do.call(c, cluster_result) else {NULL
+        #cf_dMod_rescueFits()
+        #   fitlist <- list.files(file.path(paste0(jobnm, "_folder"), "results","fit"), "\\.Rda$", recursive = TRUE, full.names = TRUE)
+        #   fitlist <- lapply(fitlist, function(x) try(local(load(x))))
+      }
+      fits <- fitlist
+      fits <- fits[vapply(fits, is.list, TRUE)]
+      class(fits) <- "parlist"
+      fits <- conveniencefunctions::cf_as.parframe(fits)
+      conveniencefunctions::dMod_saveMstrust(fit = fits, path = .outputFolder, 
+                                             identifier = identifier, FLAGoverwrite = TRUE)
+      
+      return("Job done. You can check out the results by running `readPd` which will load the fit into pd$result$fits. Re-run this function once more to purge the job.")
+    }
+  }
+  
+  if (FLAGjobDone & !FLAGjobPurged) {
+    if (readline("Are you sure? Type yes: ") == "yes"){
+      job$purge(purge_local = TRUE)
+      writeLines("jobPurged", fileJobPurged)
+      return("Job purged\n")
+    }
+  }
+}
 
 # -------------------------------------------------------------------------#
 # L1 ----
@@ -797,9 +948,10 @@ pd_L1_plotValueVsLambda <- function(pd, ...) {
 #'
 #' @examples
 pd_L1_getUnbiasedValues <- function(pd, ...) {
-  ncores <- 6
+  ncores <- 1
   values <- parallel::mclapply(X = seq_len(nrow(pd$result$L1)), mc.cores = ncores, FUN = function(i) {
     # add L1-fixed parameters to "fixed"
+    
     # Fit unbiased
     # Calculate unbiased obj value
     pd$obj(dMod::as.parvec(pd$result$L1,i), fixed = pd$fixed, deriv = FALSE)
@@ -884,37 +1036,37 @@ pd_predictAndPlot <- function(pd, i,
   # Catch i (see petab_mutateDCO for more ideas)
   mi <- missing(i)
   si <- substitute(i)
-
+  
   # .. Collect parameters and predict -----
   parf <- pd_parf_collect(pd, opt.base = opt.base, opt.mstrust = opt.mstrust, opt.profile = opt.profile)
   if (nrow(parf) > 5) cat("Predicting for more than 5 parameter sets. Are you sure?")
   predictions <- conveniencefunctions::cf_predict(prd = pd$prd, times = pd$times, pars = parf)
-
+  
   # .. Prepare data and prediction -----
   pplot <- copy(predictions)
   setnames(pplot,
            c("condition"  , "name"        , "value"),
            c("conditionId", "observableId", "measurement"))
   pplot[,`:=`(fitrank = as.factor(fitrank))]
-
+  
   # Apply observableScale to data
   dplot <- petab_joinDCO(pd$pe)
   dplot[,`:=`(measurement = eval(parse(text = paste0(observableTransformation, "(", measurement, ")")))), by = 1:nrow(dplot)]
-
+  
   # set Order: Put pure predictions to end of plot
   pplot[,`:=`(hasData = observableId %in% unique(dplot$observableId))]
   pplot <- pplot[order(-hasData)]
   pplot[,`:=`(observableId=factor(observableId, unique(observableId)))]
   dplot[,`:=`(observableId=factor(observableId, levels(pplot$observableId)))]
-
+  
   # subset conditions and observables of predictions: mutually exclusive with previous...
   pplot <- subsetPredictionToData(pplot, dplot, NFLAGsubsetType = NFLAGsubsetType)
-
+  
   # [ ] Idea for plotting predictions along a profile: Summarize by min and max?
-
+  
   # Handle i
   if (!mi) {dplot <- dplot[eval(si)]; pplot <- pplot[eval(si)]}
-
+  
   # .. Plot -----
   pl <- conveniencefunctions::cfggplot() +
     ggforce::facet_wrap_paginate(~observableId, nrow = nrow, ncol = ncol, scales = scales, page = page) +
@@ -922,7 +1074,7 @@ pd_predictAndPlot <- function(pd, i,
     geom_point(aes(time, measurement, color = conditionId), data = dplot) +
     scale_y_continuous(n.breaks = n.breaks) +
     conveniencefunctions::scale_color_cf()
-
+  
   conveniencefunctions::cf_outputFigure(pl, filename = filename, width = width, height = height, scale = scale, units = units)
 }
 
@@ -993,12 +1145,12 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
                                width = 29.7, height = 21, scale = 1, units = "cm",
                                FLAGreturnPlotData = FALSE
 ) {
-
-
+  
+  
   # .. Catch i (see petab_mutateDCO for more ideas) -----
   mi <- missing(i)
   si <- substitute(i)
-
+  
   # .. Data -----
   # observableTransformation
   dplot <- petab_joinDCO(pe)
@@ -1018,7 +1170,7 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
   data.table::setnames(pplot, c("condition"  , "name"        , "value"), c("conditionId", "observableId", "measurement"))
   pplot[,`:=`(observableId=factor(observableId,  petab_plotHelpers_variableOrder(pd)))]
   pplot <- subsetPredictionToData(pplot, dplot, NFLAGsubsetType = NFLAGsubsetType)
-
+  
   # .. Error model / prediction ribbon -----
   pplotRibbon <- NULL
   if (FLAGsummarizeProfilePredictions && opt.profile$include) {
@@ -1027,10 +1179,10 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
     pplotRibbon <- pplotRibbon[,list(
       measurementmin = min(measurement),
       measurementmax = max(measurement)
-      ), by = c("conditionId", "observableId", "time")] # Last one is a bit hacky. Better use different aeslist functions for profiles and mstrusts
+    ), by = c("conditionId", "observableId", "time")] # Last one is a bit hacky. Better use different aeslist functions for profiles and mstrusts
     pplot <- pplot[profileDirection == "optimum"]
   }
-
+  
   # .. Make experimentalCondition Columns available -----
   # [ ] Idea: instead of merging experimentalCondition, one could also merge a boiled down version of dplot.
   #   Then one could have a j argument which first works on dplot before merging.
@@ -1038,23 +1190,23 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
   #   [ ] Document this use as example
   pplot <- pe$experimentalCondition[pplot, on = c("conditionId")]
   if (!is.null(pplotRibbon)) pplotRibbon <- pe$experimentalCondition[pplotRibbon, on = c("conditionId")]
-
+  
   # .. HACK: Add parameterSetId to dplot do grouping can be performed with respect to it -----
   dplot[,`:=`(parameterSetId = "DATA")]
-
+  
   # .. Handle i -----
   if (!mi) {
     dplot <- dplot[eval(si)]
     pplot <- pplot[eval(si)]
     if (!is.null(pplotRibbon)) pplotRibbon <- pplotRibbon[eval(si)]
   }
-
+  
   # HACK: Return data, don't plot. Is this nice? Think about it.
   # Probably best to make a dedicated plotting function which takes this list as input
   if (FLAGreturnPlotData) {
     return(list(dplot = dplot, pplot = pplot, pplotRibbon = pplotRibbon))
   }
-
+  
   # .. Plot -----
   pl <- conveniencefunctions::cfggplot()
   if (FLAGmeanLine) { # Add first so the lines don't mask the points
@@ -1072,10 +1224,10 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
     pl <- pl + geom_ribbon(do.call(aes_q, aesl), data = pplotRibbon, alpha = opt.gg$ribbonAlpha)}
   pl <- pl + conveniencefunctions::scale_color_cf(aesthetics = c("color", "fill"))
   for (plx in ggCallback) pl <- pl + plx
-
+  
   # .. Print paginate message so user doesnt forget about additional pages -----
   message("Plot has ", ggforce::n_pages(pl), " pages\n")
-
+  
   # Output
   conveniencefunctions::cf_outputFigure(pl = pl, filename = filename, width = width, height = height, scale = scale, units = units, FLAGFuture = FLAGfuture)
 }
@@ -1098,18 +1250,18 @@ pd_plot_compareParameters <- function(pd, parf,
   parameters <- attr(parf, "parameters")
   p <- data.table(parf)
   p <- melt(p, id.vars = "parameterSetId", measure.vars = parameters, variable.name = "parameterId", variable.factor = FALSE, value.name = "parameterValueEstScale")
-
+  
   pt <- petab_getParameterType(pd$pe)
   p <- pt[p, on = "parameterId"]
-
+  
   pl <- conveniencefunctions::cfggplot(p, aes(parameterId, parameterValueEstScale)) +
     conveniencefunctions::facet_wrap_paginate(~parameterType, nrow = nrow, ncol = ncol, scales = scales, page = page) +
     geom_col(aes(fill = parameterSetId), position = position_dodge2()) +
     conveniencefunctions::scale_color_cf(aesthetics = c("fill", "color")) +
     theme(axis.text.x = element_text(angle = 90))
-
+  
   cf_outputFigure(pl, filename = filename, width = width, height = height, scale = scale, units = units)
-
+  
 }
 
 
@@ -1165,12 +1317,12 @@ petab_plotHelpers_meanMeasurementsValue <- function(dplot, aeslist) {
 #'
 #' @examples
 petab_plotHelpers_variableOrder <- function(pd) {
-
+  
   if (!is.null(pd$pe$meta$variableOrder)) return(variableOrder)
-
+  
   states      <- pd$dModAtoms$symbolicEquations$reactions$states
   observables <- names(pd$dModAtoms$symbolicEquations$observables)
-
+  
   c(observables, states)
 }
 
@@ -1194,16 +1346,16 @@ petab_plotHelpers_variableOrder <- function(pd) {
 #' @examples
 subsetPredictionToData <- function(pplot, dplot, NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2, strict_cutTimes = 3,
                                                                      cutTimes_keepInternal = 3
-                                                                     )[2]) {
+)[2]) {
   pplot_out <- pplot
   if (NFLAGsubsetType == 0) return(pplot_out)
-
+  
   # strict: Only combinations of observables and conditions which are present in data
   dplot_lookup <- copy(dplot)
   dplot_lookup <- dplot_lookup[,list(observableId, conditionId)]
   dplot_lookup <- unique(dplot_lookup)
   pplot_out <- pplot[dplot_lookup, on = c("observableId", "conditionId")]
-
+  
   if (NFLAGsubsetType %in% c(3,4)) {
     dplot_lookup <- copy(dplot)
     dplot_lookup <- dplot_lookup[,list(maxtime = max(time)), by = c("observableId", "conditionId")]
@@ -1211,13 +1363,13 @@ subsetPredictionToData <- function(pplot, dplot, NFLAGsubsetType = c(none = 0, s
     pplot_out <- pplot[dplot_lookup, on = c("observableId", "conditionId")]
     pplot_out <- pplot_out[time <= maxtime]
   }
-
+  
   if (NFLAGsubsetType %in% c(2,4)) {
-  # keepInternal: Additionally keep ALL conditions of ALL internal states (with no data)
-  pplot_keepInt <- pplot[!observableId %in% dplot$observableId]
-  pplot_out <- rbindlist(list(pplot_out, pplot_keepInt))
+    # keepInternal: Additionally keep ALL conditions of ALL internal states (with no data)
+    pplot_keepInt <- pplot[!observableId %in% dplot$observableId]
+    pplot_out <- rbindlist(list(pplot_out, pplot_keepInt))
   }
-
+  
   pplot_out
 }
 
@@ -1240,9 +1392,9 @@ subsetPredictionToData <- function(pplot, dplot, NFLAGsubsetType = c(none = 0, s
 #'
 #' @examples
 pd_tests <- function(pd, page = 1, cn = 1, whichTests = c("plot" = 1, "objData" = 2, "derivs" = 3, "Rprof obj data" = 4)[2]) {
-
+  
   cat("Number of implemented tests: 4")
-
+  
   # Test prediction without derivs
   if (1 %in% whichTests){
     prediction <- pd$prd(objtimes(pd$pe$measurementData$time, 200), pd$pars)
@@ -1255,40 +1407,40 @@ pd_tests <- function(pd, page = 1, cn = 1, whichTests = c("plot" = 1, "objData" 
   }
   # Test obj
   if (2 %in% whichTests){
-  objval <- pd$obj(pd$pars)
-  cat("\n===================================================\n")
-  cat("02-objData: Objective function\n")
-  cat("===================================================\n")
-  print(objval)
+    objval <- pd$obj(pd$pars)
+    cat("\n===================================================\n")
+    cat("02-objData: Objective function\n")
+    cat("===================================================\n")
+    print(objval)
   }
   # Test x for one condition
   if (3 %in% whichTests){
-  pars <- pd$p(pd$pars)
-  pars <- pars[[cn]]
-  pred <- pd$dModAtoms$fns$x(objtimes(pd$pe$measurementData$time), pars)
-  # Look at derivs
-  derivs <- dMod::getDerivs(pred)
-  cat("\n===================================================\n")
-  cat("03-derivs: Derivs of x[", cn, "]\n")
-  cat("===================================================\n")
-  print(derivs[[1]][1:10, 1:10])
+    pars <- pd$p(pd$pars)
+    pars <- pars[[cn]]
+    pred <- pd$dModAtoms$fns$x(objtimes(pd$pe$measurementData$time), pars)
+    # Look at derivs
+    derivs <- dMod::getDerivs(pred)
+    cat("\n===================================================\n")
+    cat("03-derivs: Derivs of x[", cn, "]\n")
+    cat("===================================================\n")
+    print(derivs[[1]][1:10, 1:10])
   }
-
+  
   if (4 %in% whichTests){
-  cat("\n===================================================\n")
-  cat("04-summaryRprof of obj")
-  cat("===================================================\n")
-  rp <- tempfile()
-  Rprof(rp)
-  pd$obj(pd$pars)
-  Rprof(NULL)
-  rp <- summaryRprof(rp)
-  print(rp$by.total)
-
-    }
-
-
-
+    cat("\n===================================================\n")
+    cat("04-summaryRprof of obj")
+    cat("===================================================\n")
+    rp <- tempfile()
+    Rprof(rp)
+    pd$obj(pd$pars)
+    Rprof(NULL)
+    rp <- summaryRprof(rp)
+    print(rp$by.total)
+    
+  }
+  
+  
+  
 }
 
 
@@ -1311,6 +1463,10 @@ pd_debug_p0 <- function(pd, ID = 1) {
   fixed_ <- dummy$fixed
   pd$dModAtoms$fns$p0(pars_, fixed = fixed_)
 }
+
+
+
+
 
 
 

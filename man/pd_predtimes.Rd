@@ -17,7 +17,8 @@ Wrapper around predtimes
 }
 \seealso{
 Other pd helpers: 
-\code{\link{pd_objtimes}()}
+\code{\link{pd_objtimes}()},
+\code{\link{readPd}()}
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)

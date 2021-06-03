@@ -15,6 +15,9 @@ L1_getParameterFormulaInjection(pe, parameterId_base)
 data.table(parameterId, parameterFormula, trafoType = "L1")
 }
 \description{
+Trafo injection
+}
+\details{
 \itemize{
 \item For logpars: par * L1_par
 \item For linpars: par + L1_par

@@ -1665,7 +1665,9 @@ lin <- function(x) {
 # -------------------------------------------------------------------------#
 
 #' Create L1 Trafo, depending on parameterScale
-#'
+#' 
+#' Trafo injection
+#' 
 #' * For logpars: par * L1_par
 #' * For linpars: par + L1_par
 #' 

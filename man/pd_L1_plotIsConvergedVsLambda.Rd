@@ -23,7 +23,8 @@ Other L1:
 \code{\link{pd_L1_getUnbiasedValues}()},
 \code{\link{pd_L1_plotDevianceVsLambda}()},
 \code{\link{pd_L1_plotValueVsLambda}()},
-\code{\link{pd_L1_preparePlottingData}()}
+\code{\link{pd_L1_preparePlottingData}()},
+\code{\link{readPd}()}
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)

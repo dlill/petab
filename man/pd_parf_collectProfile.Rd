@@ -24,7 +24,9 @@ Other parframe handling:
 \code{\link{pd_parf_collectL1}()},
 \code{\link{pd_parf_collectMstrust}()},
 \code{\link{pd_parf_collectPars}()},
-\code{\link{pd_parf_collect}()}
+\code{\link{pd_parf_collect}()},
+\code{\link{pd_updateEstPars}()},
+\code{\link{readPd}()}
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)

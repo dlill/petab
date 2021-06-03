@@ -15,6 +15,35 @@ readPd(filename)
 \description{
 Read a pd and load dlls
 }
+\seealso{
+Other Cluster: 
+\code{\link{clusterStatusMessage}()},
+\code{\link{pd_cluster_mstrust}()}
+
+Other L1: 
+\code{\link{pd_L1_getObjBounds}()},
+\code{\link{pd_L1_getUnbiasedValues}()},
+\code{\link{pd_L1_plotDevianceVsLambda}()},
+\code{\link{pd_L1_plotIsConvergedVsLambda}()},
+\code{\link{pd_L1_plotValueVsLambda}()},
+\code{\link{pd_L1_preparePlottingData}()}
+
+Other pd helpers: 
+\code{\link{pd_objtimes}()},
+\code{\link{pd_predtimes}()}
+
+Other parframe handling: 
+\code{\link{pd_parf_collectL1}()},
+\code{\link{pd_parf_collectMstrust}()},
+\code{\link{pd_parf_collectPars}()},
+\code{\link{pd_parf_collectProfile}()},
+\code{\link{pd_parf_collect}()},
+\code{\link{pd_updateEstPars}()}
+}
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }
+\concept{Cluster}
+\concept{L1}
+\concept{parframe handling}
+\concept{pd helpers}
