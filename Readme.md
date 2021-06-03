@@ -83,6 +83,11 @@ Some thoughts on coding-style
 
 # Version history
 
+* New in 0.3.1
+  * Started resturucturing the reading of fit results
+  * objective functions are moved to pd$objfns
+  * be more strict when it comes to interpreting the petab: Use the objective prior as specified in fitting etc...
+  * pd_cluster_* functions to run stuff on cluster
 * New in 0.1.1
     * parameterFormulaInjection in petab$meta 
         * Allows to specify arbitrary parameter transformations after the estimation parameter trafo and before the dynamic model

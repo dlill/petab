@@ -728,6 +728,7 @@ clusterStatusMessage <- function(FLAGjobDone, FLAGjobPurged, FLAGjobRecover) {
 #' @md
 #' @family Cluster
 #' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust
+#' @importFrom dMod distributed_computing
 #'
 #' @examples
 pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_nodes = 10, 
@@ -751,7 +752,7 @@ pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_node
   
   # Start mstrust job
   file.copy(file.path(pd$filenameParts$.currentFolder, pd$filenameParts$.compiledFolder, "/"), ".", recursive = TRUE)
-  job <- distributed_computing(
+  job <- dMod::distributed_computing(
     {
       loadDLL(pd$obj_data);
       

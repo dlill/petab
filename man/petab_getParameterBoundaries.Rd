@@ -7,10 +7,12 @@
 petab_getParameterBoundaries(pe, whichBoundary = c("upper", "lower")[1])
 }
 \arguments{
-\item{whichBoundary}{}
+\item{pe}{petab}
+
+\item{whichBoundary}{upper or lower}
 }
 \value{
-
+c(name = value)
 }
 \description{
 Title
