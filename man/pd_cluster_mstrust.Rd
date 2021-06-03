@@ -9,7 +9,8 @@ pd_cluster_mstrust(
   .outputFolder,
   n_startsPerNode = 16 * 3,
   n_nodes = 10,
-  identifier = "mstrust"
+  identifier = "mstrust",
+  FLAGforcePurge = FALSE
 )
 }
 \arguments{

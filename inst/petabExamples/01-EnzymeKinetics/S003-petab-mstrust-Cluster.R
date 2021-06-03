@@ -14,7 +14,6 @@ SFLAGbrowser = "1"
 testCases = FALSE
 path2TestCases = "PEtabTests/"
 
-# debugonce(readPd)
 pd <- importPEtabSBML_indiv("petab", NFLAGcompile = 3, .compiledFolder = "Compiled", SFLAGbrowser = "0")
 
 pd_cluster_mstrust(pd, .outputFolder = ".", 16, 2)

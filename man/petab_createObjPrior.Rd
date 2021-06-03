@@ -4,10 +4,10 @@
 \alias{petab_createObjPrior}
 \title{Create the prior function specified in parameters_df}
 \usage{
-petab_createObjPrior(pe, FLAGuseNominalValueAsCenter)
+petab_createObjPrior(pe, FLAGuseNominalValueAsCenter = FALSE)
 }
 \arguments{
-\item{FLAGuseNominalCenter}{}
+\item{FLAGuseNominalCenter}{Should be deprecated}
 }
 \value{
 
@@ -18,3 +18,4 @@ Create the prior function specified in parameters_df
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }
+\concept{asdf}

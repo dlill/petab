@@ -167,11 +167,13 @@ pdIndiv_rebuildPrdObj <- function(pd, Nobjtimes = 100) {
                            est.grid = pd$dModAtoms$gridlist$est.grid,
                            fix.grid = pd$dModAtoms$gridlist$fix.grid,
                            times = tobj)
+  obj_prior <- petab_createObjPrior(pd$pe)
   
-  # Update p, prd and obj_data
+  # Update p, prd and obj_data obj_prior
   pd$p        <- p
   pd$prd      <- prd
   pd$objfns$obj_data <- obj_data
+  pd$objfns$obj_prior <- obj_prior
   
   # Rebuild obj
   pd$obj <- Reduce("+", pd$objfns)
@@ -728,7 +730,8 @@ clusterStatusMessage <- function(FLAGjobDone, FLAGjobPurged, FLAGjobRecover) {
 #' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust
 #'
 #' @examples
-pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_nodes = 10, identifier = "mstrust", FLAGforcePurge = FALSE) {
+pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_nodes = 10, 
+                               identifier = "mstrust", FLAGforcePurge = FALSE) {
   
   # .. General job handling -----
   jobnm <- paste0("mstrust_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))

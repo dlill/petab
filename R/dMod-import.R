@@ -2136,8 +2136,11 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   # High level prediction function
   pd <- pdIndiv_rebuildPrdObj(pd = pd,Nobjtimes = 100)
   
+  
   # .. Save and return -----
   saveRDS(pd, rdsfile)
+  
+  # [ ] Here I should do something like try(evaluateObjfn) which writes out pd$result$base
   
   pd
 }

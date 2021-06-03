@@ -1106,29 +1106,30 @@ petab_getMeasurementParsMapping <- function(pe, column = c("observableParameters
 
 #' Create the prior function specified in parameters_df
 #'
+#' @param pe petab
+#' @param FLAGuseNominalCenter Should be deprecated
 #'
-#'
-#' @param pe
-#' @param FLAGuseNominalCenter
-#'
-#' @return
+#' @return [dMod::constraintL2()]
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
-#'
+#' @family asdf
 #' @importFrom dMod constraintL2
+#' 
 #' @examples
-petab_createObjPrior <- function(pe, FLAGuseNominalValueAsCenter) {
+petab_createObjPrior <- function(pe, FLAGuseNominalValueAsCenter = FALSE) {
   # [ ] Todo: Move this function to dMod-*.R file
 
   p <- copy(pe$parameters)
   p <- p[estimate == 1]
 
-
   notImplemented <- which(p$objectivePriorType != "parameterScaleNormal")
   if (length(notImplemented))
-    stop("objectivePriorType not implemented: ", paste0(unique(p$objectivePriorType[notImplemented]),collapse = ","))
-
+    warning("objectivePriorType not implemented: ", paste0(unique(p$objectivePriorType[notImplemented]),collapse = ","), "\n",
+            "The respective parameters are not going to be priored: ", paste0(unique(p$parameterId[notImplemented]),collapse = ","))
+  p <- p[objectivePriorType == "parameterScaleNormal"]
+  
+  
   p[,`:=`(mu = as.numeric(gsub(";.*", "", objectivePriorParameters)))]
   if (FLAGuseNominalValueAsCenter) {
     # Apply transformation before using as center
@@ -1150,10 +1151,10 @@ petab_createObjPrior <- function(pe, FLAGuseNominalValueAsCenter) {
 
 #' Title
 #'
-#' @param pe
-#' @param whichBoundary
+#' @param pe petab
+#' @param whichBoundary upper or lower
 #'
-#' @return
+#' @return c(name = value)
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
