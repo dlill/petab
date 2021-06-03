@@ -1222,7 +1222,7 @@ petab_getMeasurementParsScales <- function(measurementData,parameters) {
 #' @param ggCallback additional stuff to add to the ggplot, such as a call to [ggplot2::labs()] or scales
 #' @param FLAGmeanLine draw line connecting the means of groups defined by c("observableId", "time", "conditionId", names(aeslist)=
 #' @param FLAGfuture export asynchronously with the future package
-#' @param filename,width,height,scale,units see [ggplot2::ggsave()]
+#' @param filename,width,height,scale,units,... see [ggplot2::ggsave()]
 #'
 #' @return ggplot
 #'
@@ -1243,7 +1243,7 @@ petab_plotData <- function(petab,
                              facet_wrap_paginate(~observableId, nrow = 4, ncol = 4, scales = "free")),
                            filename = NULL,
                            FLAGfuture = TRUE,
-                           width = 29.7, height = 21, scale = 1, units = "cm"
+                           width = 29.7, height = 21, scale = 1, units = "cm", ...
 ) {
 
   # create plotting data.table
@@ -1283,7 +1283,7 @@ petab_plotData <- function(petab,
   message("Plot has ", ggforce::n_pages(pl), " pages\n")
 
   # output
-  cf_outputFigure(pl = pl, filename = filename, width = width, height = height, scale = scale, units = units, FLAGFuture = FLAGfuture)
+  cf_outputFigure(pl = pl, filename = filename, width = width, height = height, scale = scale, units = units, FLAGFuture = FLAGfuture, ...)
 }
 
 # -------------------------------------------------------------------------#
@@ -1764,6 +1764,7 @@ pe_L1_addL1ParsToExperimentalCondition <- function(pe, parameterId_base, conditi
 pe_L1_createL1Problem <- function(pe, parameterId_base, conditionSpecL1_reference, j_conditionSpecL1 = conditionId) {
   # 1 Create parameterFormulaInjection
   pe <- pe_L1_updateParameterFormulaInjection(pe, parameterId_base)
+  
   # 2 Add L1 spec and add other information to pe$meta$L1
   pe$meta$L1$L1Spec <- data.table::copy(pe$experimentalCondition[,list(conditionId = conditionId)])
   sj <- substitute(j_conditionSpecL1)
@@ -1774,6 +1775,7 @@ pe_L1_createL1Problem <- function(pe, parameterId_base, conditionSpecL1_referenc
   
   # 3 Add L1 parameters to experimentalCondition
   pe <- pe_L1_addL1ParsToExperimentalCondition(pe, parameterId_base, conditionSpecL1_reference)
+  
   # 4 Re-create parameters_df including L1 parameters
   pepaL1 <- petab_create_parameter_df(pe)
   pepaOld <- pe$parameters

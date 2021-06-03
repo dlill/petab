@@ -36,7 +36,7 @@ pd_predictAndPlot2(pd,i = time > 0.5)
 # * For each model fit the model with all available parameters
 # * Model selection with LRT
 
-# .. Fit all, no L1 -----
+# .. Fit all with base model, no L1 -----
 iterlim = 1000
 printIter = TRUE
 traceFile = NULL
