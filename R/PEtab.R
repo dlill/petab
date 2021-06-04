@@ -1700,6 +1700,27 @@ L1_getParameterFormulaInjection <- function(pe, parameterId_base) {
   p[,list(parameterId, parameterFormula, trafoType = "L1")]
 }
 
+
+#' Title
+#'
+#' @param l1 pe$meta$L1
+#'
+#' @return
+#' @export
+#'
+#' @examples
+L1_augmentL1Info <- function(l1) {
+  # [ ] Should be standard in pe$meta$L1
+  conditionSpecL1_L1Conds <- setdiff(unique(l1$L1Spec$L1Spec), l1$conditionSpecL1_reference)
+  parameters_L1 <- lapply(conditionSpecL1_L1Conds, function(cn) paste0("L1_",l1$parameterId_base, "_", cn))
+  parameters_L1 <- do.call(c, parameters_L1)
+  parameters_L1reference <- paste0("L1Ref_",l1$parameterId_base)
+  
+  list(conditionSpecL1_L1Conds = conditionSpecL1_L1Conds,parameters_L1 = parameters_L1,parameters_L1reference = parameters_L1reference)
+}
+
+
+
 #' Title
 #'
 #' @inheritParams L1_getParameterFormulaInjection
@@ -1787,6 +1808,7 @@ pe_L1_createL1Problem <- function(pe, parameterId_base, conditionSpecL1_referenc
   
   pe$meta$L1$parameterId_base <- parameterId_base
   pe$meta$L1$conditionSpecL1_reference <- conditionSpecL1_reference
+  pe$meta$L1 <- c(pe$meta$L1, L1_augmentL1Info(pe$meta$L1))
   
   # 3 Add L1 parameters to experimentalCondition
   pe <- pe_L1_addL1ParsToExperimentalCondition(pe, parameterId_base, conditionSpecL1_reference)

@@ -18,6 +18,7 @@ Read a pd and load dlls
 \seealso{
 Other Cluster: 
 \code{\link{clusterStatusMessage}()},
+\code{\link{pd_cluster_L1}()},
 \code{\link{pd_cluster_mstrust}()}
 
 Other L1: 

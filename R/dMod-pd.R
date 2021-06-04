@@ -62,7 +62,9 @@ readPd <- function(filename) {
   if (is.null(pd$result$profile) && dir.exists(dirname(conveniencefunctions::dMod_files(path)$profile)))
     pd$result$profiles <- conveniencefunctions::dMod_readProfiles(path)
   
-  # [ ] L1 results
+  # L1 - get L1 scan results
+  if (is.null(pd$result$profile) && dir.exists(dirname(conveniencefunctions::dMod_files(path)$L1)))
+    pd$result$profiles <- conveniencefunctions::dMod_readL1(path)
   
   # 4 Set Parameters to most relevant fit
   pd$pars <- if (!is.null(pd$result$fits)) as.parvec(pd$result$fits) else if (!is.null(pd$result$base_obsParsFitted)) as.parvec(pd$result$base_obsParsFitted) else pd$pars
@@ -831,6 +833,114 @@ pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_node
       return("Job purged\n")
     }
   }
+}
+
+#' Fit model on cluster
+#'
+#' @param pd 
+#' @param .outputFolder 
+#' @param n_startsPerNode 
+#' @param n_nodes 
+#' @param id 
+#' @param type 
+#'
+#' @return Characters
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family Cluster
+#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust cf_parf_metaNames0
+#' @importFrom dMod distributed_computing profile_pars_per_node
+#'
+#' @examples
+pd_cluster_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log10(0.0001), log10(100), length.out = n_nodes*16-1)), 
+                          identifier = "L1", FLAGforcePurge = FALSE) {
+  
+  # .. General job handling -----
+  jobnm <- paste0("mstrust_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))
+  
+  fileJobDone    <- conveniencefunctions::dMod_files(.outputFolder, identifier)$L1
+  fileJobPurged  <- file.path(dirname(fileJobDone), paste0(".", jobnm, "jobPurged"))
+  fileJobRecover <- file.path(paste0(jobnm, "_folder"), paste0(jobnm, ".R"))
+  
+  FLAGjobDone    <- file.exists(fileJobDone)
+  FLAGjobPurged  <- file.exists(fileJobPurged)
+  FLAGjobRecover <- file.exists(fileJobRecover) | FLAGjobDone | FLAGjobPurged
+  
+  cat(clusterStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
+  
+  # Assign Global variables: Important, in future, this might be a source of bugs, if other cluster-functions are written
+  assign("lambdas",lambdas,.GlobalEnv)
+  
+  # Start mstrust job
+  file.copy(file.path(pd$filenameParts$.currentFolder, pd$filenameParts$.compiledFolder, "/"), ".", recursive = TRUE)
+  var_list <- dMod::profile_pars_per_node(lambdas, 16)
+  
+  job <- dMod::distributed_computing(
+    {
+      node <- as.numeric(Sys.getenv('SLURM_ARRAY_TASK_ID'))
+      
+      loadDLL(pd$objfns$obj_data);
+      
+      parlower <- petab_getParameterBoundaries(pd$pe, "lower")
+      parupper <- petab_getParameterBoundaries(pd$pe, "upper")
+      
+      ncores <- 16
+      parallel::mclapply(X = var_1:var_2, mc.cores = ncores, FUN = function(idx) {
+        lambda <- lambdas[idx]
+        
+        fit <- trustL1(
+          objfun = pd$obj, parinit = pd$pars,
+          mu = pd$L1$muL1, one.sided = FALSE, lambda = lambda,
+          rinit = 0.1, rmax = 10, iterlim = 500,
+          parupper = parupper, parlower = parlower
+        )
+        
+        fit <- c(list(lambdaL1 = lambda), fit[c("value", "argument", "iterations", "converged")])
+        dput(fit, file = sprintf("L1-%02i-%02i.R",node , idx))
+        
+        fit
+      })
+    },
+    jobname = jobnm, 
+    partition = "single", cores = 16, nodes = 1, walltime = "12:00:00",
+    ssh_passwd = Sys.getenv("hurensohn"), machine = "cluster", 
+    var_values = var_list, no_rep = NULL, 
+    recover = FLAGjobRecover,
+    compile = F
+  )
+  unlink(list.files(".", "\\.o$|\\.so$|\\.c$|\\.rds$"))
+  
+  if (!FLAGjobRecover) return("Job submitted")
+  if (FLAGforcePurge) {
+    # bit ugly code duplication...
+    job$purge(purge_local = TRUE)
+    return("Job was purged")
+  }
+  # .. Get results -----
+  if (!FLAGjobDone & !FLAGjobPurged) {
+    if (job$check()) {
+      job$get()
+      
+      # Gebastelt ...
+      fits <- list.files(file.path(paste0(jobnm, "_folder"),"results/"), "^L1.*R$", full.names = T) %>% lapply(source, local = TRUE) %>% lapply(function(x) x$value)
+      fits <- lapply(fits, function(f) {data.table(as.data.table(f[setdiff(names(f), "argument")]), as.data.table(as.list(f$argument))) })
+      fits <- rbindlist(fits)
+      fits <- cf_parframe(fits, metanames = conveniencefunctions::cf_parf_metaNames0$l1)
+      dMod_saveL1(L1 = fits, path = .outputFolder, identifier = identifier, FLAGoverwrite = TRUE)
+      
+      return("Job done. # [ ] TODO You can check out the results by running `readPd` which will load the fit into pd$result$L1. Re-run this function once more to purge the job.")
+    }
+  }
+  
+  if (FLAGjobDone & !FLAGjobPurged) {
+    if (readline("Are you sure? Type yes: ") == "yes"){
+      job$purge(purge_local = TRUE)
+      writeLines("jobPurged", fileJobPurged)
+      return("Job purged\n")
+    }
+  }
+  
 }
 
 # -------------------------------------------------------------------------#
