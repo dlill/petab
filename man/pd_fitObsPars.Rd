@@ -2,18 +2,20 @@
 % Please edit documentation in R/dMod-pd.R
 \name{pd_fitObsPars}
 \alias{pd_fitObsPars}
-\title{Run a fit only for observation parameters}
+\title{Fit only obsPars}
 \usage{
-pd_fitObsPars(pd, NFLAGsavePd = 3)
+pd_fitObsPars(pd, FLAGoverwrite = FALSE, iterlim = 500)
 }
 \arguments{
-\item{NFLAGsavePd}{as in pd_importIndiv: 0: don't save, 1: save, but redo everything, 3: if it was done before and pd didn't change, just return the pd}
+\item{pd}{}
+
+\item{FLAGoverwrite}{TRUE or FALSE}
 }
 \value{
-
+pd with pd$result$pd$base_obsParsFitted
 }
 \description{
-Run a fit only for observation parameters
+Fit only obsPars
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)

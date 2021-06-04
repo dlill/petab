@@ -4,7 +4,11 @@
 \alias{petab_parameterFormulaInjection}
 \title{Create a parameterFormulaInjection}
 \usage{
-petab_parameterFormulaInjection(parameterId, parameterFormula)
+petab_parameterFormulaInjection(
+  parameterId,
+  parameterFormula,
+  trafoType = "SteadyState"
+)
 }
 \arguments{
 \item{parameterId}{e.g. "kprodS"}

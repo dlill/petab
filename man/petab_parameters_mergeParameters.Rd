@@ -7,7 +7,7 @@
 petab_parameters_mergeParameters(
   pe_pa1,
   pe_pa2,
-  mergeCols = c("nominalValue", "parameterScale", "estimate")
+  mergeCols = setdiff(intersect(names(pe_pa1), names(pe_pa2)), "parameterId")
 )
 }
 \arguments{

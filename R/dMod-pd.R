@@ -42,7 +42,14 @@ readPd <- function(filename) {
   # If in pd already, some filenameParts variable might have been derived from them,
   #   so it would be dangerous to reload them if they were postprocessed
   
-  # [ ] Would be better to use pd_files rather than dMod-files
+  # base
+  path <- dirname(dirname(filename))
+  if (is.null(pd$result$base) && file.exists(conveniencefunctions::dMod_files(path, "base")$mstrust))
+    pd$result$base <- conveniencefunctions::dMod_readMstrust(path, "base")
+  # base_obsParsFitted
+  path <- dirname(dirname(filename))
+  if (is.null(pd$result$base_obsParsFitted) && file.exists(conveniencefunctions::dMod_files(path, "base_obsParsFitted")$mstrust))
+    pd$result$base_obsParsFitted <- conveniencefunctions::dMod_readMstrust(path, "base_obsParsFitted")
   # mstrust
   path <- dirname(dirname(filename))
   if (is.null(pd$result$fits) && file.exists(conveniencefunctions::dMod_files(path, "mstrust")$mstrust))
@@ -56,10 +63,9 @@ readPd <- function(filename) {
     pd$result$profiles <- conveniencefunctions::dMod_readProfiles(path)
   
   # [ ] L1 results
-  # [ ] Would be good instead of pd_fitObsPars overwriting pd, rather have it save the parameters in a file and load them
-  #     Then, one can call pd_updateEstPars(pd) which looks for available parameters among
-  #     base, base-fitted, base-fittedObsPars, mstrust
   
+  # 4 Set Parameters to most relevant fit
+  pd$pars <- if (!is.null(pd$result$fits)) as.parvec(pd$result$fits) else if (!is.null(pd$result$base_obsParsFitted)) as.parvec(pd$result$base_obsParsFitted) else pd$pars
   
   pd
 }
@@ -296,9 +302,18 @@ pd_updateEstPars <- function(pd, parsEst, FLAGupdatePE = TRUE, FLAGsavePd = FALS
 #'
 #' @examples
 pd_parf_collectPars <- function(pd, parameterSetId = "Base") {
-  if (is.null(pd$result$base)) 
+  parf <- NULL
+  if (!is.null(pd$result$base_obsParsFitted)){
+    parf <- cbind(parameterSetId = "base_obsParsFitted", pd$result$base_obsParsFitted, stringsAsFactors = FALSE)
+  } else if (!is.null(pd$result$base)) {
+    parf <- cbind(parameterSetId = "base", pd$result$base, stringsAsFactors = FALSE)
+  } else if (is.null(pd$result$base)) {
     pd <- pd_updateEstPars(pd, pd$pars, FLAGupdatePE = FALSE)
-  pd$result$base
+    parf <- pd$result$base
+  }
+  
+  parf <- dMod::parframe(parf,parameters = names(c(pd$pars, pd$fixed)), metanames = c("parameterSetId","fitrank","step","stepsize","index","value","converged","iterations"))
+  parf
 }
 
 
@@ -497,27 +512,27 @@ pd_pars_getFixedOnBoundary <- function(pd, tol = 1e-2) {
 # Fitting functions ----
 # -------------------------------------------------------------------------#
 
-#' Run a fit only for observation parameters
+#' Fit only obsPars
 #'
-#' @param pd
-#' @param NFLAGsavePd as in pd_importIndiv: 0: don't save, 1: save, but redo everything, 3: if it was done before and pd didn't change, just return the pd
+#' @param pd 
+#' @param FLAGoverwrite TRUE or FALSE
 #'
-#' @return
+#' @return pd with pd$result$pd$base_obsParsFitted
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family pd fitting
+#' @importFrom conveniencefunctions dMod_files dMod_saveMstrust
 #' @importFrom dMod trust
 #'
 #' @examples
-pd_fitObsPars <- function(pd, NFLAGsavePd = 3) {
-  # [ ] dont save pd, save a parframe in Results instead
-  
-  logfile <- pd_files(pd$filenameParts)$obsParsFitted
-  if (file.exists(logfile) &&
-      !inputFileChanged(pd_files(pd$filenameParts)$rdsfile, logfile) &&
-      NFLAGsavePd == 3)
-    return(pd)
+pd_fitObsPars <- function(pd, FLAGoverwrite = FALSE, iterlim = 500) {
+  .outputFolder <- dirname(pd$filenameParts$.compiledFolder)
+  fit_file <- conveniencefunctions::dMod_files(.outputFolder, "base_obsParsFitted")$mstrust
+  if (!FLAGoverwrite && file.exists(fit_file)) {
+    cat("FitObsPars: Previous parameters were loaded")
+    return(readPd(pd_files(pd$filenameParts)$rdsfile))
+  }
   
   obspars <- petab_getParameterType(pd$pe)
   obspars <- obspars[parameterType %in% c("observableParameters", "noiseParameters"), parameterId]
@@ -528,11 +543,12 @@ pd_fitObsPars <- function(pd, NFLAGsavePd = 3) {
   parlower <- petab_getParameterBoundaries(pd$pe, "lower")[obspars]
   parupper <- petab_getParameterBoundaries(pd$pe, "upper")[obspars]
   
-  fit <- dMod::trust(pd$obj, fit_par, 1,10, iterlim = 1000, fixed = fit_fix, parlower = parlower, parupper = parupper)
+  fit <- dMod::trust(pd$obj, fit_par, 1,10, iterlim = iterlim, fixed = fit_fix, parlower = parlower, parupper = parupper, printIter = TRUE)
+  fit$argument <- c(fit$argument, fit_fix)
+  parf_base_obsParsFitted <- as.parframe(structure(list(fit), class = c("parlist", "list")))
+  conveniencefunctions::dMod_saveMstrust(fit = parf_base_obsParsFitted, path = file.path(.outputFolder), identifier = "base_obsParsFitted", FLAGoverwrite = FLAGoverwrite)
   
-  pd <- pd_updateEstPars(pd, parsEst = fit$argument, FLAGupdatePE = TRUE, FLAGsavePd = NFLAGsavePd > 0)
-  if (NFLAGsavePd > 0) writeLines("obsPars fitted", logfile)
-  pd
+  readPd(pd_files(pd$filenameParts)$rdsfile)
 }
 
 
@@ -1268,6 +1284,62 @@ pd_plot_compareParameters <- function(pd, parf,
   
 }
 
+#' Title
+#'
+#' @param pd 
+#' @param stepMax maximum step of waterfall
+#' @param filename for plotting
+#' @param i subset the data.table on their names c("parameterId", "parameterType", "fitrank", "step", "stepsize", 
+#'                                                "index", "value", "converged", "iterations", "estValue")
+#' @param ggCallback for plotting
+#' @param ... output to [conveniencefunctions::cf_outputFigure()]
+#'
+#' @return ggplot
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family plotting
+#' @importFrom data.table melt
+#' @importFrom conveniencefunctions cfggplot cf_outputFigure
+#'
+#' @examples
+pd_plotParsParallelLines <- function(pd, stepMax = 3, filename = NULL, i, ggCallback = NULL, ...) {
+  
+  si <- substitute(i)
+  mi <- missing(i)
+  
+  parf <- pd$result$fits
+  
+  parameters <- attr(parf, "parameters")
+  
+  p <- as.data.table(as.data.frame(parf))
+  p <- data.table::melt(p, measure.vars = parameters, variable.name = "parameterId", variable.factor = FALSE, value.name = "estValue", verbose = F)
+  pt <- petab_getParameterType(pd$pe)
+  p <- pt[p, on="parameterId"]
+  p <- p[order(parameterType)]
+  p[,`:=`(parameterId = factor(parameterId, unique(parameterId)))]
+  p[,`:=`(parameterType = factor(parameterType, c("noiseParameters", "observableParameters", "other", "L1")))]
+  p <- p[step <= stepMax]
+  
+  if (!mi) p <- p[eval(si)]
+  
+  pl <- conveniencefunctions::cfggplot(p, aes(parameterId, estValue, group = fitrank, color = parameterType)) + 
+    facet_grid(step~parameterType, scales = "free_x") + 
+    geom_point(alpha = 0.1) + 
+    geom_line( alpha = 0.1) + 
+    guides(color = FALSE) +
+    theme(axis.text.x = element_text(angle = 90),
+          panel.grid.major.y = element_line(color="grey90"))
+  
+  for (plx in ggCallback) pl <- pl + plx
+  
+  conveniencefunctions::cf_outputFigure(pl, filename, ...)
+  
+  pl
+  
+}
+
+
 
 #' Title
 #'
@@ -1411,10 +1483,10 @@ pd_tests <- function(pd, page = 1, cn = 1, whichTests = c("plot" = 1, "objData" 
   }
   # Test obj
   if (2 %in% whichTests){
-    objval <- pd$obj(pd$pars)
     cat("\n===================================================\n")
     cat("02-objData: Objective function\n")
     cat("===================================================\n")
+    objval <- pd$objfns$obj_data(pd$pars, FLAGverbose = TRUE)
     print(objval)
   }
   # Test x for one condition

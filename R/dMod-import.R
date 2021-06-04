@@ -1874,8 +1874,9 @@ pdIndiv_getBaseScales <- function(cg, scalesOuter) {
 #'
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de) building on the original function of Marcus and Svenja
 #' @md
-#' @importFrom dMod repar
+#' @importFrom dMod repar as.parframe
 #' @importFrom cOde getSymbols
+#' @importFrom conveniencefunctions dMod_saveMstrust
 #'
 #' @export
 importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.petab",
@@ -1908,6 +1909,15 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   if(NFLAGcompile > 0) {
     pd <- readPd(rdsfile)
     if (NFLAGcompile == 2) return(pd)
+  }
+  
+  if(NFLAGcompile == 0) {
+    .resultsFolder <- file.path(dirname(.compiledFolder), "Results")
+    results <- list.files(.resultsFolder, recursive = TRUE)
+    prompt <- paste0("Deleting the following results: ", paste0(grep("mstrust.rds|profile|L1", results, value = TRUE), collapse = ", ") ," Are you sure? (type yes)")
+    if (any(grepl("mstrust.rds|profile|L1", results))) 
+      if (readline(prompt) != "yes") stop("import stopped")
+    unlink(.resultsFolder,recursive = TRUE)
   }
   
   ## load required packages
@@ -2145,9 +2155,15 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   # .. Save and return -----
   saveRDS(pd, rdsfile)
   
-  # [ ] Here I should do something like try(evaluateObjfn) which writes out pd$result$base
+  if (grepl(SFLAGbrowser, "7evaluateObj")) browser()
+  # Try to evaluate obj for first time
+  cat("Evaluating obj\n")
+  value_base <- tryCatch(pd$obj(pd$pars)$value, error = function(x) NA)
+  parf_base <- dMod::as.parframe(structure(list(list(value = value_base, index = 1, converged = FALSE, iterations = 1, argument = pd$pars)), class = c("parlist", "list")))
+  conveniencefunctions::dMod_saveMstrust(parf_base, dirname(dirname(rdsfile)), identifier = "base", FLAGoverwrite = TRUE)
   
-  pd
+  # return pd
+  readPd(rdsfile)
 }
 
 # .. pd_parameterNames -----

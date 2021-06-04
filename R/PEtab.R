@@ -13,7 +13,7 @@
 #' @export
 #'
 #' @examples
-petab_create_parameter_df <- function(pe, observableParameterScale = "lin") {
+petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
 
   model                 <- pe$model
   measurementData       <- pe$measurementData
@@ -1345,7 +1345,8 @@ petab_getParameterType <- function(pe) {
   parameters[,`:=`(parameterType = "other")]
   parameters[parameterId %in% observableParameters,`:=`(parameterType = "observableParameters")]
   parameters[parameterId %in% noiseParameters     ,`:=`(parameterType = "noiseParameters")]
-
+  parameters[grep("^L1_",parameterId)             ,`:=`(parameterType = "L1")]
+  
   parameters
 }
 
