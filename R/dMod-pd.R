@@ -63,11 +63,14 @@ readPd <- function(filename) {
     pd$result$profiles <- conveniencefunctions::dMod_readProfiles(path)
   
   # L1 - get L1 scan results
-  if (is.null(pd$result$profile) && dir.exists(dirname(conveniencefunctions::dMod_files(path)$L1)))
-    pd$result$profiles <- conveniencefunctions::dMod_readL1(path)
+  if (is.null(pd$result$L1) && dir.exists(dirname(conveniencefunctions::dMod_files(path)$L1)))
+    pd$result$L1 <- conveniencefunctions::dMod_readL1(path)
+  # L1 - get unbiased models
   
-  # 4 Set Parameters to most relevant fit
-  pd$pars <- if (!is.null(pd$result$fits)) as.parvec(pd$result$fits) else if (!is.null(pd$result$base_obsParsFitted)) as.parvec(pd$result$base_obsParsFitted) else pd$pars
+  
+  # 4 Set Parameters to most relevant fit: mstrust || base_obsParsFitted || base
+  pars <- if (!is.null(pd$result$fits)) as.parvec(pd$result$fits) else if (!is.null(pd$result$base_obsParsFitted)) as.parvec(pd$result$base_obsParsFitted) else pd$pars
+  pd$pars <- unclass_parvec(pars)
   
   pd
 }
@@ -779,11 +782,15 @@ pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_node
       
       center <- pepy_sample_parameter_startpoints(pd$pe, n_starts = n_startsPerNode, seed = seed, 
                                                   FLAGincludeCurrent = FLAGincludeCurrent)
-      
       parlower <- petab_getParameterBoundaries(pd$pe, "lower")
       parupper <- petab_getParameterBoundaries(pd$pe, "upper")
       
+      center <- center[,setdiff(names(center)     , names(pd$fixed))]
+      parlower <- parlower[setdiff(names(parlower), names(pd$fixed))]
+      parupper <- parupper[setdiff(names(parupper), names(pd$fixed))]
+      
       mstrust(objfun = pd$obj, center = center, studyname = paste0("fit", seed),
+              fixed = pd$fixed,
               rinit = 0.1, rmax = 10, cores = 16,
               iterlim = 500, 
               optmethod = "trust", 
@@ -934,7 +941,7 @@ pd_cluster_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log1
   }
   
   if (FLAGjobDone & !FLAGjobPurged) {
-    if (readline("Are you sure? Type yes: ") == "yes"){
+    if (readline("Purge job. Are you sure? Type yes: ") == "yes"){
       job$purge(purge_local = TRUE)
       writeLines("jobPurged", fileJobPurged)
       return("Job purged\n")
@@ -942,6 +949,51 @@ pd_cluster_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log1
   }
   
 }
+
+#' Title
+#'
+#' @param pd 
+#' @param .outputFolder 
+#' @param FLAGforcePurge 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+pd_cluster_L1_fitUnbiased <- function(pd, .outputFolder, FLAGforcePurge = FALSE) {
+  
+  assign(".pd", pd, .GlobalEnv)
+  on.exit({assign("pd", .pd, .GlobalEnv)})
+  
+  fixed_L1 <- L1_getModelCandidates(pd$result$L1)
+  cat("===================== n models: ", nrow(fixed_L1), "\n")
+  idx <- (seq_len(nrow(fixed_L1)))[[3]]
+  for (idx in seq_len(nrow(fixed_L1))){
+    cat("------------------- ", idx, " ------------------\n")
+    
+    pd <- copy(.pd)
+    parametersFixed <- fixed_L1[idx,,drop = TRUE]
+    parametersFixed <- names(parametersFixed)[parametersFixed]
+    
+    fit_par <- pd$pars[setdiff(names(pd$pars), parametersFixed)]
+    fit_fix <- c(pd$fixed, pd$pars[parametersFixed])
+    
+    pd$pars <- fit_par
+    pd$fixed <- fit_fix
+    
+    # Sample only narrow
+    pd$pe$parameters[,`:=`(initializationPriorParameters = paste0(pd$pars[parameterId] - 1,";", pd$pars[parameterId] + 1))]
+    pd$pe$parameters[initializationPriorParameters == "NA;NA",`:=`(initializationPriorParameters = "0;1")]
+    
+    assign("pd", pd, .GlobalEnv)
+    
+    pd_cluster_mstrust(pd, .outputFolder = .outputFolder, n_startsPerNode = 16*3, n_nodes = 1,
+                       identifier = paste0("L1Unbiased_", idx), FLAGforcePurge = FLAGforcePurge)
+    
+    Sys.sleep(0.1)
+  }
+}
+
 
 # -------------------------------------------------------------------------#
 # L1 ----
@@ -1088,6 +1140,23 @@ pd_L1_getUnbiasedValues <- function(pd, ...) {
   })
   pd$result$L1$valueUnbiased <- values
   pd
+}
+
+
+#' Title
+#'
+#' @param L1Scan L1-parframe Result from pd_cluster_L1
+#'
+#' @return Matrix indicating the model structure of L1 models
+#' @export
+#'
+#' @examples
+L1_getModelCandidates <- function(L1Scan) {
+  fixed_L1 <- as.matrix(L1Scan)
+  fixed_L1 <- fixed_L1[,grep("^L1_", colnames(fixed_L1)),drop=FALSE]
+  fixed_L1 <- fixed_L1 == 0
+  fixed_L1 <- unique(fixed_L1)
+  fixed_L1
 }
 
 

@@ -102,10 +102,7 @@ fits <- cf_parframe(fits, metanames = cf_parf_metaNames0$l1)
 
 # .... Determine model candidates ------
 # [ ] find better name, find better data structure to save the intermediate fits in the pd
-fixed_L1 <- as.matrix(fits)
-fixed_L1 <- fixed_L1[,grep("^L1_", colnames(fixed_L1)),drop=FALSE]
-fixed_L1 <- fixed_L1 == 0
-fixed_L1 <- unique(fixed_L1)
+fixed_L1 <- L1_getModelCandidates(fits)
 
 # .. Fit models -----
 iterlim = 1000
