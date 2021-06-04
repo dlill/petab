@@ -20,7 +20,6 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "lin") {
   experimentalCondition <- pe$experimentalCondition
 
   # Species
-  message("Do we need to prepend init_ before species?")
   speciesInfo <- model$speciesInfo
   par_sp <- petab_parameters(parameterId =   speciesInfo$speciesName,
                              parameterName = speciesInfo$speciesName,
@@ -35,7 +34,6 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "lin") {
                              nominalValue =  parInfo$parValue)
   # Observable parameters
   par_ob <- NULL
-  message("Scale for all observable parameters: ", observableParameterScale, "\n")
   if (length(getSymbols(measurementData$observableParameters)))
     par_ob <- petab_parameters(parameterId =  getSymbols(measurementData$observableParameters),
                                parameterName = getSymbols(measurementData$observableParameters),
@@ -88,6 +86,8 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "lin") {
       for (px in pfi_L1$parameterId) {
         # Set scale of L1 parameters
         pxscale <- par[parameterId == px, parameterScale]
+        if (!length(pxscale)) pxscale <- par[parameterId == paste0("L1Ref_", px), parameterScale] # Might be that a parameter was already renamed
+        if (!length(pxscale)) warning(px, " has no associated scale")
         par[grepl(paste0("L1_", px), parameterId),`:=`(parameterScale = pxscale)]
         par[grepl(paste0("L1_", px), parameterId) & parameterScale != "lin",`:=`(nominalValue = 1)]
         par[grepl(paste0("L1_", px), parameterId) & parameterScale == "lin",`:=`(nominalValue = 0)]
@@ -480,10 +480,11 @@ petab_meta <- function(parameterFormulaInjection = NULL, variableOrder = NULL, .
 #' @md
 #'
 #' @examples
-petab_parameterFormulaInjection = function(parameterId, parameterFormula) {
+petab_parameterFormulaInjection = function(parameterId, parameterFormula, trafoType = "SteadyState") {
   data.table(
     parameterId      = as.character(parameterId),
-    parameterFormula = as.character(parameterFormula)
+    parameterFormula = as.character(parameterFormula),
+    trafoType        = as.character(trafoType)
   )
 }
 
@@ -1563,7 +1564,7 @@ petab_mergeParameters <- function(pe1,pe2, mergeCols = c("nominalValue", "parame
 #'
 #' @examples
 petab_parameters_mergeParameters <- function(pe_pa1, pe_pa2, mergeCols = c("nominalValue", "parameterScale", "estimate")) {
-  cat("Merging columns: ", paste0(mergeCols, collapse = ","))
+  message("Merging columns: ", paste0(mergeCols, collapse = ","), "\n")
 
   mergeColsPA2 <- paste0(mergeCols, "PA2")
   pe_pa2 <- pe_pa2[,c("parameterId", ..mergeCols)]
@@ -1732,13 +1733,15 @@ pe_L1_addL1ParsToExperimentalCondition <- function(pe, parameterId_base, conditi
   # Checks
   if (is.null(pe$meta$L1$L1Spec)) stop("Please add pe$meta$L1Spec")  
   
-  p_isSet <- parameterId_base %in% names(pe$experimentalCondition)
-  if (any(p_isSet)) stop("L1'd parameters already used as colname in experimentalCondition: ", paste0(parameterId_base[p_isSet], collapse = ","), "\n",
-                         "If you need this feature, it needs to be implemented.")
-  p_isSet <- parameterId_base %in% petab_getParametersExperimentalCondition(pe$experimentalCondition)
-  if (any(p_isSet)) stop("L1'd parameters already used as entry in experimentalCondition: ", paste0(parameterId_base[p_isSet], collapse = ","), "\n",
-                         "If you need this feature, it needs to be implemented.")
-  
+  # Rename parameters in experimentalCondition
+  pe_ex_colnames <- parameterId_base[parameterId_base %in% names(pe$experimentalCondition)]
+  pe_ex_parameters <- parameterId_base[parameterId_base %in% petab_getParametersExperimentalCondition(pe$experimentalCondition)]
+  if (length(union(pe_ex_colnames,pe_ex_parameters))) warning("These L1'd parameters are already condition specific: ", paste0(union(pe_ex_colnames,pe_ex_parameters), collapse = ","))
+  if (length(pe_ex_colnames)) setnames(pe$experimentalCondition, pe_ex_colnames, paste0("L1Ref_", pe_ex_colnames))
+  if (length(pe_ex_parameters)) pe$experimentalCondition[,(names(pe$experimentalCondition)):=lapply(.SD, function(x) replaceSymbols(pe_ex_parameters,
+                                                                                                                                    paste0("L1Ref_", pe_ex_parameters),
+                                                                                                                                    x))]
+  # Add parameters to experimentalCondition
   pe$experimentalCondition <- pe$meta$L1$L1Spec[pe$experimentalCondition, on = "conditionId"]
   pe$experimentalCondition[,(paste0("L1_", parameterId_base)) := lapply(parameterId_base, function(px) paste0("L1_", px, "_", L1Spec))]
   pe$experimentalCondition[L1Spec %in% conditionSpecL1_reference,(paste0("L1_", parameterId_base)) := 0]
@@ -1765,6 +1768,8 @@ pe_L1_addL1ParsToExperimentalCondition <- function(pe, parameterId_base, conditi
 #' pe <- petab_exampleRead("04")
 #' pe_L1_createL1Problem(pe, c("kcat", "E"), conditionSpecL1_reference = "C1", j_conditionSpecL1 = conditionId)
 pe_L1_createL1Problem <- function(pe, parameterId_base, conditionSpecL1_reference, j_conditionSpecL1 = conditionId) {
+  pe <- copy(pe)
+  
   # 1 Create parameterFormulaInjection
   pe <- pe_L1_updateParameterFormulaInjection(pe, parameterId_base)
   
