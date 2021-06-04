@@ -291,9 +291,14 @@ petab_experimentalCondition <- function(
   conditionId,
   conditionName = NA,
   ...) {
+  pe_ex_Pars <- list(...)
+  if (length(pe_ex_Pars)) {
+    nm_fixed <- vapply(setNames(nm = names(pe_ex_Pars)), function(nm) {suppressWarnings(any(!is.na(as.numeric(pe_ex_Pars[[nm]]))))}, FUN.VALUE = TRUE)
+    if (any(nm_fixed)) warning("The numeric values in experimentalCondition are assumed on estScale. The following parameters are affected: ", paste0(names(nm_fixed)[nm_fixed], collapse = ", "))
+    }
   d <- data.table(conditionId =   as.character(conditionId),
                   conditionName = as.character(conditionName),
-                  as.data.table(list(...)))
+                  as.data.table(pe_ex_Pars))
   d[base::order(conditionId)]
 }
 
