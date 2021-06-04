@@ -8,6 +8,7 @@ pd_predictAndPlot2(
   pd,
   pe = pd$pe,
   i,
+  j,
   opt.base = pd_parf_opt.base(),
   opt.mstrust = pd_parf_opt.mstrust(),
   opt.profile = pd_parf_opt.profile(FALSE),
@@ -30,7 +31,9 @@ pd_predictAndPlot2(
 )
 }
 \arguments{
-\item{units}{}
+\item{i, j}{data.table arguments working on dco, but note that j will be evaulated in a separate step \emph{after} i}
+
+\item{filename, FLAGfuture, width, height, scale, units}{Agurments going to \code{\link[conveniencefunctions:cf_outputFigure]{conveniencefunctions::cf_outputFigure()}}}
 }
 \value{
 

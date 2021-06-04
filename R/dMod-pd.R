@@ -429,7 +429,7 @@ pd_parf_collect <- function(pd,
                             opt.base =    pd_parf_opt.base(   include = TRUE , parameterSetId = "Base"),
                             opt.mstrust = pd_parf_opt.mstrust(include = TRUE , fitrankRange = 1:20, tol = 1),
                             opt.profile = pd_parf_opt.profile(include = FALSE, rows = "profile_endpoints", parameters = NULL),
-                            opt.L1 =      pd_parf_opt.L1(     include = FALSE, rows = 1:nrow(pd$result$L1))
+                            opt.L1 =      pd_parf_opt.L1(     include = FALSE, rows = seq_len(nrow(pd$result$L1)))
 ) {
   
   parf_base <- parf_fit <- parf_profile <- parf_L1 <- NULL
@@ -1104,7 +1104,7 @@ pd_predictAndPlot <- function(pd, i,
 #'
 #' @param pd
 #' @param pe
-#' @param i
+#' @param i,j data.table arguments working on dco, but note that j will be evaulated in a separate step *after* i
 #' @param opt.base
 #' @param opt.mstrust
 #' @param opt.profile
@@ -1113,12 +1113,7 @@ pd_predictAndPlot <- function(pd, i,
 #' @param FLAGmeanLine
 #' @param aeslist
 #' @param ggCallback
-#' @param filename
-#' @param FLAGfuture
-#' @param width
-#' @param height
-#' @param scale
-#' @param units
+#' @param filename,FLAGfuture,width,height,scale,units Agurments going to [conveniencefunctions::cf_outputFigure()]
 #'
 #' @return
 #' @export
@@ -1148,7 +1143,7 @@ pd_predictAndPlot <- function(pd, i,
 #' scale = 1
 #' units = "cm"
 pd_predictAndPlot2 <- function(pd, pe = pd$pe,
-                               i,
+                               i,j,
                                opt.base = pd_parf_opt.base(),
                                opt.mstrust = pd_parf_opt.mstrust(),
                                opt.profile = pd_parf_opt.profile(FALSE),
@@ -1170,6 +1165,8 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
   # .. Catch i (see petab_mutateDCO for more ideas) -----
   mi <- missing(i)
   si <- substitute(i)
+  mj <- missing(j)
+  sj <- substitute(j)
   
   # .. Data -----
   # observableTransformation
@@ -1187,7 +1184,7 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
   simconds <- if (!mi && !NFLAGsubsetType%in%c(2,4)) dplot[eval(si)] else dplot
   simconds <- unique(simconds[,conditionId])
   pplot <- conveniencefunctions::cf_predict(prd = pd$prd, times = pd$times, pars = parf, fixed = pd$fixed, conditions = simconds)
-  data.table::setnames(pplot, c("condition"  , "name"        , "value"), c("conditionId", "observableId", "measurement"))
+  data.table::setnames(pplot, c("condition", "name", "value"), c("conditionId", "observableId", "measurement"))
   pplot[,`:=`(observableId=factor(observableId,  petab_plotHelpers_variableOrder(pd)))]
   pplot <- subsetPredictionToData(pplot, dplot, NFLAGsubsetType = NFLAGsubsetType)
   
@@ -1219,6 +1216,11 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
     dplot <- dplot[eval(si)]
     pplot <- pplot[eval(si)]
     if (!is.null(pplotRibbon)) pplotRibbon <- pplotRibbon[eval(si)]
+  }
+  if (!mj) {
+    dplot[,eval(sj)]
+    pplot[,eval(sj)]
+    if (!is.null(pplotRibbon)) pplotRibbon[,eval(sj)]
   }
   
   # HACK: Return data, don't plot. Is this nice? Think about it.
