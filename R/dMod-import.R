@@ -1951,7 +1951,8 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   parsEst <- pe$parameters[estimate == 1] # replaces myfit_values
   parsEst[,`:=`(estValue = eval(parse(text = paste0(parameterScale, "(", nominalValue, ")")))),by = 1:nrow(parsEst)]
   
-  # Fixed parameters. Possible sources 
+  # Fixed parameters. 
+  # Possible sources 
   # * pe$parameters
   # * SBML parameters
   # * SBML compartments
@@ -1966,6 +1967,10 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   parsFix_SBMLInit <- parsFix_SBMLInit[!parameterId %in% c(names(cg), parsFix$parameterId, parsEst$parameterId)] 
   parsFix <- rbindlist(list(parsFix, parsFix_SBMLPars, parsFix_SBMLComp, parsFix_SBMLInit))
   parsFix[,`:=`(estValue = eval(parse(text = paste0(parameterScale, "(", nominalValue, ")")))),by = 1:nrow(parsFix)]
+  
+  # Possible sinks => Remove from fix
+  # * pe$meta$parameterFormulaInjection
+  parsFix <- parsFix[!parameterId %in% pe$meta$parameterFormulaInjection$parameterId]
   
   # .. Add measurement parameters -----
   obsParMapping <- petab_getMeasurementParsMapping(pe, column = "observableParameters")
