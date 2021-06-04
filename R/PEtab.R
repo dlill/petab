@@ -88,10 +88,11 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "lin") {
         pxscale <- par[parameterId == px, parameterScale]
         if (!length(pxscale)) pxscale <- par[parameterId == paste0("L1Ref_", px), parameterScale] # Might be that a parameter was already renamed
         if (!length(pxscale)) warning(px, " has no associated scale")
-        par[grepl(paste0("L1_", px), parameterId),`:=`(parameterScale = pxscale)]
+        par[grepl(paste0("L1_", px), parameterId),`:=`(parameterScale = pxscale)] # why grepl? fragile...
         par[grepl(paste0("L1_", px), parameterId) & parameterScale != "lin",`:=`(nominalValue = 1)]
         par[grepl(paste0("L1_", px), parameterId) & parameterScale == "lin",`:=`(nominalValue = 0)]
-        par[grepl(paste0("L1_", px), parameterId),`:=`(objectivePriorType = "parameterScaleLaplace")]
+        par[grepl(paste0("L1_", px), parameterId),`:=`(objectivePriorType = "parameterScaleNormal")] # [ ] Should be parameterScaleLaplace
+        par[grepl(paste0("L1_", px), parameterId),`:=`(objectivePriorParameters = "0;10")] 
         # Update names of inner parameters to L1Ref_par, so their names are set correctly in parameters
         par[parameterId==px,`:=`(parameterId = paste0("L1Ref_", parameterId))]
     }}
@@ -1563,7 +1564,7 @@ petab_mergeParameters <- function(pe1,pe2, mergeCols = c("nominalValue", "parame
 #' @importFrom data.table merge.data.table
 #'
 #' @examples
-petab_parameters_mergeParameters <- function(pe_pa1, pe_pa2, mergeCols = c("nominalValue", "parameterScale", "estimate")) {
+petab_parameters_mergeParameters <- function(pe_pa1, pe_pa2, mergeCols = setdiff(intersect(names(pe_pa1), names(pe_pa2)), "parameterId")) {
   message("Merging columns: ", paste0(mergeCols, collapse = ","), "\n")
 
   mergeColsPA2 <- paste0(mergeCols, "PA2")
