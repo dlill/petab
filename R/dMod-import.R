@@ -1950,6 +1950,9 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
     inits_events <- setdiff(unique(myevents$var), unique(mypreeqEvents$var))
     inits_events <- setNames(rep(0, length(inits_events)), inits_events)
   }
+  # HACK
+  myevents <- pe$meta$events
+  
   
   # .. Initialize gridlist and trafo -----
   if (grepl(SFLAGbrowser, "2BuildGrids")) browser()

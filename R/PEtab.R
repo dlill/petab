@@ -14,11 +14,11 @@
 #'
 #' @examples
 petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
-
+  
   model                 <- pe$model
   measurementData       <- pe$measurementData
   experimentalCondition <- pe$experimentalCondition
-
+  
   # Species
   speciesInfo <- model$speciesInfo
   par_sp <- petab_parameters(parameterId =   speciesInfo$speciesName,
@@ -26,30 +26,41 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
                              nominalValue =  speciesInfo$initialAmount,
                              estimate = as.numeric(speciesInfo$initialAmount > 0),
                              parameterScale = ifelse(speciesInfo$initialAmount > 0, "log10", "lin")
-                             )
+  )
   # Kinetic parameters in ODEs
   parInfo <- model$parInfo
   par_pa <- petab_parameters(parameterId =   parInfo$parName,
                              parameterName = parInfo$parName,
                              nominalValue =  parInfo$parValue)
+  
+  # HACK: Should this be here or further down? I put it here so the dynamic model is not interrupted
+  if (length(getSymbols(pe$meta$events$value))){
+    par_ev <- petab_parameters(parameterId   = getSymbols(pe$meta$events$value),
+                               parameterName = getSymbols(pe$meta$events$value),
+                               nominalValue  = 1,
+                               estimate      = 0,
+                               parameterScale = "lin") # up to debate
+    par_pa <- rbindlist(list(par_pa, par_ev))
+  }
+  
   # Observable parameters
   par_ob <- NULL
   if (length(getSymbols(measurementData$observableParameters)))
     par_ob <- petab_parameters(parameterId =  getSymbols(measurementData$observableParameters),
                                parameterName = getSymbols(measurementData$observableParameters),
                                parameterScale = observableParameterScale)
-
+  
   # MeasurementErrors
   par_meErr <- NULL
   if (length(getSymbols(measurementData$noiseParameters)))
     par_meErr <- petab_parameters(parameterId =   getSymbols(measurementData$noiseParameters),
                                   parameterName = getSymbols(measurementData$noiseParameters),
                                   nominalValue = 0.1)
-
+  
   # Get all base-parameters
   par <- rbindlist(list(par_sp, par_pa, par_ob, par_meErr))
-
-
+  
+  
   # Parameters from experimentalConditions
   # More complicated, need also to exclude colnames
   #   from previously collected parameters
@@ -68,14 +79,14 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
       if (!length(parameterScales)) next # In this case it's probably a L1-parameter which is dealt with later
       par_ec[parameterId %in% pxouter,`:=`(parameterScale = parameterScales)]
     }
-
+    
     # Remove base parameters from par
     par <- par[!parameterId %in% parnamesInner]
-
+    
     # Append par_ec
     par <- rbindlist(list(par, par_ec))
   }
-
+  
   pfi <- pe$meta$parameterFormulaInjection
   if (!is.null(pfi)) {
     
@@ -95,7 +106,7 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
         par[grepl(paste0("L1_", px), parameterId),`:=`(objectivePriorParameters = "0;10")] 
         # Update names of inner parameters to L1Ref_par, so their names are set correctly in parameters
         par[parameterId==px,`:=`(parameterId = paste0("L1Ref_", parameterId))]
-    }}
+      }}
     
     parnamesPFI <- setdiff(cOde::getSymbols(pfi$parameterFormula), c(par$parameterId, names(pe$experimentalCondition)))
     if (length(parnamesPFI)){
@@ -107,7 +118,7 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
     # Remove inner parameters which are set by injection from the petab_parameters
     par <- par[!parameterId %in% pfi$parameterId]
     
-    }
+  }
   
   par
 }
@@ -146,12 +157,12 @@ petab_columns <- function(pe = NULL) {
                        "measurementData",
                        "observables",
                        "parameters")], names))
-
+  
   m <- c("observableId","simulationConditionId","measurement","time","observableParameters","noiseParameters","datasetId","replicateId","preequilibrationConditionId")
   o <- c("observableId","observableName","observableFormula","observableTransformation","noiseFormula","noiseDistribution")
   e <- c("conditionId","conditionName")
   p <- c("parameterId","parameterName","parameterScale","lowerBound","upperBound","nominalValue","estimate","initializationPriorType","initializationPriorParameters","objectivePriorType","objectivePriorParameters")
-
+  
   list(experimentalCondition = e,
        measurementData = m,
        observables = o,
@@ -170,7 +181,7 @@ petab_joinDCO <- function(pe) {
   if (length(pe$measurementData$preequilibrationConditionId) &&
       any(!is.na(pe$preequilibrationConditionId)))
     warning("DCO might not be able to handle preequilibrationConditionId")
-
+  
   dx <- copy(pe$measurementData)
   dx <- pe$experimentalCondition[dx, on = c("conditionId" = "simulationConditionId")]
   dx <- pe$observables[dx, on = c("observableId")]
@@ -189,7 +200,7 @@ petab_joinDCO <- function(pe) {
 petab_unjoinDCO <- function(DCO, pe = NULL) {
   # Get standard column names
   pc <- petab_columns(pe = pe)
-
+  
   # Extract the tables
   # Excols: A bit overcautious with the names, when there is the potential to
   #   pass a petab to pe it should be able to get the names
@@ -198,22 +209,22 @@ petab_unjoinDCO <- function(DCO, pe = NULL) {
                      setdiff(names(DCO), c(pc$measurementData, pc$observables))))
   experimentalCondition = do.call(petab_experimentalCondition, DCO[,..excols])
   experimentalCondition <- unique(experimentalCondition)
-
+  
   mecols <- intersect(names(DCO), c("conditionId", pc$measurementData))
   measurementData <- DCO[,..mecols]
   setnames(measurementData, "conditionId", "simulationConditionId") # need to name back
   measurementData = do.call(petab_measurementData, measurementData)
-
+  
   obcols <- intersect(names(DCO), pc$observables)
   observables = do.call(petab_observables, DCO[,..obcols])
   observables <- unique(observables)
-
+  
   # Do some sanity checks
   lostConditions <- setdiff(unique(pe$experimentalCondition$conditionId),
                             unique(experimentalCondition$conditionId))
   if (length(lostConditions))
     warning("Conditions got lost in the transformation: ", paste0(lostConditions, collapse = ", "))
-
+  
   # Modify and return petab
   pe$experimentalCondition <- experimentalCondition
   pe$measurementData       <- measurementData
@@ -238,28 +249,28 @@ petab_unjoinDCO <- function(DCO, pe = NULL) {
 #' @examples
 #' # todo!!
 petab_mutateDCO <- function(pe, i, j) {
-
+  
   mi <- missing(i)
   mj <- missing(j)
   if ( mi &&  mj) return(pe)
-
+  
   # Catch the arguments
   si <- substitute(i)
   sj <- substitute(j)
-
+  
   # Probably unnecessary check that j is supplied properly
   if (!mj){
     pj <- getParseData(parse(text=deparse(sj)))
     is_set <- "`:=`" %in% pj[,"text"] # is the command a "set_*" command in the data.table sense?
     if (!is_set) stop("j should be called with `:=`")
   }
-
+  
   # Perform the data transformation on the DCO
   dco <- petab_joinDCO(pe)
   if (!mi &&  mj) {dco <- dco[eval(si)];   cat("subsetted dco\n")}       # filter
   if ( mi && !mj) {dco[,eval(sj)];         cat("mutated dco\n")}         # mutate
   if (!mi && !mj) {dco[eval(si),eval(sj)]; cat("mutated dco in rows\n")} # mutate_in_row
-
+  
   # Return modified petab
   pe_out <- petab_unjoinDCO(dco, pe)
   pe_out
@@ -295,7 +306,7 @@ petab_experimentalCondition <- function(
   if (length(pe_ex_Pars)) {
     nm_fixed <- vapply(setNames(nm = names(pe_ex_Pars)), function(nm) {suppressWarnings(any(!is.na(as.numeric(pe_ex_Pars[[nm]]))))}, FUN.VALUE = TRUE)
     if (any(nm_fixed)) warning("The numeric values in experimentalCondition are assumed on estScale. The following parameters are affected: ", paste0(names(nm_fixed)[nm_fixed], collapse = ", "))
-    }
+  }
   d <- data.table(conditionId =   as.character(conditionId),
                   conditionName = as.character(conditionName),
                   as.data.table(pe_ex_Pars))
@@ -407,7 +418,7 @@ petab_parameters <- function(
   initializationPriorParameters = "-1;1",
   objectivePriorType            = c("parameterScaleNormal","parameterScaleUniform","uniform","normal","laplace","logNormal","logLaplace","parameterScaleLaplace")[[1]],
   objectivePriorParameters      = "0;2") {
-
+  
   d <- data.table(
     parameterId                   = as.character(parameterId),
     parameterName                 = as.character(parameterName),
@@ -543,9 +554,9 @@ petab <- function(
     meta                  = meta,
     ...
   )
-
+  
   petab_lint(petab)
-
+  
   petab
 }
 
@@ -587,10 +598,10 @@ petab_modelname_path <- function(filename) {
 #' @examples
 #' petab_files("Models/Example")
 petab_files <- function(filename, FLAGTestCase = FALSE, FLAGreturnList = FALSE) {
-
+  
   modelname <- petab_modelname_path(filename)$modelname
   path      <- petab_modelname_path(filename)$path
-
+  
   # [ ] warning("model refers to rds instead of xml\n")
   out <- NULL
   if (FLAGTestCase) {
@@ -641,7 +652,7 @@ petab_files <- function(filename, FLAGTestCase = FALSE, FLAGreturnList = FALSE) 
 #'
 #' @examples
 readPetab <- function(filename, FLAGTestCase = FALSE) {
-
+  
   files <- petab_files(filename = filename, FLAGTestCase = FLAGTestCase)
   files <- files[file.exists(files)]
   # tables
@@ -652,7 +663,7 @@ readPetab <- function(filename, FLAGTestCase = FALSE) {
   # model+meta
   files_model <- grep("rds", files, value = TRUE)
   files_model <- lapply(files_model, readRDS)
-
+  
   do.call(petab, c(files_model, files_tsv))
 }
 
@@ -669,18 +680,18 @@ readPetab <- function(filename, FLAGTestCase = FALSE) {
 #'
 #' @examples
 writePetab <- function(pe, filename = "petab/model") {
-
+  
   # run linter once more
   pe <- do.call(petab, pe)
-
+  
   # Create folder, load petab
   dir.create(petab_modelname_path(filename)$path, FALSE, TRUE)
   pepy <- petab_python_setup()
-
+  
   # Get filenames
   files <- petab_files(filename = filename)
   modelname <- gsub(".petab$","", basename(filename))
-
+  
   # Write yaml
   pepy$create_problem_yaml(sbml_files        = basename(files["modelXML"]),
                            condition_files   = basename(files["experimentalCondition"]),
@@ -688,26 +699,26 @@ writePetab <- function(pe, filename = "petab/model") {
                            parameter_file    = basename(files["parameters"]),
                            observable_files  = basename(files["observables"]),
                            yaml_file         = files["yaml"])
-
+  
   # [ ] Hack: Remove once sbml export is stable
   if ("model" %in% names(pe)) pe$modelXML <- pe$model
-
+  
   # Select files to write
   files <- files[names(pe)]
   files <- files[vapply(pe, function(x) !is.null(x), TRUE)]
-
+  
   # Write tables
   files_tsv <- grep("tsv", files, value = TRUE)
   if (length(files_tsv))
     lapply(names(files_tsv), function(nm) {
       data.table::fwrite(pe[[nm]], files[[nm]], sep = "\t")})
-
+  
   # Write model+meta rds
   files_model <- grep("rds", files, value = TRUE)
   if (length(files_model))
     lapply(names(files_model), function(nm) {
       saveRDS(pe[[nm]], files[[nm]])})
-
+  
   # Write model xml
   files_model <- grep("xml", files, value = TRUE)
   if (length(files_model)) {
@@ -716,7 +727,7 @@ writePetab <- function(pe, filename = "petab/model") {
     args <- args[setdiff(names(args), "events")] # [ ] Todo: Events
     do.call(sbml_exportEquationList, args)
   }
-
+  
   cat("Success?")
   invisible(pe)
 }
@@ -745,7 +756,7 @@ petab_combine_experimentalCondition <- function(ec1, ec2, NFLAGconflict = c("sto
   if (length(s21)) stop("The following names are in experimentalCondition 1, but not in 2:\n",
                         paste0(s21, collapse = ", "), "\n",
                         "Please fix manually before combining.\n")
-
+  
   i12 <- intersect(ec1$conditionId,ec2$conditionId)
   if (length(i12)) {
     cat("Overlapping conditionIds =================\n-----------------pe1----------------------\n")
@@ -760,7 +771,7 @@ petab_combine_experimentalCondition <- function(ec1, ec2, NFLAGconflict = c("sto
       ec1 <- ec1[!conditionId %in% i12]
     }
   }
-
+  
   rbindlist(list(ec1,ec2), use.names = TRUE)
 }
 
@@ -824,10 +835,10 @@ petab_combine_observables <- function(o1,o2, NFLAGconflict = c("stop" = 0, "use_
 #' @examples
 #' 
 petab_combine_parameters <- function(p1,p2) {
-
+  
   if (is.null(p1)) return(p2)
   if (is.null(p2)) return(p1)
-
+  
   i12 <- intersect(p2$parameterId,p1$parameterId)
   if (length(i12)) {
     message("The following parameterId are in both petabs. Using parameters from pe1. \n",
@@ -850,7 +861,7 @@ petab_combine_parameters <- function(p1,p2) {
 #' @examples
 petab_combine <- function(pe1,pe2, NFLAGconflict = c("stop" = 0, "use_pe1" = 1, "use_pe2" = 2)[2]) {
   if (NFLAGconflict>0) cat("Preferring pe", NFLAGconflict, "\n")
-
+  
   petab(
     model                 = pe1$model,
     experimentalCondition = petab_combine_experimentalCondition(pe1$experimentalCondition, pe2$experimentalCondition),
@@ -859,7 +870,7 @@ petab_combine <- function(pe1,pe2, NFLAGconflict = c("stop" = 0, "use_pe1" = 1, 
     parameters            = petab_combine_parameters(           pe1$parameters           , pe2$parameters),
     meta                  = pe1$meta
   )
-
+  
 }
 
 
@@ -880,43 +891,43 @@ petab_combine <- function(pe1,pe2, NFLAGconflict = c("stop" = 0, "use_pe1" = 1, 
 #'
 #' @examples
 petab_lint <- function(pe) {
-
+  
   # Basic weeoe mwaaxr
-
+  
   # [ ] Implement access to petab.lint
   errlist <- list()
-
+  
   # experimentalCondition
   dupes <- which(duplicated(pe$experimentalCondition$conditionId))
   if(length(dupes)) {
     warning("These rows are duplicates in conditionId :", paste0(head(dupes,10), collapse = ","), "...")
     errlist <- c(errlist, list(conditionIdDupes = dupes))}
-
-
+  
+  
   # measurementData
   dupes <- which(duplicated(pe$measurementData))
   if(length(dupes)) {
     warning("These rows are duplicates in measurementData: ", paste0(dupes, collapse = ","))
     errlist <- c(errlist, list(measurementDataDupes = dupes))}
-
+  
   if (any(is.na(pe$measurementData$time)))
     stop("Petab contains missing times")
   if (any(is.na(pe$measurementData$measurement)))
     stop("Petab contains missing times")
-
-
+  
+  
   # observables
   dupes <- which(duplicated(pe$observables$observableID))
   if(length(dupes)) {
     warning("These rows are duplicates in observableId: ", paste0(head(dupes,10), collapse = ","), "...")
     errlist <- c(errlist, list(observableIdDupes = dupes))}
-
-
+  
+  
   # parameters
   if (!is.null(pe$parameters)) {
     pars_NA <- pe$parameters[is.na(nominalValue), parameterId]
     if (length(pars_NA)) warning("These parameters have no correct nominal value: ", paste0(pars_NA, collapse = ","))
-
+    
     parsNotEstimatedNotLin <- pe$parameters[estimate == 0 & parameterScale != "lin"]
     if (nrow(parsNotEstimatedNotLin)) {
       logscale_but_zero <- parsNotEstimatedNotLin$nominalValue == 0
@@ -924,13 +935,13 @@ petab_lint <- function(pe) {
                                        paste0(parsNotEstimatedNotLin$parameterId[logscale_but_zero], collapse = ","))
     }
   }
-
+  
   # meta
   if (!is.null(pe$meta$parameterFormulaInjection)) {
     names_overwritten <- pe$meta$parameterFormulaInjection$parameterId %in% names(pe$experimentalCondition)
     if (any(names_overwritten)) stop("Parameters given in est.grid are overwritten by parameterFormulaInjection: ", 
                                      paste0(pe$meta$parameterFormulaInjection$parameterId[names_overwritten], ", "))}
-
+  
   errlist
 }
 
@@ -960,9 +971,9 @@ petab_lint <- function(pe) {
 pepy_sample_parameter_startpoints <- function(pe, n_starts = 100L, seed = 1L, FLAGincludeCurrent = TRUE) {
   n_starts <- as.integer(n_starts-as.numeric(FLAGincludeCurrent))
   seed     <- as.integer(seed)
-
+  
   pepy <- petab_python_setup()
-
+  
   pars <- pepy$sample_parameter_startpoints(
     parameter_df = pe$parameters,
     n_starts = n_starts,
@@ -1026,13 +1037,13 @@ petab_python_setup <- function() {
   if (!"petab" %in% reticulate::virtualenv_list()){
     reticulate::virtualenv_install("petab", "petab", ignore_installed = TRUE)
   }
-
+  
   # Stupid RStudio "ich mach mein eigenes environment variables ding"
   # PATH <- Sys.getenv("PATH")
   # PATH <- paste0(file.path(Sys.getenv("HOME"), ".virtualenvs/petab/bin"), ":", PATH)
   # Sys.setenv(PATH = PATH)
   message("======================\nIf this function fails, restart RStudio from your terminal and/or recreate the *.Rproj file of your current project \n==============")
-
+  
   message("Using petab virtualenv\n")
   reticulate::use_virtualenv("petab")
   reticulate::import("petab")
@@ -1067,15 +1078,15 @@ petab_python_setup <- function() {
 #' petab_getMeasurementParsMapping(pe, "observableParameters")
 #' # suggested use: indiv_addLocalParsToGridlist ...
 petab_getMeasurementParsMapping <- function(pe, column = c("observableParameters", "noiseParameters")[1]) {
-
+  
   measurementData <- copy(pe$measurementData)
-
+  
   # Select column and name
   parameters <- measurementData[[column]]
   parameterString <- gsub("Parameters", "Parameter", column)
-
+  
   if (all(is.na(parameters))) return(data.table(conditionId = unique(measurementData$simulationConditionId)))
-
+  
   # Pipeline of death
   mp <- strsplit(parameters, ";")
   mp <- lapply(mp, function(x) {if(length(x)) return(as.data.table(as.list(x))) else data.table(NA)})
@@ -1092,13 +1103,13 @@ petab_getMeasurementParsMapping <- function(pe, column = c("observableParameters
     print(mp[dupes, list(conditionId,INNERPARAMETER)])
     stop(column, "contain non-unique values in some conditionIds (see print output above)")}
   mp <- dcast(mp, conditionId ~ INNERPARAMETER, value.var = "OUTERPARAMETER")
-
+  
   # Check that all conditionIds are specified, and if not, create empty row
   experimentalCondition <- copy(pe$experimentalCondition)
   if (length(setdiff(experimentalCondition$conditionId, mp$conditionId))) {
     mp <- mp[data.table(conditionId = experimentalCondition$conditionId), on = "conditionId"]
   }
-
+  
   # Replace NAs with dummy value 1
   colsWithNa <- vapply(mp, function(x) any(is.na(x)), FALSE)
   colsWithNa <- names(colsWithNa)[colsWithNa]
@@ -1108,7 +1119,7 @@ petab_getMeasurementParsMapping <- function(pe, column = c("observableParameters
     #         paste0(colsWithNa, collapse = ","))
     mp[,(colsWithNa):=lapply(.SD, function(x) replace(x, is.na(x),1)), .SDcols = colsWithNa]
   }
-
+  
   mp
 }
 
@@ -1129,10 +1140,10 @@ petab_getMeasurementParsMapping <- function(pe, column = c("observableParameters
 #' @examples
 petab_createObjPrior <- function(pe, FLAGuseNominalValueAsCenter = FALSE) {
   # [ ] Todo: Move this function to dMod-*.R file
-
+  
   p <- copy(pe$parameters)
   p <- p[estimate == 1]
-
+  
   notImplemented <- which(p$objectivePriorType != "parameterScaleNormal")
   if (length(notImplemented))
     warning("objectivePriorType not implemented: ", paste0(unique(p$objectivePriorType[notImplemented]),collapse = ","), "\n",
@@ -1151,11 +1162,11 @@ petab_createObjPrior <- function(pe, FLAGuseNominalValueAsCenter = FALSE) {
     p[,`:=`(mu = estValue)]
   }
   p[,`:=`(sd = as.numeric(gsub(".*;", "", objectivePriorParameters)))]
-
-
+  
+  
   dMod::constraintL2(mu = setNames(p$mu, p$parameterId),
                      sigma = setNames(p$sd, p$parameterId))
-
+  
 }
 
 
@@ -1186,14 +1197,14 @@ petab_getParameterBoundaries <- function(pe, whichBoundary = c("upper", "lower")
 
 
 petab_getMeasurementParsScales <- function(measurementData,parameters) {
-
+  
   # >>>>>>> obsolete function!
   # >>>>>>> functionality covered currently by
   # >>>>>>> dMod::updateParscalesToBaseTrafo <<<<<<<<
-
+  
   parameters <- pe$parameters
   measurementData <- pe$measurementData
-
+  
   # measurementPars
   mp <- lapply(c("observableParameters", "noiseParameters"), function(column) {
     petab_getMeasurementParsMapping(measurementData, column)})
@@ -1201,18 +1212,18 @@ petab_getMeasurementParsScales <- function(measurementData,parameters) {
   mp <- melt(mp, id.vars = "condition",
              variable.name = "INNERPARAMETER",
              variable.factor = FALSE, value.name = "parameterId")
-
+  
   # parScales
   ps <- parameters[mp, on = c("parameterId") ]
   ps <- ps[,list(INNERPARAMETER, parameterScale)]
   ps <- unique(ps)
-
+  
   # check that trafo is the same in all conditions
   dupeScale <- duplicated(ps$INNERPARAMETER)
   if (any(dupeScale))
     stop("Model parameter has two different scales mapped to it in different conditions: ",
          ps$INNERPARAMETER[dupeScale])
-
+  
   list(parScales = setNames(ps$parameterScale, ps$INNERPARAMETER),
        coveredPars = unique(mp$parameterId))
 }
@@ -1256,17 +1267,17 @@ petab_plotData <- function(petab,
                            FLAGfuture = TRUE,
                            width = 29.7, height = 21, scale = 1, units = "cm", ...
 ) {
-
+  
   # create plotting data.table
   dplot <- petab_joinDCO(petab)
   # apply log transformation to data when applicable
   if (FLAGUseObservableTransformation) {
     dplot[,`:=`(measurement = eval(parse(text = paste0(observableTransformation, "(measurement)")))#,
                 # observableId = paste0(observableTransformation, " ", observableId) # HACK for Jamboree, where I didn't want the scale in the plot: Make this accessible as option
-                ),
-          by = 1:nrow(dplot)]
+    ),
+    by = 1:nrow(dplot)]
   }
-
+  
   # mean values to draw lines
   if (FLAGmeanLine){
     byvars <- lapply(aeslist, function(x) cOde::getSymbols(as.character(x)))
@@ -1275,11 +1286,11 @@ petab_plotData <- function(petab,
     dmean <- copy(dplot)
     dmean <- dmean[,list(measurement = mean(measurement)), by = byvars]
   }
-
+  
   # handle aesthetics
   aes0 <- list(x = ~time, y = ~measurement, color = ~conditionId)
   aeslist <- c(aeslist, aes0[setdiff(names(aes0), names(aeslist))])
-
+  
   # Create plot
   pl <- cfggplot(dplot)
   if (FLAGmeanLine) { # Add first so te lines don't mask the points
@@ -1289,10 +1300,10 @@ petab_plotData <- function(petab,
   }
   pl <- pl + geom_point(do.call(aes_q, aeslist), data = dplot)
   for (plx in ggCallback) pl <- pl + plx
-
+  
   # Print paginate message so user doesnt forget about additional pages
   message("Plot has ", ggforce::n_pages(pl), " pages\n")
-
+  
   # output
   cf_outputFigure(pl = pl, filename = filename, width = width, height = height, scale = scale, units = units, FLAGFuture = FLAGfuture, ...)
 }
@@ -1339,11 +1350,11 @@ petab_overviewObsPerCond <- function(pe, Ntruncate = 1000, ...) {
 #'
 #' @examples
 petab_getParameterType <- function(pe) {
-
+  
   # Parameter types
   observableParameters <- cOde::getSymbols(pe$measurementData$observableParameters)
   noiseParameters      <- cOde::getSymbols(pe$measurementData$noiseParameters)
-
+  
   parameters <- data.table(parameterId = pe$parameters$parameterId)
   parameters[,`:=`(parameterType = "other")]
   parameters[parameterId %in% observableParameters,`:=`(parameterType = "observableParameters")]
@@ -1575,7 +1586,7 @@ petab_mergeParameters <- function(pe1,pe2, mergeCols = c("nominalValue", "parame
 #' @examples
 petab_parameters_mergeParameters <- function(pe_pa1, pe_pa2, mergeCols = setdiff(intersect(names(pe_pa1), names(pe_pa2)), "parameterId")) {
   message("Merging columns: ", paste0(mergeCols, collapse = ","), "\n")
-
+  
   mergeColsPA2 <- paste0(mergeCols, "PA2")
   pe_pa2 <- pe_pa2[,c("parameterId", ..mergeCols)]
   # Merge, update, clean

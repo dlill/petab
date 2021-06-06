@@ -306,13 +306,13 @@ pd_updateEstPars <- function(pd, parsEst, FLAGupdatePE = TRUE, FLAGsavePd = FALS
 #' @importFrom conveniencefunctions pars2parframe
 #'
 #' @examples
-pd_parf_collectPars <- function(pd, parameterSetId = "Base") {
+pd_parf_collectPars <- function(pd, parameterSetId = "base_obsParsFitted") {
   parf <- NULL
-  if (!is.null(pd$result$base_obsParsFitted)){
+  if (!is.null(pd$result$base_obsParsFitted) && parameterSetId == "base_obsParsFitted"){
     parf <- cbind(parameterSetId = "base_obsParsFitted", pd$result$base_obsParsFitted, stringsAsFactors = FALSE)
-  } else if (!is.null(pd$result$base)) {
+  } else if (!is.null(pd$result$base) && parameterSetId == "base") {
     parf <- cbind(parameterSetId = "base", pd$result$base, stringsAsFactors = FALSE)
-  } else if (is.null(pd$result$base)) {
+  } else {
     pd <- pd_updateEstPars(pd, pd$pars, FLAGupdatePE = FALSE)
     parf <- pd$result$base
   }
@@ -377,7 +377,7 @@ pd_parf_collectProfile <- function(pd, rows = c("profile_endpoints", "optimum"),
   parsEnd <- parsOpt <- NULL
   if ("profile_endpoints" %in% rows){
     parsEnd <- pars[profileDirection != "optimum",.SD[which.max(abs(constraint))], by = c("whichPar", "profileDirection")]
-    parsEnd[,`:=`(parameterSetId = "profile_endpoints")]
+    parsEnd[,`:=`(parameterSetId = paste0("profile_endpoints", whichPar))]
     data.table::setcolorder(parsEnd, c(names(pars), "parameterSetId"))
   }
   if ("optimum" %in% rows){
@@ -464,7 +464,7 @@ pd_parf_collect <- function(pd,
 }
 
 #' @export
-pd_parf_opt.base <- function(include = TRUE, parameterSetId = "Base") {
+pd_parf_opt.base <- function(include = TRUE, parameterSetId = "base_obsParsFitted") {
   list(include = include, parameterSetId = parameterSetId)
 }
 #' @export
@@ -1641,7 +1641,9 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
     pplotRibbon <- pplot[profileDirection %in% c("left", "right")]
     pplotRibbon <- pplotRibbon[,list(
       measurementmin = min(measurement),
-      measurementmax = max(measurement)
+      measurementmax = max(measurement),
+      parameterSetIdmin = parameterSetId[which.min(measurement)],
+      parameterSetIdmax = parameterSetId[which.max(measurement)]
     ), by = c("conditionId", "observableId", "time")] # Last one is a bit hacky. Better use different aeslist functions for profiles and mstrusts
     pplot <- pplot[profileDirection == "optimum"]
   }
