@@ -4,7 +4,7 @@
 \alias{pd_parf_collectPars}
 \title{Title}
 \usage{
-pd_parf_collectPars(pd, parameterSetId = "Base")
+pd_parf_collectPars(pd, parameterSetId = "base_obsParsFitted")
 }
 \arguments{
 \item{pd}{}

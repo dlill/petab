@@ -2,20 +2,44 @@
 % Please edit documentation in R/dMod-pd.R
 \name{pd_cluster_L1_fitUnbiased}
 \alias{pd_cluster_L1_fitUnbiased}
-\title{Title}
+\title{Fit model on cluster}
 \usage{
-pd_cluster_L1_fitUnbiased(pd, .outputFolder, FLAGforcePurge = FALSE)
+pd_cluster_L1_fitUnbiased(
+  pd,
+  .outputFolder,
+  n_startsPerNode = 16 * 3,
+  identifier = "mstrust",
+  FLAGforcePurge = FALSE
+)
 }
 \arguments{
 \item{pd}{}
 
 \item{.outputFolder}{}
 
-\item{FLAGforcePurge}{}
+\item{n_startsPerNode}{}
+
+\item{n_nodes}{}
+
+\item{id}{}
+
+\item{type}{}
 }
 \value{
-
+Characters
 }
 \description{
-Title
+Fit model on cluster
 }
+\seealso{
+Other Cluster: 
+\code{\link{clusterStatusMessage}()},
+\code{\link{pd_cluster_L1_fitUnbiasedKNECHT}()},
+\code{\link{pd_cluster_L1}()},
+\code{\link{pd_cluster_mstrust}()},
+\code{\link{readPd}()}
+}
+\author{
+Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+}
+\concept{Cluster}

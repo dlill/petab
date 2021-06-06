@@ -816,6 +816,7 @@ pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_node
   # .. Get results -----
   if (!FLAGjobDone & !FLAGjobPurged) {
     if (job$check()) {
+      Sys.sleep(5) # avoid being blocked
       job$get()
       fitlist  <- if (exists("cluster_result")) do.call(c, cluster_result) else {NULL
         #cf_dMod_rescueFits()
@@ -834,7 +835,7 @@ pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_node
   }
   
   if (FLAGjobDone & !FLAGjobPurged) {
-    if (readline("Are you sure? Type yes: ") == "yes"){
+    if (readline("Purge job. Are you sure? Type yes: ") == "yes"){
       job$purge(purge_local = TRUE)
       writeLines("jobPurged", fileJobPurged)
       return("Job purged\n")
@@ -927,6 +928,7 @@ pd_cluster_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log1
   # .. Get results -----
   if (!FLAGjobDone & !FLAGjobPurged) {
     if (job$check()) {
+      Sys.sleep(5) # avoid being blocked
       job$get()
       
       # Gebastelt ...
@@ -950,49 +952,6 @@ pd_cluster_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log1
   
 }
 
-#' Title
-#'
-#' @param pd 
-#' @param .outputFolder 
-#' @param FLAGforcePurge 
-#'
-#' @return
-#' @export
-#'
-#' @examples
-pd_cluster_L1_fitUnbiased <- function(pd, .outputFolder, FLAGforcePurge = FALSE) {
-  
-  assign(".pd", pd, .GlobalEnv)
-  on.exit({assign("pd", .pd, .GlobalEnv)})
-  
-  fixed_L1 <- L1_getModelCandidates(pd$result$L1)
-  cat("===================== n models: ", nrow(fixed_L1), "\n")
-  idx <- (seq_len(nrow(fixed_L1)))[[3]]
-  for (idx in seq_len(nrow(fixed_L1))){
-    cat("------------------- ", idx, " ------------------\n")
-    
-    pd <- copy(.pd)
-    parametersFixed <- fixed_L1[idx,,drop = TRUE]
-    parametersFixed <- names(parametersFixed)[parametersFixed]
-    
-    fit_par <- pd$pars[setdiff(names(pd$pars), parametersFixed)]
-    fit_fix <- c(pd$fixed, pd$pars[parametersFixed])
-    
-    pd$pars <- fit_par
-    pd$fixed <- fit_fix
-    
-    # Sample only narrow
-    pd$pe$parameters[,`:=`(initializationPriorParameters = paste0(pd$pars[parameterId] - 1,";", pd$pars[parameterId] + 1))]
-    pd$pe$parameters[initializationPriorParameters == "NA;NA",`:=`(initializationPriorParameters = "0;1")]
-    
-    assign("pd", pd, .GlobalEnv)
-    
-    pd_cluster_mstrust(pd, .outputFolder = .outputFolder, n_startsPerNode = 16*3, n_nodes = 1,
-                       identifier = paste0("L1Unbiased_", idx), FLAGforcePurge = FLAGforcePurge)
-    
-    Sys.sleep(60)
-  }
-}
 
 #' Fit model on cluster
 #'
@@ -1012,7 +971,7 @@ pd_cluster_L1_fitUnbiased <- function(pd, .outputFolder, FLAGforcePurge = FALSE)
 #' @importFrom dMod distributed_computing
 #'
 #' @examples
-pd_cluster_L1_fitUnbiased2 <- function(pd, .outputFolder, n_startsPerNode = 16*3, 
+pd_cluster_L1_fitUnbiased <- function(pd, .outputFolder, n_startsPerNode = 16*3, 
                                        identifier = "mstrust", FLAGforcePurge = FALSE) {
   
   # .. General job handling -----
@@ -1028,17 +987,24 @@ pd_cluster_L1_fitUnbiased2 <- function(pd, .outputFolder, n_startsPerNode = 16*3
   
   cat(clusterStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
   
+  # Hacking var_list: want to have different nodes
+  n_nodes <- nrow(L1_getModelCandidates(pd$result$L1))
+  var_list <- list(node = 1:n_nodes)
+  
   # Assign Global variables: Important, in future, this might be a source of bugs, if other cluster-functions are written
   assign("n_startsPerNode",n_startsPerNode,.GlobalEnv)
   
   # Start mstrust job
   file.copy(file.path(pd$filenameParts$.currentFolder, pd$filenameParts$.compiledFolder, "/"), ".", recursive = TRUE)
+  
+  
+  
   job <- dMod::distributed_computing(
     {
       loadDLL(pd$obj_data);
       
-      node <- as.numeric(Sys.getenv('SLURM_ARRAY_TASK_ID')) + 1
-      FLAGincludeCurrent <- node == 1
+      # node <- as.numeric(Sys.getenv('SLURM_ARRAY_TASK_ID')) + 1
+      node <- var_1
       
       # Determine fixed pars and fix them
       fixed_L1 <- L1_getModelCandidates(pd$result$L1)
@@ -1054,7 +1020,7 @@ pd_cluster_L1_fitUnbiased2 <- function(pd, .outputFolder, n_startsPerNode = 16*3
       
       # Sample only narrow
       pd$pe$parameters[,`:=`(initializationPriorParameters = paste0(pd$pars[parameterId] - 1,";", pd$pars[parameterId] + 1))]
-      pd$pe$parameters[initializationPriorParameters == "NA;NA",`:=`(initializationPriorParameters = "0;1")]
+      pd$pe$parameters[initializationPriorParameters == "NA;NA",`:=`(initializationPriorParameters = "0;1")] # Petab needs these to be set  but they don't matter
       
       # [ ] "current" from FLAGincludeCurrent should be the L1 fit rather than the global fit...
       center <- pepy_sample_parameter_startpoints(pd$pe, n_starts = n_startsPerNode, seed = node, 
@@ -1062,7 +1028,7 @@ pd_cluster_L1_fitUnbiased2 <- function(pd, .outputFolder, n_startsPerNode = 16*3
       parlower <- petab_getParameterBoundaries(pd$pe, "lower")
       parupper <- petab_getParameterBoundaries(pd$pe, "upper")
       
-      # only take fixed
+      # only take free paramters
       center <- center[,setdiff(names(center)     , names(pd$fixed))]
       parlower <- parlower[setdiff(names(parlower), names(pd$fixed))]
       parupper <- parupper[setdiff(names(parupper), names(pd$fixed))]
@@ -1079,8 +1045,7 @@ pd_cluster_L1_fitUnbiased2 <- function(pd, .outputFolder, n_startsPerNode = 16*3
     jobname = jobnm, 
     partition = "single", cores = 16, nodes = 1, walltime = "12:00:00",
     ssh_passwd = Sys.getenv("hurensohn"), machine = "cluster", 
-    fix_these_arguments_nodes_no_rep,
-    var_values = NULL, no_rep = n_nodes, 
+    var_values = var_list, 
     recover = FLAGjobRecover,
     compile = F
   )
@@ -1095,6 +1060,7 @@ pd_cluster_L1_fitUnbiased2 <- function(pd, .outputFolder, n_startsPerNode = 16*3
   # .. Get results -----
   if (!FLAGjobDone & !FLAGjobPurged) {
     if (job$check()) {
+      Sys.sleep(5) # avoid being blocked
       job$get()
       fitlist  <- if (exists("cluster_result")) do.call(c, cluster_result) else {NULL
         #cf_dMod_rescueFits()
@@ -1113,7 +1079,7 @@ pd_cluster_L1_fitUnbiased2 <- function(pd, .outputFolder, n_startsPerNode = 16*3
   }
   
   if (FLAGjobDone & !FLAGjobPurged) {
-    if (readline("Are you sure? Type yes: ") == "yes"){
+    if (readline("Purge job. Are you sure? Type yes: ") == "yes"){
       job$purge(purge_local = TRUE)
       writeLines("jobPurged", fileJobPurged)
       return("Job purged\n")
