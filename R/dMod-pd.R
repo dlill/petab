@@ -971,13 +971,13 @@ pd_cluster_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log1
 #' @importFrom dMod distributed_computing
 #'
 #' @examples
-pd_cluster_L1_fitUnbiased <- function(pd, .outputFolder, n_startsPerNode = 16*3, 
-                                       identifier = "mstrust", FLAGforcePurge = FALSE) {
+pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, 
+                                                 identifier = "L1UB", FLAGforcePurge = FALSE) {
   
   # .. General job handling -----
-  jobnm <- paste0("mstrust_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))
+  jobnm <- paste0("L1UB_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))
   
-  fileJobDone    <- conveniencefunctions::dMod_files(.outputFolder, identifier)[["mstrust"]]
+  fileJobDone    <- conveniencefunctions::dMod_files(.outputFolder, paste0(identifier,1))[["mstrust"]]
   fileJobPurged  <- file.path(dirname(fileJobDone), paste0(".", jobnm, "jobPurged"))
   fileJobRecover <- file.path(paste0(jobnm, "_folder"), paste0(jobnm, ".R"))
   
@@ -993,6 +993,8 @@ pd_cluster_L1_fitUnbiased <- function(pd, .outputFolder, n_startsPerNode = 16*3,
   
   # Assign Global variables: Important, in future, this might be a source of bugs, if other cluster-functions are written
   assign("n_startsPerNode",n_startsPerNode,.GlobalEnv)
+  assign("n_nodes"        ,n_nodes        ,.GlobalEnv)
+  assign("var_list"       ,var_list       ,.GlobalEnv)
   
   # Start mstrust job
   file.copy(file.path(pd$filenameParts$.currentFolder, pd$filenameParts$.compiledFolder, "/"), ".", recursive = TRUE)
@@ -1041,6 +1043,137 @@ pd_cluster_L1_fitUnbiased <- function(pd, .outputFolder, n_startsPerNode = 16*3,
               output = TRUE, cautiousMode = TRUE,
               stats = FALSE, 
               parlower = parlower, parupper = parupper)
+    },
+    jobname = jobnm, 
+    partition = "single", cores = 16, nodes = 1, walltime = "12:00:00",
+    ssh_passwd = Sys.getenv("hurensohn"), machine = "cluster", 
+    var_values = var_list, 
+    recover = FLAGjobRecover,
+    compile = F
+  )
+  unlink(list.files(".", "\\.o$|\\.so$|\\.c$|\\.rds$"))
+  
+  if (!FLAGjobRecover) return("Job submitted")
+  if (FLAGforcePurge) {
+    # bit ugly code duplication...
+    job$purge(purge_local = TRUE)
+    return("Job was purged")
+  }
+  # .. Get results -----
+  if (!FLAGjobDone & !FLAGjobPurged) {
+    if (job$check()) {
+      Sys.sleep(5) # avoid being blocked
+      job$get()
+      parfs <- lapply(cluster_result, cf_as.parframe)
+      lapply(seq_along(parfs), function(idx) dMod_saveMstrust(parfs[[idx]], .outputFolder, paste0(identifier, idx)))
+      
+      conveniencefunctions::dMod_saveMstrust(fit = fits, path = .outputFolder, 
+                                             identifier = identifier, FLAGoverwrite = TRUE)
+      
+      return("Job done. You can check out the results by running `readPd` which will load the fit into pd$result$fits. Re-run this function once more to purge the job.")
+    }
+  }
+  
+  if (FLAGjobDone & !FLAGjobPurged) {
+    if (readline("Purge job. Are you sure? Type yes: ") == "yes"){
+      job$purge(purge_local = TRUE)
+      writeLines("jobPurged", fileJobPurged)
+      return("Job purged\n")
+    }
+  }
+}
+
+
+#' Fit model on cluster
+#'
+#' @param pd 
+#' @param .outputFolder 
+#' @param n_startsPerNode 
+#' @param n_nodes 
+#' @param id 
+#' @param type 
+#'
+#' @return Characters
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family Cluster
+#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust
+#' @importFrom dMod distributed_computing
+#'
+#' @examples
+pd_cluster_L1_fitUnbiasedEachOnce <- function(pd, .outputFolder, n_startsPerNode = 16*3, 
+                                              identifier = "L1UBSingle", FLAGforcePurge = FALSE) {
+  
+  # .. General job handling -----
+  jobnm <- paste0("L1UB_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))
+  
+  fileJobDone    <- conveniencefunctions::dMod_files(.outputFolder, identifier)[["mstrust"]]
+  fileJobPurged  <- file.path(dirname(fileJobDone), paste0(".", jobnm, "jobPurged"))
+  fileJobRecover <- file.path(paste0(jobnm, "_folder"), paste0(jobnm, ".R"))
+  
+  FLAGjobDone    <- file.exists(fileJobDone)
+  FLAGjobPurged  <- file.exists(fileJobPurged)
+  FLAGjobRecover <- file.exists(fileJobRecover) | FLAGjobDone | FLAGjobPurged
+  
+  cat(clusterStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
+  
+  # Hacking var_list: want to have different nodes
+  n_nodes <- nrow(L1_getModelCandidates(pd$result$L1))
+  var_list <- dMod::profile_pars_per_node(1:n_nodes, 16)
+  
+  # Assign Global variables: Important, in future, this might be a source of bugs, if other cluster-functions are written
+  assign("n_startsPerNode",n_startsPerNode,.GlobalEnv)
+  assign("n_nodes"        ,n_nodes        ,.GlobalEnv)
+  assign("var_list"       ,var_list       ,.GlobalEnv)
+  
+  # Start mstrust job
+  file.copy(file.path(pd$filenameParts$.currentFolder, pd$filenameParts$.compiledFolder, "/"), ".", recursive = TRUE)
+  
+  
+  stop("update arguments in trust (are mstrust args, not yet fixed)")
+  
+  job <- dMod::distributed_computing(
+    {
+      .pd <- copy(pd)
+      loadDLL(pd$obj_data);
+      
+      # node <- as.numeric(Sys.getenv('SLURM_ARRAY_TASK_ID')) + 1
+      parallel::mclapply(var_1:var_2, function(node) {
+        pd <- copy(.pd)
+        # Determine fixed pars and fix them
+        fixed_L1 <- L1_getModelCandidates(pd$result$L1)
+        
+        parametersFixed <- fixed_L1[node,,drop = TRUE]
+        parametersFixed <- names(parametersFixed)[parametersFixed]
+        
+        fit_par <- pd$pars[setdiff(names(pd$pars), parametersFixed)]
+        fit_fix <- c(pd$fixed, pd$pars[parametersFixed])
+        
+        pd$pars <- fit_par
+        pd$fixed <- fit_fix
+        
+        # Sample only narrow
+        pd$pe$parameters[,`:=`(initializationPriorParameters = paste0(pd$pars[parameterId] - 1,";", pd$pars[parameterId] + 1))]
+        pd$pe$parameters[initializationPriorParameters == "NA;NA",`:=`(initializationPriorParameters = "0;1")] # Petab needs these to be set  but they don't matter
+        
+        parlower <- petab_getParameterBoundaries(pd$pe, "lower")
+        parupper <- petab_getParameterBoundaries(pd$pe, "upper")
+        
+        # only take free paramters
+        parlower <- parlower[setdiff(names(parlower), names(pd$fixed))]
+        parupper <- parupper[setdiff(names(parupper), names(pd$fixed))]
+        
+        
+        # trust(objfun = pd$obj, center = pd$pars, studyname = paste0("fit", node),
+        #       fixed = pd$fixed,
+        #       rinit = 0.1, rmax = 10, cores = 16,
+        #       iterlim = 500, 
+        #       optmethod = "trust", 
+        #       output = TRUE, cautiousMode = TRUE,
+        #       stats = FALSE, 
+        #       parlower = parlower, parupper = parupper)
+      })
     },
     jobname = jobnm, 
     partition = "single", cores = 16, nodes = 1, walltime = "12:00:00",
@@ -1157,8 +1290,8 @@ pd_cluster_L1_fitUnbiasedKNECHT <- function(pd, .outputFolder, n_startsPerNode =
         
         # [ ] "current" from FLAGincludeCurrent should be the L1 fit rather than the global fit...
         center <- dMod::msParframe(pd$pars, n = n_startsPerNode, seed = node, sd = 1)
-          # pepy_sample_parameter_startpoints(pd$pe, n_starts = n_startsPerNode, seed = node, 
-          #                                           FLAGincludeCurrent = TRUE)
+        # pepy_sample_parameter_startpoints(pd$pe, n_starts = n_startsPerNode, seed = node, 
+        #                                           FLAGincludeCurrent = TRUE)
         parlower <- petab_getParameterBoundaries(pd$pe, "lower")
         parupper <- petab_getParameterBoundaries(pd$pe, "upper")
         
@@ -1168,13 +1301,13 @@ pd_cluster_L1_fitUnbiasedKNECHT <- function(pd, .outputFolder, n_startsPerNode =
         parupper <- parupper[setdiff(names(parupper), names(pd$fixed))]
         
         fit <- mstrust(objfun = pd$obj, center = center, studyname = paste0("fit", node),
-                fixed = pd$fixed,
-                rinit = 0.1, rmax = 10, cores = 16,
-                iterlim = 500, 
-                optmethod = "trust", 
-                output = TRUE, cautiousMode = TRUE,
-                stats = FALSE, 
-                parlower = parlower, parupper = parupper)
+                       fixed = pd$fixed,
+                       rinit = 0.1, rmax = 10, cores = 16,
+                       iterlim = 500, 
+                       optmethod = "trust", 
+                       output = TRUE, cautiousMode = TRUE,
+                       stats = FALSE, 
+                       parlower = parlower, parupper = parupper)
         saveRDS(cf_as.parframe(fit), paste0("fit_", node, ".rds"))
       }
     },
