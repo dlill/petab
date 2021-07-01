@@ -2081,6 +2081,12 @@ pd_debug_p0 <- function(pd, ID = 1) {
   dummy <- make_pars(pars, fixed, est.grid, fix.grid, ID)
   pars_ <- dummy$pars
   fixed_ <- dummy$fixed
+  
+  conveniencefunctions::compare(getParameters(pd$dModAtoms$fns$p0), c(names(pars_), names(fixed_)))
+  
+  print(pars_)
+  print(fixed_)
+  
   pd$dModAtoms$fns$p0(pars_, fixed = fixed_)
 }
 
