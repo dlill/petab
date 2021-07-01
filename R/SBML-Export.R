@@ -591,6 +591,9 @@ sbml_exportEquationList <- function(equationList,
                                     speciesInfo     = getSpeciesInfo(equationList),
                                     parInfo         = getParInfo(equationList),
                                     compartmentInfo = getCompartmentInfo(equationList)) {
+  
+  cat("Implement with https://simplesbml.readthedocs.io/en/latest/")
+  
   # Load libSBML
   library(libSBML)
   

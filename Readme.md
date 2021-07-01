@@ -15,6 +15,7 @@
 
 ```
 if (Sys.info()["sysname"] == "Windows") {
+  options(download.file.method = "wininet")
   devtools::install_url("https://sourceforge.net/projects/sbml/files/libsbml/5.18.0/stable/Windows/R%20interface/libSBML_5.18.0.zip")
 } else {
   devtools::install_url("https://sourceforge.net/projects/sbml/files/libsbml/5.18.0/stable/R%20interface/libSBML_5.18.0.tar.gz")

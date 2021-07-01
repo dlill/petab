@@ -999,14 +999,12 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
   # Start mstrust job
   file.copy(file.path(pd$filenameParts$.currentFolder, pd$filenameParts$.compiledFolder, "/"), ".", recursive = TRUE)
   
-  
-  
   job <- dMod::distributed_computing(
     {
       loadDLL(pd$obj_data);
       
-      # node <- as.numeric(Sys.getenv('SLURM_ARRAY_TASK_ID')) + 1
-      node <- var_1
+      node <- as.numeric(Sys.getenv('SLURM_ARRAY_TASK_ID')) + 1
+      # node <- var_1
       
       # Determine fixed pars and fix them
       fixed_L1 <- L1_getModelCandidates(pd$result$L1)
@@ -1015,7 +1013,7 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
       parametersFixed <- names(parametersFixed)[parametersFixed]
       
       fit_par <- pd$pars[setdiff(names(pd$pars), parametersFixed)]
-      fit_fix <- c(pd$fixed, pd$pars[parametersFixed])
+      fit_fix <- c(pd$fixed, pd$pars[parametersFixed] * 0)
       
       pd$pars <- fit_par
       pd$fixed <- fit_fix
@@ -1031,11 +1029,11 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
       parupper <- petab_getParameterBoundaries(pd$pe, "upper")
       
       # only take free paramters
-      center <- center[,setdiff(names(center)     , names(pd$fixed))]
+      center <- center[,setdiff(names(center)     , names(pd$fixed))] # redundant, is alredy taken care of by pepy_sample_parameter_startpoints. actually this implementation is not clean, as it does not take pd but pe as input, but uses pd
       parlower <- parlower[setdiff(names(parlower), names(pd$fixed))]
       parupper <- parupper[setdiff(names(parupper), names(pd$fixed))]
       
-      mstrust(objfun = pd$obj, center = center, studyname = paste0("fit", node),
+      fit <- mstrust(objfun = pd$obj, center = center, studyname = paste0("fit", node),
               fixed = pd$fixed,
               rinit = 0.1, rmax = 10, cores = 16,
               iterlim = 500, 
@@ -1043,6 +1041,7 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
               output = TRUE, cautiousMode = TRUE,
               stats = FALSE, 
               parlower = parlower, parupper = parupper)
+      try(conveniencefunctions::cf_as.parframe(fit))
     },
     jobname = jobnm, 
     partition = "single", cores = 16, nodes = 1, walltime = "12:00:00",
@@ -1064,12 +1063,8 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
     if (job$check()) {
       Sys.sleep(5) # avoid being blocked
       job$get()
-      parfs <- lapply(cluster_result, cf_as.parframe)
+      parfs <- cluster_result
       lapply(seq_along(parfs), function(idx) dMod_saveMstrust(parfs[[idx]], .outputFolder, paste0(identifier, idx)))
-      
-      conveniencefunctions::dMod_saveMstrust(fit = fits, path = .outputFolder, 
-                                             identifier = identifier, FLAGoverwrite = TRUE)
-      
       return("Job done. You can check out the results by running `readPd` which will load the fit into pd$result$fits. Re-run this function once more to purge the job.")
     }
   }
@@ -1148,7 +1143,7 @@ pd_cluster_L1_fitUnbiasedEachOnce <- function(pd, .outputFolder, n_startsPerNode
         parametersFixed <- names(parametersFixed)[parametersFixed]
         
         fit_par <- pd$pars[setdiff(names(pd$pars), parametersFixed)]
-        fit_fix <- c(pd$fixed, pd$pars[parametersFixed])
+        fit_fix <- c(pd$fixed, pd$pars[parametersFixed] * 0)
         
         pd$pars <- fit_par
         pd$fixed <- fit_fix
@@ -1699,7 +1694,7 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
                                aeslist = petab_plotHelpers_aeslist(),
                                ggCallback = list(facet_wrap_paginate(~observableId, nrow = 4, ncol = 4, scales = "free"),
                                                  scale_y_continuous(n.breaks = 5)),
-                               opt.sim = list(Ntimes_gt5ParSetIds = 60),
+                               opt.sim = list(Ntimes_gt5ParSetIds = 60, predtimes = NULL),
                                opt.gg = list(ribbonAlpha = 0.2), # would be nice to put this into opt.profile or maybe opt.gg?
                                filename = NULL, FLAGfuture = TRUE,
                                width = 29.7, height = 21, scale = 1, units = "cm",
@@ -1722,7 +1717,7 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
   # .. Prediction -----
   parf <- pd_parf_collect(pd, opt.base = opt.base, opt.mstrust = opt.mstrust, opt.profile = opt.profile, opt.L1 = opt.L1)
   if (nrow(parf) > 5) {
-    pd$times <- pd_predtimes(pd, N = min(60, opt.sim$Ntimes_gt5ParSetIds)) # hack hack hack make consistent with opt.sim$predtimes
+    pd$times <- pd_predtimes(pd, N = opt.sim$Ntimes_gt5ParSetIds)
     if (!opt.profile$include) cat("Predicting for more than 5 parameter sets. Are you sure?")
   }
   if (!is.null(opt.sim$predtimes)) pd$times <- opt.sim$predtimes
