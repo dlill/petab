@@ -19,7 +19,7 @@ pd_predictAndPlot2(
   aeslist = petab_plotHelpers_aeslist(),
   ggCallback = list(facet_wrap_paginate(~observableId, nrow = 4, ncol = 4, scales =
     "free"), scale_y_continuous(n.breaks = 5)),
-  opt.sim = list(Ntimes_gt5ParSetIds = 60),
+  opt.sim = list(Ntimes_gt5ParSetIds = 60, predtimes = NULL),
   opt.gg = list(ribbonAlpha = 0.2),
   filename = NULL,
   FLAGfuture = TRUE,

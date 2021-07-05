@@ -2131,6 +2131,11 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   pars <- setNames(parsEst$estValue, parsEst$parameterId)
   pars <- pars[setdiff(names(pars), names(trafoInjected))]
   
+  times <- c(
+    pe$measurementData$time,
+    pe$meta$presimTimes
+  )
+  
   # .. Collect final list -----
   pd <- list(
     # petab
@@ -2149,7 +2154,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
     filenameParts = filenameParts,
     # Parameters + Time
     pars               = pars,
-    times              = predtimes(pe$measurementData$time, Nobjtimes = 200)
+    times              = predtimes(times, Nobjtimes = 200)
   )
   # High level prediction function
   pd <- pdIndiv_rebuildPrdObj(pd = pd,Nobjtimes = 100)

@@ -22,8 +22,15 @@ Mainly for plotting, e.g. such that mean-lines start at zero
 \seealso{
 Other plotData: 
 \code{\link{petab_plotData}()}
+
+Other measurementData: 
+\code{\link{petab_applyInverseObservableTransformation}()},
+\code{\link{petab_applyObservableTransformation}()},
+\code{\link{petab_fixErrorModel}()},
+\code{\link{petab_measurementData}()}
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }
+\concept{measurementData}
 \concept{plotData}

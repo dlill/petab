@@ -24,6 +24,14 @@ petab_measurementData(
 \description{
 Constructor for Measurements
 }
+\seealso{
+Other measurementData: 
+\code{\link{petab_applyInverseObservableTransformation}()},
+\code{\link{petab_applyObservableTransformation}()},
+\code{\link{petab_duplicateControls}()},
+\code{\link{petab_fixErrorModel}()}
+}
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }
+\concept{measurementData}

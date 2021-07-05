@@ -330,6 +330,8 @@ petab_experimentalCondition <- function(
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @export
+#' @family measurementData
+#' 
 petab_measurementData <- function(
   observableId,
   simulationConditionId,
@@ -1616,6 +1618,7 @@ petab_parameters_mergeParameters <- function(pe_pa1, pe_pa2, mergeCols = setdiff
 #' @md
 #'
 #' @family plotData
+#' @family measurementData
 #'
 #' @importFrom data.table rbindlist setnames
 #'
@@ -1645,6 +1648,74 @@ petab_duplicateControls <- function(pe, i, conditionMapping, FLAGDuplicatesFirst
   }
   pe
 }
+
+
+#' Title
+#'
+#' @param pe 
+#'
+#' @return pe
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family measurementData
+#'
+#' @examples
+petab_applyObservableTransformation <- function(pe) {
+  dco <- petab_joinDCO(pe)
+  dco[,`:=`(measurement = eval(parse(text = paste0(observableTransformation, "(measurement)"))))]
+  petab_unjoinDCO(dco, pe)
+}
+
+#' Title
+#'
+#' @param pe 
+#'
+#' @return pe
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family measurementData
+#' 
+#' @examples
+petab_applyInverseObservableTransformation <- function(pe) {
+  dco <- petab_joinDCO(pe)
+  dco[observableTransformation == "log10",`:=`(measurement = eval(parse(text = paste0("10^(measurement)"))))]
+  dco[observableTransformation == "log",`:=`(measurement = eval(parse(text = paste0("exp(measurement)"))))]
+  petab_unjoinDCO(dco, pe)
+}
+
+#' Replace error parameters in measurementData by sensible estimates
+#' 
+#' 1. Calculates sd per time, observableId and conditionId. 
+#' 2. Then the mean of these sd's is taken per observableId
+#' 
+#' All calculations are done on the est-scale of each observable
+#' 
+#' Assumes constant error model (per observable)
+#' 
+#' @param pe 
+#'
+#' @return pe
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family measurementData
+#'
+#' @examples
+petab_fixErrorModel <- function(pe) {
+  pe <- petab_applyObservableTransformation(pe)
+  pe_me <- pe$measurementData
+  pe_me[!grepl(";", noiseParameters)&suppressWarnings(is.na(as.numeric(noiseParameters))),
+        `:=`(noiseParameters = sd(measurement)), by = c("time", "observableId", "conditionId")]
+  pe_me[!grepl(";", noiseParameters)&suppressWarnings(is.na(as.numeric(noiseParameters))),
+        `:=`(noiseParameters = mean(noiseParameters)), by = c("observableId")]
+  pe$measurementData <- pe_me
+  petab_applyInverseObservableTransformation(pe)
+}
+
+
+
 
 # -------------------------------------------------------------------------#
 # Scales ----

@@ -172,7 +172,8 @@ pdIndiv_rebuildPrdObj <- function(pd, Nobjtimes = 100) {
   prd <- PRD_indiv(prd0, pd$dModAtoms$gridlist$est.grid, pd$dModAtoms$gridlist$fix.grid)
   
   # Rebuild obj_data
-  tobj <- if (!is.null(pd$objfns$obj_data)) dMod::controls(pd$objfns$obj_data, name = "times") else dMod::objtimes(pd$pe$measurementData$time, Nobjtimes = Nobjtimes)
+  times <- c(pd$pe$measurementData$time, pd$pe$meta$presimTimes)
+  tobj <- if (!is.null(pd$objfns$obj_data)) dMod::controls(pd$objfns$obj_data, name = "times") else dMod::objtimes(times, Nobjtimes = Nobjtimes)
   obj_data <- normL2_indiv(pd$dModAtoms$data, prd0,
                            pd$dModAtoms$e,
                            est.grid = pd$dModAtoms$gridlist$est.grid,
@@ -434,7 +435,7 @@ pd_parf_collect <- function(pd,
                             opt.base =    pd_parf_opt.base(   include = TRUE , parameterSetId = "Base"),
                             opt.mstrust = pd_parf_opt.mstrust(include = TRUE , fitrankRange = 1:20, tol = 1),
                             opt.profile = pd_parf_opt.profile(include = FALSE, rows = "profile_endpoints", parameters = NULL),
-                            opt.L1 =      pd_parf_opt.L1(     include = FALSE, rows = seq_len(nrow(pd$result$L1)))
+                            opt.L1 =      pd_parf_opt.L1(     include = FALSE, rows = seq_len(as.numeric(nrow(pd$result$L1))))
 ) {
   
   parf_base <- parf_fit <- parf_profile <- parf_L1 <- NULL
@@ -447,7 +448,7 @@ pd_parf_collect <- function(pd,
     args <- c(list(pd = pd), opt.mstrust[setdiff(names(opt.mstrust), "include")])
     parf_fit <- do.call(pd_parf_collectMstrust, args)}
   
-  if (opt.profile$include) {
+  if (opt.profile$include && !is.null(pd$result$L1)) {
     args <- c(list(pd = pd), opt.profile[setdiff(names(opt.profile), "include")])
     parf_profile <- do.call(pd_parf_collectProfile, args)}
   
@@ -2082,9 +2083,16 @@ pd_debug_p0 <- function(pd, ID = 1) {
   pars_ <- dummy$pars
   fixed_ <- dummy$fixed
   
+  cat("------------ Compare parameters ------------------------------------","\n",
+      "x = pd$dModAtoms$fns$p0)", "\n", "y = c(names(pars_), names(fixed_))","\n",
+      "setdiff(x,y) are MISSING in parameters\n"
+      )
   conveniencefunctions::compare(getParameters(pd$dModAtoms$fns$p0), c(names(pars_), names(fixed_)))
   
+  cat("------------ Parameter values ------------------------------------","\n")
+  cat("------------ pars_ -------------","\n")
   print(pars_)
+  cat("------------ fixed_ -------------","\n")
   print(fixed_)
   
   pd$dModAtoms$fns$p0(pars_, fixed = fixed_)

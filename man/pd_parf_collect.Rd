@@ -10,7 +10,8 @@ pd_parf_collect(
   opt.mstrust = pd_parf_opt.mstrust(include = TRUE, fitrankRange = 1:20, tol = 1),
   opt.profile = pd_parf_opt.profile(include = FALSE, rows = "profile_endpoints",
     parameters = NULL),
-  opt.L1 = pd_parf_opt.L1(include = FALSE, rows = seq_len(nrow(pd$result$L1)))
+  opt.L1 = pd_parf_opt.L1(include = FALSE, rows =
+    seq_len(as.numeric(nrow(pd$result$L1))))
 )
 }
 \arguments{
