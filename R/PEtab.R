@@ -557,8 +557,6 @@ petab <- function(
     ...
   )
   
-  petab_lint(petab)
-  
   petab
 }
 
@@ -666,7 +664,9 @@ readPetab <- function(filename, FLAGTestCase = FALSE) {
   files_model <- grep("rds", files, value = TRUE)
   files_model <- lapply(files_model, readRDS)
   
-  do.call(petab, c(files_model, files_tsv))
+  pe <- do.call(petab, c(files_model, files_tsv))
+  petab_lint(pe)
+  pe
 }
 
 #' Title
@@ -683,8 +683,9 @@ readPetab <- function(filename, FLAGTestCase = FALSE) {
 #' @examples
 writePetab <- function(pe, filename = "petab/model") {
   
-  # run linter once more
-  pe <- do.call(petab, pe)
+  # run linter
+  petab_lint(petab)
+  
   
   # Create folder, load petab
   dir.create(petab_modelname_path(filename)$path, FALSE, TRUE)
@@ -1707,7 +1708,7 @@ petab_fixErrorModel <- function(pe) {
   pe <- petab_applyObservableTransformation(pe)
   pe_me <- pe$measurementData
   pe_me[!grepl(";", noiseParameters)&suppressWarnings(is.na(as.numeric(noiseParameters))),
-        `:=`(noiseParameters = sd(measurement)), by = c("time", "observableId", "conditionId")]
+        `:=`(noiseParameters = sd(measurement)), by = c("time", "observableId", "simulationConditionId")]
   pe_me[!grepl(";", noiseParameters)&suppressWarnings(is.na(as.numeric(noiseParameters))),
         `:=`(noiseParameters = mean(noiseParameters)), by = c("observableId")]
   pe$measurementData <- pe_me
