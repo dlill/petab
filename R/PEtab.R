@@ -186,16 +186,17 @@ petab_joinDCO <- function(pe, FLAGincludeMetaInformation = TRUE) {
   
   if (FLAGincludeMetaInformation & !is.null(pe$meta$metaInformation)) {
     # Add units
-    units <- pe$meta$metaInformation$units
-    names(units) <- paste0("unit_", names(units))
-    dco <- data.table(dco, as.data.table(units))
+    # units <- pe$meta$metaInformation$units
+    # names(units) <- paste0("unit_", names(units))
+    # dco <- data.table(dco, as.data.table(units))
     
     # Expand petab_columns
     pc <- pe$meta$metaInformation$petab_columns
     for (nm in names(pc)) {
       varnames <- strsplit(pc[[nm]], "_")[[1]]
       keep <- which(!varnames %in% names(dco)) # don't overwrite existing columns
-      dco[,(varnames[keep]):=(eval(parse(text = paste0('tstrsplit(',nm,', "_", keep = keep)'))))]
+      if (length(keep)) 
+        dco[,(varnames[keep]):=(eval(parse(text = paste0('tstrsplit(',nm,', "_", keep = keep)'))))]
     }
   }
   dco
@@ -696,6 +697,7 @@ readPetab <- function(filename, FLAGTestCase = FALSE) {
 #' @md
 #' @export
 #' @importFrom data.table fwrite
+#' @importFrom yaml write_yaml
 #'
 #' @examples
 writePetab <- function(pe, filename = "petab/model") {
@@ -1352,12 +1354,13 @@ petab_plotData <- function(petab,
 #'
 #' @param pe [petab()] object
 #' @param Ntruncate truncate pasted observables at this many characters
-#' @param ...
+#' @param ... arguments going to [conveniencefunctions::cfoutput_MdTable()]
 #'
-#' @return
+#' @return prints table to console or writes it to disk
+#' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
-#' @export
+#' @family Overview Tables
 #' @importFrom conveniencefunctions cfoutput_MdTable
 petab_overviewObsPerCond <- function(pe, Ntruncate = 1000, ...) {
   dx <- petab_joinDCO(pe)
@@ -1366,6 +1369,29 @@ petab_overviewObsPerCond <- function(pe, Ntruncate = 1000, ...) {
            by = c("conditionId", "conditionName")]
   dx <- dx[,`:=`(observableId = substr(observableId, 1, Ntruncate))]
   conveniencefunctions::cfoutput_MdTable(dx, ...)
+}
+
+
+#' Print available names in the DCO
+#'
+#' @param pe 
+#'
+#' @return prints list of available columns
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family Overview Tables
+#'
+#' @examples
+petab_overviewDCONames <- function(pe) {
+  columns <- petab_columns(pe)
+  columns$parameters <- NULL
+  
+  metaNames <- names(petab_joinDCO(pe))
+  metaNames <- setdiff(metaNames, do.call(c, columns))
+  columns$metaInformation <- metaNames
+  
+  print(columns)
 }
 
 # -------------------------------------------------------------------------#

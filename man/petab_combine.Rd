@@ -2,7 +2,7 @@
 % Please edit documentation in R/PEtab.R
 \name{petab_combine}
 \alias{petab_combine}
-\title{Title}
+\title{Combine two petabs}
 \usage{
 petab_combine(
   pe1,
@@ -11,13 +11,18 @@ petab_combine(
 )
 }
 \arguments{
+\item{pe1, pe2}{petabs}
+
 \item{NFLAGconflict}{one of c("stop" = 0, "use_pe1" = 1, "use_pe2" = 2)}
 }
 \value{
-
+pe
 }
 \description{
-Title
+\itemize{
+\item Row-bind the relevant tables
+\item If conflicts occur, inform user about it (e.g. different column names in experimentalCondition)
+}
 }
 \seealso{
 Other Combine petabs: 
@@ -25,5 +30,8 @@ Other Combine petabs:
 \code{\link{petab_combine_measurementData}()},
 \code{\link{petab_combine_observables}()},
 \code{\link{petab_combine_parameters}()}
+}
+\author{
+Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }
 \concept{Combine petabs}

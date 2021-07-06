@@ -11,14 +11,19 @@ petab_overviewObsPerCond(pe, Ntruncate = 1000, ...)
 
 \item{Ntruncate}{truncate pasted observables at this many characters}
 
-\item{...}{}
+\item{...}{arguments going to \code{\link[conveniencefunctions:cfoutput_MdTable]{conveniencefunctions::cfoutput_MdTable()}}}
 }
 \value{
-
+prints table to console or writes it to disk
 }
 \description{
 Generate overview table which observables are in which condition
 }
+\seealso{
+Other Overview Tables: 
+\code{\link{petab_overviewDCONames}()}
+}
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }
+\concept{Overview Tables}

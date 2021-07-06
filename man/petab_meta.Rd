@@ -4,7 +4,12 @@
 \alias{petab_meta}
 \title{Additional Information}
 \usage{
-petab_meta(parameterFormulaInjection = NULL, variableOrder = NULL, ...)
+petab_meta(
+  parameterFormulaInjection = NULL,
+  variableOrder = NULL,
+  metaInformation = NULL,
+  ...
+)
 }
 \arguments{
 \item{parameterFormulaInjection}{data.table(parameterId, parameterFormula)}
@@ -12,6 +17,8 @@ petab_meta(parameterFormulaInjection = NULL, variableOrder = NULL, ...)
 \item{variableOrder}{vector of stateIds and observableIds in the order which you want for plotting}
 
 \item{...}{}
+
+\item{yaml}{hierarchichal list, stored in a yaml-file}
 }
 \value{
 named list of supplied arguments

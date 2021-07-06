@@ -11,11 +11,7 @@ pd_plot_compareParameters(
   ncol = 3,
   scales = "free",
   page = 1,
-  filename = NULL,
-  width = 29.7,
-  height = 21,
-  scale = 1,
-  units = "cm"
+  ...
 )
 }
 \arguments{

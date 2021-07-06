@@ -6,17 +6,13 @@
 \usage{
 petab_plotData(
   petab,
+  i,
+  j,
   aeslist = NULL,
   FLAGUseObservableTransformation = TRUE,
   FLAGmeanLine = TRUE,
   ggCallback = list(facet_wrap_paginate(~observableId, nrow = 4, ncol = 4, scales =
     "free")),
-  filename = NULL,
-  FLAGfuture = TRUE,
-  width = 29.7,
-  height = 21,
-  scale = 1,
-  units = "cm",
   ...
 )
 }
@@ -31,9 +27,9 @@ Can be overriden by aeslist}
 
 \item{ggCallback}{additional stuff to add to the ggplot, such as a call to \code{\link[ggplot2:labs]{ggplot2::labs()}} or scales}
 
-\item{filename, width, height, scale, units, ...}{see \code{\link[ggplot2:ggsave]{ggplot2::ggsave()}}}
-
 \item{FLAGfuture}{export asynchronously with the future package}
+
+\item{filename, width, height, scale, units, ...}{see \code{\link[ggplot2:ggsave]{ggplot2::ggsave()}}}
 }
 \value{
 ggplot

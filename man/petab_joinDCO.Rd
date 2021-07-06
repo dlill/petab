@@ -4,7 +4,7 @@
 \alias{petab_joinDCO}
 \title{Create one big table containing measurementData, observables and experimentalCondition}
 \usage{
-petab_joinDCO(pe)
+petab_joinDCO(pe, FLAGincludeMetaInformation = TRUE)
 }
 \arguments{
 \item{petab}{\link{petab}}
