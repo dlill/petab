@@ -1969,13 +1969,8 @@ pe_L1_createL1Problem <- function(pe, parameterId_base, conditionSpecL1_referenc
 # Todolist/Wishlist ----
 # -------------------------------------------------------------------------#
 
-# [ ] petab_meta = list(meta_measurementData, meta_observables,
-#                       meta_experimentalConditions, meta_parameters)
-#   * Tables contain e.g. units, other annotations etc
-#   * Could be used for programming on the DCO,
-#     e.g. with meta_measurementData$cellline, it's easy to parameterize by cell line
 # [ ] sbml - getSpeciesInfo: speciesUnit
 # [ ] sbml - initialAssignments
 # [ ] sbml - assignmentRules
-
+# [ ] sbml - events
 

@@ -22,7 +22,8 @@ Imports:
   reticulate,
   cOde,
   tools,
-  stringr
+  stringr,
+  yaml
 Suggests: 
     testthat,
     covr
