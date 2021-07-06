@@ -765,9 +765,9 @@ pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_node
   FLAGjobDone    <- file.exists(fileJobDone)
   FLAGjobPurged  <- file.exists(fileJobPurged)
   FLAGjobRecover <- file.exists(fileJobRecover) | FLAGjobDone | FLAGjobPurged
-  if (!FLAGjobPurged) conveniencefunctions::check_clusterTimeStamp()
   
   cat(clusterStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
+  if (!FLAGjobPurged) conveniencefunctions::check_clusterTimeStamp()
   
   # Assign Global variables: Important, in future, this might be a source of bugs, if other cluster-functions are written
   assign("n_startsPerNode",n_startsPerNode,.GlobalEnv)

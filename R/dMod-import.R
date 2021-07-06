@@ -2166,8 +2166,9 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   
   if (grepl(SFLAGbrowser, "7evaluateObj")) browser()
   # Try to evaluate obj for first time
-  cat("Evaluating obj\n")
+  cat("Evaluating obj ... ")
   value_base <- tryCatch(pd$obj(pd$pars)$value, error = function(x) NA)
+  cat("objective value: ", value_base, "\n")
   parf_base <- dMod::as.parframe(structure(list(list(value = value_base, index = 1, converged = FALSE, iterations = 1, argument = pd$pars)), class = c("parlist", "list")))
   conveniencefunctions::dMod_saveMstrust(parf_base, dirname(dirname(rdsfile)), identifier = "base", FLAGoverwrite = TRUE)
   

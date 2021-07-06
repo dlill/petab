@@ -748,7 +748,7 @@ writePetab <- function(pe, filename = "petab/model") {
   # Write model+meta rds
   if (!is.null(pe$meta$metaInformation)) {
     # Ugly first bit: write metaInformation separately as yaml
-    yaml::write_yaml(pe$meta$metaInformation, files["metaInformation"])
+    yaml::write_yaml(pe$meta$metaInformation, petab_files(filename = filename)["metaInformation"])
     pe$meta$metaInformation <- NULL
   }
   files_model <- grep("rds", files, value = TRUE)
@@ -1778,7 +1778,7 @@ petab_fixErrorModel <- function(pe) {
   pe_me <- pe$measurementData
   idx <- !grepl(";",pe_me$noiseParameters)&suppressWarnings(is.na(as.numeric(pe_me$noiseParameters)))
   pe_me[idx,`:=`(noiseParameters = sd(measurement)), by = c("time", "observableId", "simulationConditionId")]
-  pe_me[idx,`:=`(noiseParameters = as.character(mean(as.numeric(noiseParameters)))), by = c("observableId")]
+  pe_me[idx,`:=`(noiseParameters = as.character(mean(as.numeric(noiseParameters), na.rm = TRUE))), by = c("observableId")]
   pe$measurementData <- pe_me
   petab_applyInverseObservableTransformation(pe)
 }
