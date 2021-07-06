@@ -175,7 +175,7 @@ petab_columns <- function(pe = NULL) {
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @export
-petab_joinDCO <- function(pe) {
+petab_joinDCO <- function(pe, FLAGincludeMetaInformation = TRUE) {
   if (length(pe$measurementData$preequilibrationConditionId) &&
       any(!is.na(pe$preequilibrationConditionId)))
     warning("DCO might not be able to handle preequilibrationConditionId")
@@ -184,8 +184,20 @@ petab_joinDCO <- function(pe) {
   dco <- pe$experimentalCondition[dco, on = c("conditionId" = "simulationConditionId")]
   dco <- pe$observables[dco, on = c("observableId")]
   
-  
-  
+  if (FLAGincludeMetaInformation & !is.null(pe$meta$metaInformation)) {
+    # Add units
+    units <- pe$meta$metaInformation$units
+    names(units) <- paste0("unit_", names(units))
+    dco <- data.table(dco, as.data.table(units))
+    
+    # Expand petab_columns
+    pc <- pe$meta$metaInformation$petab_columns
+    for (nm in names(pc)) {
+      varnames <- strsplit(pc[[nm]], "_")[[1]]
+      keep <- which(!varnames %in% names(dco)) # don't overwrite existing columns
+      dco[,(varnames[keep]):=(eval(parse(text = paste0('tstrsplit(',nm,', "_", keep = keep)'))))]
+    }
+  }
   dco
 }
 
@@ -276,10 +288,6 @@ petab_mutateDCO <- function(pe, i, j) {
   pe_out <- petab_unjoinDCO(dco, pe)
   pe_out
 }
-
-
-
-
 
 
 # -------------------------------------------------------------------------#
