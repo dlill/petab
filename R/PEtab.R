@@ -153,8 +153,17 @@ petab_dput <- function(pe, variable) {
 #' @examples
 petab_columns <- function(pe = NULL) {
   
-  if(!is.null(pe))
-    return(lapply(pe[c("experimentalCondition","measurementData","observables","parameters")], names))
+  if(!is.null(pe)) {
+    pc <- lapply(pe[c("experimentalCondition","measurementData","observables","parameters")], names)
+    
+    metaInformation <- pe$meta$metaInformation$petab_columns
+    metaInformation <- lapply(metaInformation, function(mi) strsplit(mi, "_")[[1]])
+    metaInformation <- do.call(c, metaInformation)
+    metaInformation <- unname(metaInformation)
+    pc <- c(pc, list(metaInformation = metaInformation))
+    
+    return(pc)
+  }
   
   m <- c("observableId","simulationConditionId","measurement","time","observableParameters","noiseParameters","datasetId","replicateId","preequilibrationConditionId")
   o <- c("observableId","observableName","observableFormula","observableTransformation","noiseFormula","noiseDistribution")
@@ -164,7 +173,8 @@ petab_columns <- function(pe = NULL) {
   list(experimentalCondition = e,
        measurementData = m,
        observables = o,
-       parameters = p)
+       parameters = p,
+       metaInformation = metaInformation)
 }
 
 #' Create one big table containing measurementData, observables and experimentalCondition
@@ -220,7 +230,7 @@ petab_unjoinDCO <- function(DCO, pe = NULL) {
   #   pass a petab to pe it should be able to get the names
   #   from that, but let's keep it for now.
   excols <- unique(c(intersect(names(DCO), pc$experimentalCondition),
-                     setdiff(names(DCO), c(pc$measurementData, pc$observables))))
+                     setdiff(names(DCO), c(pc$measurementData, pc$observables, pc$metaInformation))))
   experimentalCondition = do.call(petab_experimentalCondition, DCO[,..excols])
   experimentalCondition <- unique(experimentalCondition)
   
