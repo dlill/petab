@@ -435,7 +435,7 @@ pd_parf_collect <- function(pd,
                             opt.base =    pd_parf_opt.base(   include = TRUE , parameterSetId = "Base"),
                             opt.mstrust = pd_parf_opt.mstrust(include = TRUE , fitrankRange = 1:20, tol = 1),
                             opt.profile = pd_parf_opt.profile(include = FALSE, rows = "profile_endpoints", parameters = NULL),
-                            opt.L1 =      pd_parf_opt.L1(     include = FALSE, rows = seq_len(as.numeric(nrow(pd$result$L1))))
+                            opt.L1 =      pd_parf_opt.L1(     include = FALSE)
 ) {
   
   parf_base <- parf_fit <- parf_profile <- parf_L1 <- NULL
@@ -749,13 +749,12 @@ clusterStatusMessage <- function(FLAGjobDone, FLAGjobPurged, FLAGjobRecover) {
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family Cluster
-#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust
+#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust check_clusterTimeStamp
 #' @importFrom dMod distributed_computing
 #'
 #' @examples
 pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_nodes = 10, 
                                identifier = "mstrust", FLAGforcePurge = FALSE) {
-  
   # .. General job handling -----
   jobnm <- paste0("mstrust_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))
   
@@ -766,6 +765,7 @@ pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_node
   FLAGjobDone    <- file.exists(fileJobDone)
   FLAGjobPurged  <- file.exists(fileJobPurged)
   FLAGjobRecover <- file.exists(fileJobRecover) | FLAGjobDone | FLAGjobPurged
+  if (!FLAGjobPurged) conveniencefunctions::check_clusterTimeStamp()
   
   cat(clusterStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
   
@@ -858,13 +858,12 @@ pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_node
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family Cluster
-#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust cf_parf_metaNames0
+#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust cf_parf_metaNames0 check_clusterTimeStamp
 #' @importFrom dMod distributed_computing profile_pars_per_node
 #'
 #' @examples
 pd_cluster_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log10(0.0001), log10(100), length.out = n_nodes*16-1)), 
                           identifier = "L1", FLAGforcePurge = FALSE) {
-  
   # .. General job handling -----
   jobnm <- paste0("mstrust_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))
   
@@ -875,6 +874,7 @@ pd_cluster_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log1
   FLAGjobDone    <- file.exists(fileJobDone)
   FLAGjobPurged  <- file.exists(fileJobPurged)
   FLAGjobRecover <- file.exists(fileJobRecover) | FLAGjobDone | FLAGjobPurged
+  if (!FLAGjobPurged) conveniencefunctions::check_clusterTimeStamp()
   
   cat(clusterStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
   
@@ -968,13 +968,12 @@ pd_cluster_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log1
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family Cluster
-#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust
+#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust check_clusterTimeStamp
 #' @importFrom dMod distributed_computing
 #'
 #' @examples
 pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, 
                                                  identifier = "L1UB", FLAGforcePurge = FALSE) {
-  
   # .. General job handling -----
   jobnm <- paste0("L1UB_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))
   
@@ -985,6 +984,7 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
   FLAGjobDone    <- file.exists(fileJobDone)
   FLAGjobPurged  <- file.exists(fileJobPurged)
   FLAGjobRecover <- file.exists(fileJobRecover) | FLAGjobDone | FLAGjobPurged
+  if (!FLAGjobPurged) conveniencefunctions::check_clusterTimeStamp()
   
   cat(clusterStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
   
@@ -1094,7 +1094,7 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family Cluster
-#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust
+#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust check_clusterTimeStamp
 #' @importFrom dMod distributed_computing
 #'
 #' @examples
@@ -1111,6 +1111,7 @@ pd_cluster_L1_fitUnbiasedEachOnce <- function(pd, .outputFolder, n_startsPerNode
   FLAGjobDone    <- file.exists(fileJobDone)
   FLAGjobPurged  <- file.exists(fileJobPurged)
   FLAGjobRecover <- file.exists(fileJobRecover) | FLAGjobDone | FLAGjobPurged
+  if (!FLAGjobPurged) conveniencefunctions::check_clusterTimeStamp()
   
   cat(clusterStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
   
@@ -1236,7 +1237,7 @@ pd_cluster_L1_fitUnbiasedEachOnce <- function(pd, .outputFolder, n_startsPerNode
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family Cluster
-#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust
+#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust check_clusterTimeStamp
 #' @importFrom dMod distributed_computing
 #'
 #' @examples
@@ -1254,6 +1255,7 @@ pd_cluster_L1_fitUnbiasedKNECHT <- function(pd, .outputFolder, n_startsPerNode =
   FLAGjobDone    <- file.exists(fileJobDone)
   FLAGjobPurged  <- file.exists(fileJobPurged)
   FLAGjobRecover <- file.exists(fileJobRecover) | FLAGjobDone | FLAGjobPurged
+  if (!FLAGjobPurged) conveniencefunctions::check_clusterTimeStamp()
   
   cat(clusterStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
   
@@ -1810,7 +1812,7 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
 #' @examples
 pd_plot_compareParameters <- function(pd, parf,
                                       nrow = 1, ncol = 3, scales = "free", page = 1,
-                                      filename = NULL, width = 29.7, height = 21, scale = 1, units = "cm"
+                                      ...
 ) {
   parameters <- attr(parf, "parameters")
   p <- data.table(parf)
@@ -1825,8 +1827,7 @@ pd_plot_compareParameters <- function(pd, parf,
     conveniencefunctions::scale_color_cf(aesthetics = c("fill", "color")) +
     theme(axis.text.x = element_text(angle = 90))
   
-  cf_outputFigure(pl, filename = filename, width = width, height = height, scale = scale, units = units)
-  
+  cf_outputFigure(pl, ...)
 }
 
 #' Title

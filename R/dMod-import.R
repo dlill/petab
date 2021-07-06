@@ -2055,7 +2055,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
     if (length(check_pfiEstimated)) stop("These trafoInjected parameters are in est.grid: ", paste0(check_pfiEstimated, collapse = ", "))
     # Remove injected Parameter from est-trafo
     trafo <- trafo[setdiff(names(trafo), pfi$parameterId)]
-    gl$fix.grid[,(pfi$parameterId) := NULL,]
+    for (pid in intersect(names(gl$fix.grid), pfi$parameterId)) gl$fix.grid[,(pid) := NULL,]
     # trafoInjected
     trafoInjected <- setNames(pfi$parameterFormula, pfi$parameterId)
   }
@@ -2083,6 +2083,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
                     optionsSens = list(method = "lsodes", lrw=200000, rtol = 1e-7, atol = 1e-7))
     
     cat("Compiling errormodel\n")
+    myerr <- NULL
     if(length(cOde::getSymbols(myerrors)))
       myerr <- dMod::Y(myerrors, f = c(as.eqnvec(myreactions), myobservables), states = names(myobservables),
                        attach.input = FALSE, compile = TRUE, modelname = paste0("errfn_", modelname))

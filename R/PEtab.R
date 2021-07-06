@@ -152,11 +152,9 @@ petab_dput <- function(pe, variable) {
 #'
 #' @examples
 petab_columns <- function(pe = NULL) {
+  
   if(!is.null(pe))
-    return(lapply(pe[c("experimentalCondition",
-                       "measurementData",
-                       "observables",
-                       "parameters")], names))
+    return(lapply(pe[c("experimentalCondition","measurementData","observables","parameters")], names))
   
   m <- c("observableId","simulationConditionId","measurement","time","observableParameters","noiseParameters","datasetId","replicateId","preequilibrationConditionId")
   o <- c("observableId","observableName","observableFormula","observableTransformation","noiseFormula","noiseDistribution")
@@ -182,10 +180,13 @@ petab_joinDCO <- function(pe) {
       any(!is.na(pe$preequilibrationConditionId)))
     warning("DCO might not be able to handle preequilibrationConditionId")
   
-  dx <- copy(pe$measurementData)
-  dx <- pe$experimentalCondition[dx, on = c("conditionId" = "simulationConditionId")]
-  dx <- pe$observables[dx, on = c("observableId")]
-  dx
+  dco <- copy(pe$measurementData)
+  dco <- pe$experimentalCondition[dco, on = c("conditionId" = "simulationConditionId")]
+  dco <- pe$observables[dco, on = c("observableId")]
+  
+  
+  
+  dco
 }
 
 #' Unjoin DataConditonObs
@@ -468,14 +469,15 @@ petab_model <- function(equationList, events = NA,
 #'
 #' @param parameterFormulaInjection data.table(parameterId, parameterFormula)
 #' @param variableOrder vector of stateIds and observableIds in the order which you want for plotting
+#' @param yaml hierarchichal list, stored in a yaml-file
 #' @param ...
 #'
 #' @return named list of supplied arguments
 #' @export
 #'
 #' @examples
-petab_meta <- function(parameterFormulaInjection = NULL, variableOrder = NULL, ...) {
-  list(parameterFormulaInjection = parameterFormulaInjection, variableOrder = variableOrder, ...)
+petab_meta <- function(parameterFormulaInjection = NULL, variableOrder = NULL, metaInformation = NULL,...) {
+  list(parameterFormulaInjection = parameterFormulaInjection, variableOrder = variableOrder, metaInformation = metaInformation, ...)
 }
 
 
@@ -616,7 +618,9 @@ petab_files <- function(filename, FLAGTestCase = FALSE, FLAGreturnList = FALSE) 
       parameters                 = paste0("_parameters"                , ".tsv"),
       simulatedData              = paste0("_simulatedData"             , ".tsv"),
       visualizationSpecification = paste0("_visualizationSpecification", ".tsv"),
-      meta                       = paste0("_meta"                      , ".rds"))
+      meta                       = paste0("_meta"                      , ".rds"),
+      metaInformation            = paste0("_metaInformation"           , ".yaml")
+      )
   } else {
     out <- c(
       yaml                       = paste0(modelname, ".yaml"),
@@ -629,7 +633,9 @@ petab_files <- function(filename, FLAGTestCase = FALSE, FLAGreturnList = FALSE) 
       parameters                 = paste0("parameters_"                , modelname, ".tsv"),
       simulatedData              = paste0("simulatedData_"             , modelname, ".tsv"),
       visualizationSpecification = paste0("visualizationSpecification_", modelname, ".tsv"),
-      meta                       = paste0("meta_"                      , modelname, ".rds"))
+      meta                       = paste0("meta_"                      , modelname, ".rds"),
+      metaInformation            = paste0("metaInformation_"           , modelname, ".yaml")
+      )
   }
   nm <- names(out)
   out <- setNames(file.path(path, out), nm)
@@ -645,9 +651,10 @@ petab_files <- function(filename, FLAGTestCase = FALSE, FLAGreturnList = FALSE) 
 #' @param FLAGTestCase
 #'
 #' @return
+#' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
-#' @export
+#' @importFrom yaml read_yaml
 #' @importFrom data.table fread
 #'
 #' @examples
@@ -663,6 +670,8 @@ readPetab <- function(filename, FLAGTestCase = FALSE) {
   # model+meta
   files_model <- grep("rds", files, value = TRUE)
   files_model <- lapply(files_model, readRDS)
+  
+  if ("metaInformation" %in% names(files)) files_model$meta$metaInformation <- yaml::read_yaml(files["metaInformation"])
   
   pe <- do.call(petab, c(files_model, files_tsv))
   petab_lint(pe)
@@ -684,7 +693,7 @@ readPetab <- function(filename, FLAGTestCase = FALSE) {
 writePetab <- function(pe, filename = "petab/model") {
   
   # run linter
-  petab_lint(petab)
+  petab_lint(pe)
   
   
   # Create folder, load petab
@@ -717,6 +726,11 @@ writePetab <- function(pe, filename = "petab/model") {
       data.table::fwrite(pe[[nm]], files[[nm]], sep = "\t")})
   
   # Write model+meta rds
+  if (!is.null(pe$meta$metaInformation)) {
+    # Ugly first bit: write metaInformation separately as yaml
+    yaml::write_yaml(pe$meta$metaInformation, files["metaInformation"])
+    pe$meta$metaInformation <- NULL
+  }
   files_model <- grep("rds", files, value = TRUE)
   if (length(files_model))
     lapply(names(files_model), function(nm) {
@@ -851,14 +865,18 @@ petab_combine_parameters <- function(p1,p2) {
   data.table::rbindlist(list(p1,p2), use.names = TRUE)
 }
 
-#' Title
+#' Combine two petabs
+#' 
+#' * Row-bind the relevant tables
+#' * If conflicts occur, inform user about it (e.g. different column names in experimentalCondition)
 #'
-#' @param pe1
-#' @param pe2
+#' @param pe1,pe2 petabs
 #' @param NFLAGconflict one of c("stop" = 0, "use_pe1" = 1, "use_pe2" = 2)
 #'
-#' @return
+#' @return pe
 #' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
 #' @family Combine petabs
 #'
 #' @examples
@@ -871,7 +889,7 @@ petab_combine <- function(pe1,pe2, NFLAGconflict = c("stop" = 0, "use_pe1" = 1, 
     measurementData       = petab_combine_measurementData(      pe1$measurementData      , pe2$measurementData),
     observables           = petab_combine_observables(          pe1$observables          , pe2$observables, NFLAGconflict = NFLAGconflict),
     parameters            = petab_combine_parameters(           pe1$parameters           , pe2$parameters),
-    meta                  = pe1$meta
+    meta                  = list(pe1,pe2)[[NFLAGconflict]]$meta
   )
   
 }
@@ -1261,14 +1279,13 @@ petab_getMeasurementParsScales <- function(measurementData,parameters) {
 #' @md
 #' @export
 petab_plotData <- function(petab,
+                           i,j,
                            aeslist = NULL,
                            FLAGUseObservableTransformation = TRUE,
                            FLAGmeanLine = TRUE,
                            ggCallback = list(
                              facet_wrap_paginate(~observableId, nrow = 4, ncol = 4, scales = "free")),
-                           filename = NULL,
-                           FLAGfuture = TRUE,
-                           width = 29.7, height = 21, scale = 1, units = "cm", ...
+                           ...
 ) {
   
   # create plotting data.table
@@ -1280,6 +1297,14 @@ petab_plotData <- function(petab,
     ),
     by = 1:nrow(dplot)]
   }
+  
+  # Handle i and j
+  mi <- missing(i)
+  mj <- missing(j)
+  si <- substitute(i)
+  sj <- substitute(j)
+  if (!mi) {dplot <- dplot[eval(si)]}
+  if (!mj) {dplot[,eval(sj)]}
   
   # mean values to draw lines
   if (FLAGmeanLine){
@@ -1308,7 +1333,7 @@ petab_plotData <- function(petab,
   message("Plot has ", ggforce::n_pages(pl), " pages\n")
   
   # output
-  cf_outputFigure(pl = pl, filename = filename, width = width, height = height, scale = scale, units = units, FLAGFuture = FLAGfuture, ...)
+  cf_outputFigure(pl = pl, ...)
 }
 
 # -------------------------------------------------------------------------#
@@ -1707,10 +1732,9 @@ petab_applyInverseObservableTransformation <- function(pe) {
 petab_fixErrorModel <- function(pe) {
   pe <- petab_applyObservableTransformation(pe)
   pe_me <- pe$measurementData
-  pe_me[!grepl(";", noiseParameters)&suppressWarnings(is.na(as.numeric(noiseParameters))),
-        `:=`(noiseParameters = sd(measurement)), by = c("time", "observableId", "simulationConditionId")]
-  pe_me[!grepl(";", noiseParameters)&suppressWarnings(is.na(as.numeric(noiseParameters))),
-        `:=`(noiseParameters = mean(noiseParameters)), by = c("observableId")]
+  idx <- !grepl(";",pe_me$noiseParameters)&suppressWarnings(is.na(as.numeric(pe_me$noiseParameters)))
+  pe_me[idx,`:=`(noiseParameters = sd(measurement)), by = c("time", "observableId", "simulationConditionId")]
+  pe_me[idx,`:=`(noiseParameters = as.character(mean(as.numeric(noiseParameters)))), by = c("observableId")]
   pe$measurementData <- pe_me
   petab_applyInverseObservableTransformation(pe)
 }
