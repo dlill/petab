@@ -26,6 +26,7 @@ Other Cluster:
 \code{\link{pd_cluster_L1_fitUnbiasedKNECHT}()},
 \code{\link{pd_cluster_L1}()},
 \code{\link{pd_cluster_mstrust}()},
+\code{\link{pd_cluster_profile}()},
 \code{\link{readPd}()}
 }
 \author{

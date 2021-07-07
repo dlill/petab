@@ -15,3 +15,15 @@ petab_plotHelpers_variableOrder(pd)
 \description{
 Title
 }
+\seealso{
+Other plotting: 
+\code{\link{pd_plotParsParallelLines}()},
+\code{\link{pd_plotProfile}()},
+\code{\link{petab_plotHelpers_aeslist}()},
+\code{\link{petab_plotHelpers_meanMeasurementsValue}()},
+\code{\link{petab_plotHelpers_parameterOrder}()}
+}
+\author{
+Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+}
+\concept{plotting}

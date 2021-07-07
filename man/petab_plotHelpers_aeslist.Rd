@@ -24,3 +24,15 @@ petab_plotHelpers_aeslist(
 \description{
 Title
 }
+\seealso{
+Other plotting: 
+\code{\link{pd_plotParsParallelLines}()},
+\code{\link{pd_plotProfile}()},
+\code{\link{petab_plotHelpers_meanMeasurementsValue}()},
+\code{\link{petab_plotHelpers_parameterOrder}()},
+\code{\link{petab_plotHelpers_variableOrder}()}
+}
+\author{
+Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+}
+\concept{plotting}

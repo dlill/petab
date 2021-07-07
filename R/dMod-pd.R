@@ -260,6 +260,36 @@ pd_objtimes <- function(pd, N = 100) {
 }
 
 
+
+#' Determine which pars were not yet profiled
+#'
+#' @param pd 
+#' @param .outputFolder 
+#' @param FLAGreturnVector 
+#'
+#' @return either vector of p^arameters or output printed to console
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @importFrom conveniencefunctions dMod_files
+#'
+#' @examples
+pd_profile_getParsNotYetProfiled <- function(pd, .outputFolder, FLAGreturnVector = FALSE) {
+  prof_available <- list.files(dirname(conveniencefunctions::dMod_files(.outputFolder, identifier = "1")$profile))
+  prof_available <- gsub("^profiles-","" ,prof_available)
+  prof_available <- gsub(".rds$"     ,"" ,prof_available)
+  
+  profpars <- names(pd$pars)
+  profpars <- setdiff(profpars, prof_available)
+  if (FLAGreturnVector) {
+    return(profpars)
+  } else {
+    cat("profpars <- "); dput(profpars)
+    invisible()
+  }
+}
+
+
 # -------------------------------------------------------------------------#
 # Parameter handling ----
 # -------------------------------------------------------------------------#
@@ -497,11 +527,12 @@ pd_parf_opt.L1 <- function(include = FALSE, rows = NULL) {
 #' @examples
 pd_pars_getFixedOnBoundary <- function(pd, tol = 1e-2) {
   parlower <- petab_getParameterBoundaries(pd$pe, "lower")
-  if (!identical(names(parlower), names(pd$pars))) stop("parameter names and boundaries do not match")
+  parlower <- parlower[names(pd$pars)]
   parlower <- pd$pars - parlower
   parlower <- parlower[parlower <= tol]
   
   parupper <- petab_getParameterBoundaries(pd$pe, "upper")
+  parupper <- parupper[names(pd$pars)]
   parupper <- -(pd$pars - parupper)
   parupper <- parupper[parupper <= tol]
   
@@ -592,6 +623,7 @@ pd_fit <- function(pd, NFLAGsavePd = 1, iterlim = 1000, printIter = TRUE, traceF
   pd <- pd_updateEstPars(pd, parsEst = fit$argument, FLAGupdatePE = TRUE, FLAGsavePd = NFLAGsavePd > 0)
   pd
 }
+
 
 
 # fit_hierarchical -----
@@ -843,6 +875,116 @@ pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_node
     }
   }
 }
+
+
+#' Run profiles on cluster
+#'
+#' @param pd 
+#' @param .outputFolder 
+#' @param FLAGforcePurge 
+#' @param FLAGfixParsOnBoundary Fix parameters which went to the boundary. Don't fit and don't 
+#'   use for reoptimization. A bit heuristic, but [dMod::profile()] does not support boundaries. 
+#'   Therefore, if those parameters were not fixed, one potentially not start from the "optimum"
+#' @param profpars I suggest to use either 1. pd$pars or 2. hard code the result 
+#'   from [pd_profile_getParsNotYetProfiled()]
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family Cluster
+#' @importFrom dMod profile_pars_per_node
+#' @importFrom conveniencefunctions check_clusterTimeStamp
+#'
+#' @examples
+pd_cluster_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfixParsOnBoundary = TRUE, 
+                               profpars = names(pd$pars)) {
+  # Fix pars which went to boundary
+  if (FLAGfixParsOnBoundary){
+    fixed_boundary <- pd_pars_getFixedOnBoundary(pd, tol = 1e-2)
+    pd$fixed       <- c(pd$fixed, fixed_boundary)
+    pd$pars        <- pd$pars[setdiff(names(pd$pars), names(pd$fixed))]
+  }
+  
+  # .. Set up job -----
+  jobnm <- paste0("profile_", gsub("(S[0-9-]+-[0-9]+).*", "\\1", basename(.outputFolder)))
+  
+  var_list <- dMod::profile_pars_per_node(profpars, 16)
+  
+  fileJobDone   <- dMod_files(.outputFolder, profpars[1])$profile
+  fileJobPurged <- file.path(dirname(dMod_files(.outputFolder)$profile), ".jobPurged")
+  fileJobRecover <- file.path(paste0(jobnm, "_folder"), paste0(jobnm, ".R"))
+  
+  FLAGjobDone    <- file.exists(fileJobDone)
+  FLAGjobPurged  <- file.exists(fileJobPurged)
+  FLAGjobRecover <- file.exists(fileJobRecover) | FLAGjobDone | FLAGjobPurged
+  
+  cat(clusterStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
+  if (!FLAGjobPurged) conveniencefunctions::check_clusterTimeStamp()
+  
+  assign("profpars",profpars,.GlobalEnv)
+  assign("var_list",var_list,.GlobalEnv)
+  assign("jobnm",jobnm,.GlobalEnv)
+  file.copy(file.path(pd$filenameParts$.currentFolder, pd$filenameParts$.compiledFolder, "/"), ".", recursive = TRUE)
+  
+  job <- distributed_computing(
+    {
+      loadDLL(pd$obj);
+      whichPar <- profpars[(as.numeric(var_1):as.numeric(var_2))]
+      cf_profile(pd$obj, pd$pars, whichPar, verbose = TRUE,
+                 fixed = pd$fixed,
+                 method = "optimize",
+                 algoControl = list(gamma = 0.5, reoptimize = TRUE, correction = 0.5),
+                 stepControl = list(limit = 100, min = log10(1.005), stepsize = log10(1.005)),
+                 optControl = list(iterlim = 20),
+                 cautiousMode = TRUE,
+                 cores = 16,
+                 path = file.path("~", paste0(jobnm, "_folder")))
+    },
+    jobname = jobnm, 
+    partition = "single", cores = 16, nodes = 1, walltime = "12:00:00",
+    ssh_passwd = Sys.getenv("hurensohn"), machine = "cluster", 
+    var_values = var_list, no_rep = NULL, 
+    recover = FLAGjobRecover,
+    compile = F
+  )
+  unlink(list.files(".", "\\.o$|\\.so$|\\.c$|\\.rds$"))
+  
+  if (!FLAGjobRecover) return("Job submitted")
+  if (FLAGforcePurge) {
+    # bit ugly code duplication...
+    job$purge(purge_local = TRUE)
+    return("Job was purged")
+  }
+  
+  # Get results
+  if (!FLAGjobDone & !FLAGjobPurged) {
+    if (job$check()) {
+      job$get()
+      # Copy profiles
+      prof_files <- list.files(file.path(paste0(jobnm, "_folder"),  "results", "Results", "profile"),
+                               full.names = TRUE)
+      dir.create(dirname(dMod_files(.outputFolder)$profile), F,T)
+      for (pf in prof_files) file.copy(pf, file.path(.outputFolder, "Results", "profile"))
+      cat("run readPd() again to load the results into the pd")
+    }}
+  
+  # Purge job 
+  prof_done <- list.files(file.path(.outputFolder, "Results", "profile"))
+  prof_done <- gsub("^profiles-|.rds$","", prof_done)
+  
+  FLAGjobDone <- length(setdiff(profpars, prof_done)) == 0
+  if (FLAGjobDone && !FLAGjobPurged) {
+    if (readline("Purge job. Are you sure? Type yes: ") == "yes"){
+      job$purge(purge_local = TRUE)
+      cat("job purged\n")
+      writeLines("jobPurged", fileJobPurged)
+    }}
+  
+}
+
+
+
 
 #' Fit model on cluster
 #'
@@ -1896,6 +2038,9 @@ pd_plotParsParallelLines <- function(pd, stepMax = 3, filename = NULL, i, ggCall
 #'
 #' @return
 #' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family plotting
 #'
 #' @examples
 petab_plotHelpers_aeslist <- function(x = ~time,
@@ -1917,6 +2062,10 @@ petab_plotHelpers_aeslist <- function(x = ~time,
 #'
 #' @return
 #' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family plotting
+#' @importFrom cOde getSymbols
 #'
 #' @examples
 petab_plotHelpers_meanMeasurementsValue <- function(dplot, aeslist) {
@@ -1936,6 +2085,9 @@ petab_plotHelpers_meanMeasurementsValue <- function(dplot, aeslist) {
 #'
 #' @return
 #' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family plotting
 #'
 #' @examples
 petab_plotHelpers_variableOrder <- function(pd) {
@@ -1948,6 +2100,82 @@ petab_plotHelpers_variableOrder <- function(pd) {
   c(observables, states)
 }
 
+#' Title
+#'
+#' @param pd 
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family plotting
+#' @importFrom dMod getParameters
+#' @importFrom data.table data.table rbindlist
+#'
+#' @examples
+petab_plotHelpers_parameterOrder <- function(pd) {
+  pt <- petab_getParameterType(pd$pe)
+  pt[,`:=`(parameterType = factor(parameterType, levels = c("other", "observableParameters", "noiseParameters")))]
+  parameterOrder <- dMod::getParameters(pd$dModAtoms$symbolicEquations$reactions)
+  parameterOrder <- data.table::data.table(parameterId = parameterOrder)
+  parameterOrder <- parameterOrder[parameterId %in% pt$parameterId]
+  pt <- data.table::rbindlist(list(pt[parameterOrder,on = .NATURAL][,`:=`(parameterOrder = 1)], pt[!parameterOrder,on = .NATURAL][,`:=`(parameterOrder = 2)]))
+  pt <- pt[order(parameterOrder, parameterType)]
+  pt[,`:=`(parameterOrder = 1:.N)]
+  # subset to estimated
+  pt <- pt[pd$pe$parameters[estimate == 1,list(parameterId)], on = .NATURAL][order(parameterOrder)]
+  pt$parameterId
+}
+
+
+#' Title
+#'
+#' @param pd 
+#' @param filename 
+#' @param base_size 
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family plotting
+#' @importFrom dMod plotProfile
+#' @importFrom conveniencefunctions cfggplot scale_color_cf theme_cf
+#'
+#' @examples
+pd_plotProfile <- function(pd, filename = NULL, base_size = 9) {
+  dplot <- attr(dMod::plotProfile(pd$result$profiles), "data")
+  dplot <- as.data.table(dplot)
+  
+  dplot <- dplot[mode %in% c("data", "prior", "total")]
+  dplot[,`:=`(mode = factor(mode, levels = c("data", "prior", "total")))]
+  
+  nameOrder = petab_plotHelpers_parameterOrder(pd)
+  nameOrder <- nameOrder[nameOrder %in% dplot$name]
+  dplot[,`:=`(name = factor(name, levels = nameOrder))]
+  
+  dplot2 <- copy(dplot)
+  dplot2 <- dplot2[mode == "data"]
+  dplot2[,`:=`(isEndpoint = par %in% range(par)), by = "name"]
+  dplot2 <- dplot2[isEndpoint == TRUE]
+  dplot2[delta >= 3.84,`:=`(delta = NA)]
+  
+  dplot3 <- dplot[is.zero == TRUE & mode == "data"]
+  
+  pl <- conveniencefunctions::cfggplot(dplot, aes(par, delta)) + 
+    facet_wrap_paginate(~name, nrow = 3, ncol = 4, scales = "free_x") + 
+    geom_hline(aes(yintercept = yinter), data = data.frame(yinter = c(0, 3.84)), lty = 2, size = 0.2, color = "grey80") +
+    geom_point(data = dplot2, size = 3, color = cfcolors[2], alpha = 0.7) + 
+    geom_line(aes(color = mode, size = mode, linetype = mode)) + 
+    geom_point(data = dplot3, size = 2, color = cfcolors[1]) + 
+    scale_size_manual(values = c(1,0.5, 0.5)) + 
+    scale_y_continuous(breaks=c(0, 1, 2.7, 3.84), labels = c("0", "68% / 1   ", "90% / 2.71", "95% / 3.84"), limits = c(-1, 5)) +
+    conveniencefunctions::scale_color_cf() + 
+    conveniencefunctions::theme_cf(base_size) + 
+    geom_blank()
+  
+  cf_outputFigure(pl, filename = filename, width = 29.7, height = 21, scale = 1, units = "cm")
+}
 
 
 
