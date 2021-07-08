@@ -169,6 +169,7 @@ petab_columns <- function(pe = NULL) {
   o <- c("observableId","observableName","observableFormula","observableTransformation","noiseFormula","noiseDistribution")
   e <- c("conditionId","conditionName")
   p <- c("parameterId","parameterName","parameterScale","lowerBound","upperBound","nominalValue","estimate","initializationPriorType","initializationPriorParameters","objectivePriorType","objectivePriorParameters")
+  metaInformation <- NULL 
   
   list(experimentalCondition = e,
        measurementData = m,
