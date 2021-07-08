@@ -478,7 +478,7 @@ pd_parf_collect <- function(pd,
     args <- c(list(pd = pd), opt.mstrust[setdiff(names(opt.mstrust), "include")])
     parf_fit <- do.call(pd_parf_collectMstrust, args)}
   
-  if (opt.profile$include && !is.null(pd$result$L1)) {
+  if (opt.profile$include && !is.null(pd$result$profiles)) {
     args <- c(list(pd = pd), opt.profile[setdiff(names(opt.profile), "include")])
     parf_profile <- do.call(pd_parf_collectProfile, args)}
   
