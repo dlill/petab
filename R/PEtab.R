@@ -165,6 +165,7 @@ petab_columns <- function(pe = NULL) {
     return(pc)
   }
   
+  # Default information
   m <- c("observableId","simulationConditionId","measurement","time","observableParameters","noiseParameters","datasetId","replicateId","preequilibrationConditionId")
   o <- c("observableId","observableName","observableFormula","observableTransformation","noiseFormula","noiseDistribution")
   e <- c("conditionId","conditionName")
