@@ -120,6 +120,9 @@ pe <- petab(model = pe_mo,
 pe$parameters <- petab_create_parameter_df(pe)
 pe$parameters[grep("kon", parameterId),`:=`(estimate = 0)]
 
+# This will produce an expected bug
+# pe$parameters[parameterId == "kcat_C1",`:=`(parameterScale = "lin")]
+
 filename <- "petab"
 writePetab(pe, filename)
 unlink(list.files(".", "\\.o$|\\.so$|\\.c$"))
