@@ -14,10 +14,11 @@
 #' petab_select_collectParametersFromPD(pd)
 petab_select_collectParametersFromPD <- function(pd) {
   pars <- data.table::copy(pd$pe$parameters)
-  pars[,`:=`(reported = as.character(nominalValue))]
-  pars[estimate == 1,`:=`(reported = "estimate")]
-  parameters <- setNames(pars$reported, pars$parameterId)
-  as.list(parameters)
+  parameters <- setNames(pars$nominalValue, pars$parameterId)
+  parameters <- as.list(parameters)
+  idx_estimate <- pars[,estimate==1]
+  parameters[idx_estimate] <- "estimate"
+  parameters
 }
 
 #' Collect list of estimated parameters

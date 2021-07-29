@@ -1,13 +1,13 @@
 model_id: petab
-petab_yaml: ./petab/petab.yaml
-sbml: ./petab/model_petab.xml
+petab_yaml: petab.yaml
+sbml: model_petab.xml
 parameters:
   E: estimate
   ES: estimate
   kcat_C1: estimate
   kcat_C2: estimate
-  kon_C1: '1'
-  kon_C2: '1'
+  kon_C1: 1.0
+  kon_C2: 1.0
   offset_E: estimate
   offset_S: estimate
   offset_S_C2: estimate
