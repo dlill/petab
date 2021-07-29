@@ -42,23 +42,16 @@ readPd <- function(filename) {
   # If in pd already, some filenameParts variable might have been derived from them,
   #   so it would be dangerous to reload them if they were postprocessed
   
-  # base
+  # Fits
   path <- dirname(dirname(filename))
-  if (is.null(pd$result$base) && file.exists(conveniencefunctions::dMod_files(path, "base")$mstrust))
-    pd$result$base <- conveniencefunctions::dMod_readMstrust(path, "base")
-  # base_obsParsFitted
-  path <- dirname(dirname(filename))
-  if (is.null(pd$result$base_obsParsFitted) && file.exists(conveniencefunctions::dMod_files(path, "base_obsParsFitted")$mstrust))
-    pd$result$base_obsParsFitted <- conveniencefunctions::dMod_readMstrust(path, "base_obsParsFitted")
-  # mstrust
-  path <- dirname(dirname(filename))
-  if (is.null(pd$result$fits) && file.exists(conveniencefunctions::dMod_files(path, "mstrust")$mstrust))
-    pd$result$fits <- conveniencefunctions::dMod_readMstrust(path, "mstrust")
-  # Backwards compatibility ugly ugly: If identifier!="mstrust", it might have been "1"
-  if (is.null(pd$result$fits) && file.exists(conveniencefunctions::dMod_files(path, "1")$mstrust))
-    pd$result$fits <- conveniencefunctions::dMod_readMstrust(path, "1")
+  path <- file.path(path, "Results", "mstrust")
+  files <- list.files(path, "mstrustList.*\\.rds", full.names = TRUE)
+  for (f in files) {
+    identifier <- gsub("mstrustList-|\\.rds", "", basename(f))
+    if (is.null(pd$result[[identifier]])) pd$result[[identifier]] <- readRDS(f)
+  }
   
-  # profiles
+  # Profiles
   if (is.null(pd$result$profile) && dir.exists(dirname(conveniencefunctions::dMod_files(path)$profile)))
     pd$result$profiles <- conveniencefunctions::dMod_readProfiles(path)
   
@@ -69,7 +62,7 @@ readPd <- function(filename) {
   
   
   # 4 Set Parameters to most relevant fit: mstrust || base_obsParsFitted || base
-  pars <- if (!is.null(pd$result$fits)) as.parvec(pd$result$fits) else if (!is.null(pd$result$base_obsParsFitted)) as.parvec(pd$result$base_obsParsFitted) else pd$pars
+  pars <- if (!is.null(pd$result$mstrust)) as.parvec(pd$result$mstrust) else if (!is.null(pd$result$base_obsParsFitted)) as.parvec(pd$result$base_obsParsFitted) else pd$pars
   pd$pars <- unclass_parvec(pars)
   
   pd
@@ -369,7 +362,7 @@ pd_parf_collectPars <- function(pd, parameterSetId = "base_obsParsFitted") {
 #'
 #' @examples
 pd_parf_collectMstrust <- function(pd, fitrankRange = 1:15, tol = 1) {
-  parf0 <- pd$result$fits[fitrankRange]
+  parf0 <- pd$result$mstrust[fitrankRange]
   fitidxs = conveniencefunctions::cf_parf_getStepRepresentatives(parf0, tol = tol)
   pars <- parf0[fitidxs]
   pars <- data.table::as.data.table(pars)
@@ -474,7 +467,7 @@ pd_parf_collect <- function(pd,
     args <- c(list(pd = pd), opt.base[setdiff(names(opt.base), "include")])
     parf_base <- do.call(pd_parf_collectPars, args)}
   
-  if (opt.mstrust$include && !is.null(pd$result$fits)) {
+  if (opt.mstrust$include && !is.null(pd$result$mstrust)) {
     args <- c(list(pd = pd), opt.mstrust[setdiff(names(opt.mstrust), "include")])
     parf_fit <- do.call(pd_parf_collectMstrust, args)}
   
@@ -573,6 +566,7 @@ pd_fitObsPars <- function(pd, FLAGoverwrite = FALSE, iterlim = 500) {
   
   obspars <- petab_getParameterType(pd$pe)
   obspars <- obspars[parameterType %in% c("observableParameters", "noiseParameters"), parameterId]
+  obspars <- intersect(obspars, pd$pe$parameters[estimate == 1, parameterId])
   
   fit_par <- pd$pars[obspars]
   fit_fix <- pd$pars[setdiff(names(pd$pars), obspars)]
@@ -786,7 +780,7 @@ clusterStatusMessage <- function(FLAGjobDone, FLAGjobPurged, FLAGjobRecover) {
 #'
 #' @examples
 pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_nodes = 10, 
-                               identifier = "mstrust", FLAGforcePurge = FALSE) {
+                               identifier = "mstrust", FLAGforcePurge = FALSE, opt.parameter_startpoints = "sample") {
   # .. General job handling -----
   jobnm <- paste0("mstrust_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))
   
@@ -803,6 +797,7 @@ pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_node
   
   # Assign Global variables: Important, in future, this might be a source of bugs, if other cluster-functions are written
   assign("n_startsPerNode",n_startsPerNode,.GlobalEnv)
+  assign("opt.parameter_startpoints",opt.parameter_startpoints,.GlobalEnv)
   
   # Start mstrust job
   file.copy(file.path(pd$filenameParts$.currentFolder, pd$filenameParts$.compiledFolder, "/"), ".", recursive = TRUE)
@@ -813,8 +808,12 @@ pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_node
       seed <- as.numeric(Sys.getenv('SLURM_ARRAY_TASK_ID')) + 1
       FLAGincludeCurrent <- seed == 1
       
+      if (identical(opt.parameter_startpoints, "sample")){
       center <- pepy_sample_parameter_startpoints(pd$pe, n_starts = n_startsPerNode, seed = seed, 
                                                   FLAGincludeCurrent = FLAGincludeCurrent)
+      } else {
+        center <- opt.parameter_startpoints
+      }
       parlower <- petab_getParameterBoundaries(pd$pe, "lower")
       parupper <- petab_getParameterBoundaries(pd$pe, "upper")
       
@@ -849,7 +848,7 @@ pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_node
   # .. Get results -----
   if (!FLAGjobDone & !FLAGjobPurged) {
     if (job$check()) {
-      Sys.sleep(5) # avoid being blocked
+      Sys.sleep(2) # avoid being blocked
       job$get()
       fitlist  <- if (exists("cluster_result")) do.call(c, cluster_result) else {NULL
         #cf_dMod_rescueFits()
@@ -952,9 +951,11 @@ pd_cluster_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfi
   
   if (!FLAGjobRecover) return("Job submitted")
   if (FLAGforcePurge) {
-    # bit ugly code duplication...
-    job$purge(purge_local = TRUE)
-    return("Job was purged")
+    if (readline("Purge job. Are you sure? Type yes: ") == "yes"){
+      # bit ugly code duplication...
+      job$purge(purge_local = TRUE)
+      return("Job was purged")
+    }
   }
   
   # Get results
@@ -1177,13 +1178,13 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
       parupper <- parupper[setdiff(names(parupper), names(pd$fixed))]
       
       fit <- mstrust(objfun = pd$obj, center = center, studyname = paste0("fit", node),
-              fixed = pd$fixed,
-              rinit = 0.1, rmax = 10, cores = 16,
-              iterlim = 500, 
-              optmethod = "trust", 
-              output = TRUE, cautiousMode = TRUE,
-              stats = FALSE, 
-              parlower = parlower, parupper = parupper)
+                     fixed = pd$fixed,
+                     rinit = 0.1, rmax = 10, cores = 16,
+                     iterlim = 500, 
+                     optmethod = "trust", 
+                     output = TRUE, cautiousMode = TRUE,
+                     stats = FALSE, 
+                     parlower = parlower, parupper = parupper)
       try(conveniencefunctions::cf_as.parframe(fit))
     },
     jobname = jobnm, 
@@ -1996,7 +1997,7 @@ pd_plotParsParallelLines <- function(pd, stepMax = 3, filename = NULL, i, ggCall
   si <- substitute(i)
   mi <- missing(i)
   
-  parf <- pd$result$fits
+  parf <- pd$result$mstrust
   
   parameters <- attr(parf, "parameters")
   
@@ -2143,7 +2144,7 @@ petab_plotHelpers_parameterOrder <- function(pd) {
 #' @importFrom conveniencefunctions cfggplot scale_color_cf theme_cf
 #'
 #' @examples
-pd_plotProfile <- function(pd, filename = NULL, base_size = 9) {
+pd_plotProfile <- function(pd, filename = NULL, ggCallback = NULL) {
   dplot <- attr(dMod::plotProfile(pd$result$profiles), "data")
   dplot <- as.data.table(dplot)
   
@@ -2171,8 +2172,9 @@ pd_plotProfile <- function(pd, filename = NULL, base_size = 9) {
     scale_size_manual(values = c(1,0.5, 0.5)) + 
     scale_y_continuous(breaks=c(0, 1, 2.7, 3.84), labels = c("0", "68% / 1   ", "90% / 2.71", "95% / 3.84"), limits = c(-1, 5)) +
     conveniencefunctions::scale_color_cf() + 
-    conveniencefunctions::theme_cf(base_size) + 
+    conveniencefunctions::theme_cf(base_size = 9) + 
     geom_blank()
+  for (plx in ggCallback) pl <- pl + plx
   
   cf_outputFigure(pl, filename = filename, width = 29.7, height = 21, scale = 1, units = "cm")
 }
@@ -2315,7 +2317,7 @@ pd_debug_p0 <- function(pd, ID = 1) {
   cat("------------ Compare parameters ------------------------------------","\n",
       "x = pd$dModAtoms$fns$p0)", "\n", "y = c(names(pars_), names(fixed_))","\n",
       "setdiff(x,y) are MISSING in parameters\n"
-      )
+  )
   conveniencefunctions::compare(getParameters(pd$dModAtoms$fns$p0), c(names(pars_), names(fixed_)))
   
   cat("------------ Parameter values ------------------------------------","\n")

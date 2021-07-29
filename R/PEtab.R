@@ -640,7 +640,8 @@ petab_files <- function(filename, FLAGTestCase = FALSE, FLAGreturnList = FALSE) 
       simulatedData              = paste0("_simulatedData"             , ".tsv"),
       visualizationSpecification = paste0("_visualizationSpecification", ".tsv"),
       meta                       = paste0("_meta"                      , ".rds"),
-      metaInformation            = paste0("_metaInformation"           , ".yaml")
+      metaInformation            = paste0("_metaInformation"           , ".yaml"),
+      reportYaml                 = paste0(modelname, "_report"          , ".yaml")
       )
   } else {
     out <- c(
@@ -655,7 +656,8 @@ petab_files <- function(filename, FLAGTestCase = FALSE, FLAGreturnList = FALSE) 
       simulatedData              = paste0("simulatedData_"             , modelname, ".tsv"),
       visualizationSpecification = paste0("visualizationSpecification_", modelname, ".tsv"),
       meta                       = paste0("meta_"                      , modelname, ".rds"),
-      metaInformation            = paste0("metaInformation_"           , modelname, ".yaml")
+      metaInformation            = paste0("metaInformation_"           , modelname, ".yaml"),
+      reportYaml                 = paste0(modelname, "_report"          , ".yaml")
       )
   }
   nm <- names(out)

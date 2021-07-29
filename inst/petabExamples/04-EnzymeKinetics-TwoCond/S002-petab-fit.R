@@ -1,41 +1,19 @@
-# library(petab)
-devtools::load_all("~/Promotion/Promotion/Projects/petab")
+library(petab)
+setwd("~")
+petab_python_setup()
 try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 # -------------------------------------------------------------------------#
-# Arguments ----
+# Fit ----
 # -------------------------------------------------------------------------#
 filename <- "petab"
 
-# filename <- "/home/daniel/Promotion/Promotion/Software/PEtab/Benchmark-Models-PEtab/Benchmark-Models/Bachmann_MSB2011/"
-
-NFLAGcompile = 0
-.compiledFolder = "Compiled"
-SFLAGbrowser = "0"
-
-testCases = FALSE
-path2TestCases = "PEtabTests/"
+pd <- importPEtabSBML_indiv("petab", NFLAGcompile = 2, .compiledFolder = "Compiled", SFLAGbrowser = "0")
+pd_fit(pd)
+pd <- readPd(pd_files(pd$filenameParts)$rdsfile)
 
 # -------------------------------------------------------------------------#
-# OLD ----
+# Collect report ----
 # -------------------------------------------------------------------------#
-pd <- importPEtabSBML_indiv("petab", NFLAGcompile = 0, .compiledFolder = "Compiled", SFLAGbrowser = "0")
-
-# Test model
-pred <- pd$prd(seq(0,100), pd$pars)
-pd$obj_data(pd$pars)
-
-# Test fitting
-myfit <- trust(pd$obj_data, pd$pars,1,10,iterlim = 1000)
-plotCombined(pd$prd(seq(0,100), pd$pars), pd$dModAtoms$data)
-plotCombined(pd$prd(seq(0,100), myfit$argument), pd$dModAtoms$data)
-
-# Mstrust
-center <- pepy_sample_parameter_startpoints(pd$pe, n_starts = 8)
-fits <- mstrust(pd$obj_data, center, "fit", fits = 5, iterlim = 20, cores = 8)
-fits <- as.parframe(fits)
-plotValues(fits)
-dMod_saveMstrust(fits, ".", FLAGoverwrite = TRUE)
-unlink("fit", T)
-
+petab_select_createReportYamlFromPD(pd)
 
 # Exit ----

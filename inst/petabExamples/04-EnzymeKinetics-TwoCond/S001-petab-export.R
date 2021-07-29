@@ -1,4 +1,6 @@
 library(petab)
+setwd("~")
+petab_python_setup()
 try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 
 # -------------------------------------------------------------------------#

@@ -10,7 +10,8 @@ pd_cluster_mstrust(
   n_startsPerNode = 16 * 3,
   n_nodes = 10,
   identifier = "mstrust",
-  FLAGforcePurge = FALSE
+  FLAGforcePurge = FALSE,
+  opt.parameter_startpoints = "sample"
 )
 }
 \arguments{
