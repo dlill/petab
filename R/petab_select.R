@@ -138,9 +138,14 @@ petab_select_writeReportYaml <- function(reportYaml, filename = petab_files(repo
 #' petab_select_writeReportYaml(reportYaml, tf)
 #' file.edit(tf)
 petab_select_createReportYamlFromPD <- function(pd, FLAGwriteYaml = TRUE) {
+  
+  # [ ] Paths are debatable. Current choice: 
+  #   * In the reportYaml, the petab_yaml should be a relative file.path from the directory of reportYaml
+  #   * Currently, the reportYaml is written to the same directory as the petab itself and the relative file.paths are implemented by not walking any directories.
+  
   model_id             <- pd$filenameParts$modelname
-  petab_yaml           <- petab_files(file.path(dirname(pd$filenameParts$.compiledFolder), pd$filenameParts$modelname))["yaml"]
-  sbml                 <- petab_files(file.path(dirname(pd$filenameParts$.compiledFolder), pd$filenameParts$modelname))["modelXML"]
+  petab_yaml           <- basename(petab_files(pd$filenameParts$modelname)["yaml"])
+  sbml                 <- basename(petab_files(pd$filenameParts$modelname)["modelXML"])
   parameters           <- petab_select_collectParametersFromPD(pd)
   estimated_parameters <- petab_select_collectEstimatedParametersFromPD(pd)
   criteria             <- petab_select_collectCriteriaFromPD(pd)
