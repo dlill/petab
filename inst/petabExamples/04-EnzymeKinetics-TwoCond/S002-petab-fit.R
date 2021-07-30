@@ -14,6 +14,6 @@ pd <- readPd(pd_files(pd$filenameParts)$rdsfile)
 # -------------------------------------------------------------------------#
 # Collect report ----
 # -------------------------------------------------------------------------#
-petab_select_createReportYamlFromPD(pd)
+pd_petabSelect_reportYaml(pd)
 
 # Exit ----

@@ -1,6 +1,9 @@
 model_id: petab
 petab_yaml: petab.yaml
 sbml: model_petab.xml
+criteria:
+  AIC: -311.1852584
+  BIC: -258.9756746
 parameters:
   E: estimate
   ES: estimate
@@ -35,6 +38,3 @@ estimated_parameters:
   sigma_obsS_C2: -1.0541524
   sigmaAbs_obsE: 0.6587927
   sigmaRel_obsE: -0.1402521
-criteria:
-  AIC: -311.1852584
-  BIC: -258.9756746
