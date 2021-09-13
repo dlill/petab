@@ -43,8 +43,7 @@ readPd <- function(filename) {
   #   so it would be dangerous to reload them if they were postprocessed
   
   # Fits
-  path <- dirname(dirname(filename))
-  path <- file.path(path, "Results", "mstrust")
+  path <- file.path(dirname(dirname(filename)), "Results", "mstrust")
   files <- list.files(path, "mstrustList.*\\.rds", full.names = TRUE)
   for (f in files) {
     identifier <- gsub("mstrustList-|\\.rds", "", basename(f))
@@ -52,10 +51,12 @@ readPd <- function(filename) {
   }
   
   # Profiles
+  path <- dirname(dirname(filename))
   if (is.null(pd$result$profile) && dir.exists(dirname(conveniencefunctions::dMod_files(path)$profile)))
     pd$result$profiles <- conveniencefunctions::dMod_readProfiles(path)
   
   # L1 - get L1 scan results
+  path <- dirname(dirname(filename))
   if (is.null(pd$result$L1) && dir.exists(dirname(conveniencefunctions::dMod_files(path)$L1)))
     pd$result$L1 <- conveniencefunctions::dMod_readL1(path)
   # L1 - get unbiased models
@@ -975,13 +976,13 @@ pd_cluster_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfi
   prof_done <- gsub("^profiles-|.rds$","", prof_done)
   
   FLAGjobDone <- length(setdiff(profpars, prof_done)) == 0
-  if (FLAGjobDone && !FLAGjobPurged) {
+  if (FLAGjobDone & !FLAGjobPurged) {
     if (readline("Purge job. Are you sure? Type yes: ") == "yes"){
       job$purge(purge_local = TRUE)
-      cat("job purged\n")
       writeLines("jobPurged", fileJobPurged)
-    }}
-  
+      return("Job purged\n")
+    }
+  }
 }
 
 
@@ -1117,6 +1118,8 @@ pd_cluster_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log1
 #' @examples
 pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, 
                                                  identifier = "L1UB", FLAGforcePurge = FALSE) {
+  
+  stop("implement saving the node id (see S311 for the problem)")
   # .. General job handling -----
   jobnm <- paste0("L1UB_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))
   
@@ -1788,20 +1791,24 @@ pd_predictAndPlot <- function(pd, i,
 
 #' Title
 #'
-#' @param pd
-#' @param pe
+#' @param pd 
+#' @param pe to draw other data
 #' @param i,j data.table arguments working on dco, but note that j will be evaulated in a separate step *after* i
-#' @param opt.base
-#' @param opt.mstrust
-#' @param opt.profile
-#' @param NFLAGsubsetType
-#' @param FLAGsummarizeProfilePredictions
-#' @param FLAGmeanLine
-#' @param aeslist
-#' @param ggCallback
+#' @param opt.base,opt.mstrust,opt.profile Options to get parameters from parframes for prediction purposes
+#' @param NFLAGsubsetType subset *species*, *observableId*, *conditionId* and "time".
+#'   * 0 none                 : no subsetting
+#'   * 1 strict               : Only show predictions for conditions where there is data
+#'   * 2 keepInternal         : For observableIds match conditionIds to data, for internal species, no subsetting
+#'   * 3 strict_cutTimes      : as 1, but cut time to data for observableIds
+#'   * 4 keepInternal_cutTimes: as 2, but cut time to data for observableIds
+#' @param FLAGsummarizeProfilePredictions summarize predictions based on profile likelihoods by ribbon
+#' @param FLAGmeanLine draw line for mean(data)
+#' @param aeslist list of aestheticss
+#' @param ggCallback list(ggplot2 calls), e.g. list(labs(title = "bla"), scale_y_log10())
 #' @param filename,FLAGfuture,width,height,scale,units Agurments going to [conveniencefunctions::cf_outputFigure()]
+#' @param FLAGreturnPlotData return list(data.tables) which go into plotting instead of ggplot
 #'
-#' @return
+#' @return ggplot
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
@@ -1834,13 +1841,13 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
                                opt.mstrust = pd_parf_opt.mstrust(),
                                opt.profile = pd_parf_opt.profile(FALSE),
                                opt.L1 = pd_parf_opt.L1(FALSE),
-                               NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2)[2],
+                               NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2, strict_cutTimes = 3,keepInternal_cutTimes = 3)["strict_cutTimes"],
                                FLAGsummarizeProfilePredictions = TRUE,
                                FLAGmeanLine = FALSE,
                                aeslist = petab_plotHelpers_aeslist(),
                                ggCallback = list(facet_wrap_paginate(~observableId, nrow = 4, ncol = 4, scales = "free"),
                                                  scale_y_continuous(n.breaks = 5)),
-                               opt.sim = list(Ntimes_gt5ParSetIds = 60, predtimes = NULL),
+                               opt.sim = list(Ntimes_gt5ParSetIds = 100, predtimes = NULL),
                                opt.gg = list(ribbonAlpha = 0.2), # would be nice to put this into opt.profile or maybe opt.gg?
                                filename = NULL, FLAGfuture = TRUE,
                                width = 29.7, height = 21, scale = 1, units = "cm",
@@ -1867,7 +1874,7 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
     if (!opt.profile$include) cat("Predicting for more than 5 parameter sets. Are you sure?")
   }
   if (!is.null(opt.sim$predtimes)) pd$times <- opt.sim$predtimes
-  simconds <- if (!mi && !NFLAGsubsetType%in%c(2,4)) dplot[eval(si)] else dplot
+  simconds <- if (NFLAGsubsetType == 0) pd$pe$experimentalCondition else if (!mi && !NFLAGsubsetType%in%c(2,4)) dplot[eval(si)] else dplot
   simconds <- unique(simconds[,conditionId])
   pplot <- conveniencefunctions::cf_predict(prd = pd$prd, times = pd$times, pars = parf, fixed = pd$fixed, conditions = simconds)
   data.table::setnames(pplot, c("condition", "name", "value"), c("conditionId", "observableId", "measurement"))
@@ -1926,8 +1933,8 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
     aesmeanlist <- aesmeanlist[setdiff(names(aesmeanlist), "size")]
     pl <- pl + geom_line(do.call(aes_q, aesmeanlist), data = dmean, size = 0.1) # make size available as parameter
   }
-  pl <- pl + geom_point(do.call(aes_q, aeslist[intersect(names(aeslist), conveniencefunctions::cfgg_getAllAesthetics()[["geom_point"]])]), data = dplot)
-  pl <- pl + geom_line( do.call(aes_q, aeslist[intersect(names(aeslist), conveniencefunctions::cfgg_getAllAesthetics()[["geom_line"]])]) , data = pplot)
+  if (nrow(dplot)) pl <- pl + geom_point(do.call(aes_q, aeslist[intersect(names(aeslist), conveniencefunctions::cfgg_getAllAesthetics()[["geom_point"]])]), data = dplot)
+  if (nrow(pplot)) pl <- pl + geom_line( do.call(aes_q, aeslist[intersect(names(aeslist), conveniencefunctions::cfgg_getAllAesthetics()[["geom_line"]])]) , data = pplot)
   if (!is.null(pplotRibbon)) {
     aesl <- aeslist[intersect(names(aeslist), conveniencefunctions::cfgg_getAllAesthetics()[["geom_ribbon"]])]
     aesl <- aesl[setdiff(names(aesl), c("linetype", "lty", "y", "color", "colour"))]
@@ -1944,7 +1951,8 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
 
 
 
-#' Title
+
+#' Plot multiple parameter vectors in parf as barplots next to each other
 #'
 #' @param pd
 #' @param parf
@@ -1973,9 +1981,52 @@ pd_plot_compareParameters <- function(pd, parf,
   cf_outputFigure(pl, ...)
 }
 
-#' Title
+
+#' Compare two parameter vectors by plotting their difference as bar plot
 #'
-#' @param pd 
+#' @param v1,v2 Parameters on estScale
+#' @param pe Petab to infer parameterType and estimated parameters
+#' @param filename for plotting
+#'
+#' @return ggplot
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @familyPlotting
+#' @importFrom lemon facet_rep_grid
+plotParameterComparison <- function(v1,v2, pe, filename, FLAGexcludeObsPars = TRUE, FLAGestimatedOnly = TRUE) {
+  # match and calculate difference
+  d1 <-  data.table(parameterId = names(v1), estValue = unclass(v1))
+  d2 <-  data.table(parameterId = names(v2), estValue = unclass(v2))
+  dx <- merge(d1,d2, by = "parameterId", suffixes = c("_1", "_2"), all = TRUE)
+  dx[,`:=`(difference = estValue_2-estValue_1)]
+  
+  if (FLAGexcludeObsPars){
+    pt <- petab_getParameterType(pe)
+    dx <- merge(dx,pt, by =  "parameterId", all.x = TRUE, all.y = FALSE)
+    dx <- dx[!parameterType %in% c("noiseParameters", "observableParameters")]
+  }
+  if (FLAGestimatedOnly) dx <- dx[parameterId %in% petab_getParametersToEstimate(pe)]
+  
+  pl <- cfggplot(dx, aes(parameterId, difference), FLAGbold = FALSE) + 
+    lemon::facet_rep_grid(parameterType~., scales = "free", space = "free", repeat.tick.labels = TRUE) + 
+    geom_col() + 
+    coord_flip() +
+    geom_blank()
+  
+  height <- nrow(dx) * 0.42 + 2
+  cf_outputFigure(pl = pl, filename = filename, width = 15.5, height = height, scale = 1, units = "cm")
+}
+
+
+
+
+
+#' Plot resulting parameters from mstrust
+#' 
+#' This plot is inspired by the Plot from the Tutorial on modeling by Villaverde
+#'
+#' @param pd pd with field pd$result$mstrust
 #' @param stepMax maximum step of waterfall
 #' @param filename for plotting
 #' @param i subset the data.table on their names c("parameterId", "parameterType", "fitrank", "step", "stepsize", 
@@ -2013,7 +2064,7 @@ pd_plotParsParallelLines <- function(pd, stepMax = 3, filename = NULL, i, ggCall
   if (!mi) p <- p[eval(si)]
   
   pl <- conveniencefunctions::cfggplot(p, aes(parameterId, estValue, group = fitrank, color = parameterType)) + 
-    facet_grid(step~parameterType, scales = "free_x") + 
+    facet_grid(step~parameterType, scales = "free_x", space = "free_x") + 
     geom_point(alpha = 0.1) + 
     geom_line( alpha = 0.1) + 
     guides(color = FALSE) +
@@ -2022,7 +2073,8 @@ pd_plotParsParallelLines <- function(pd, stepMax = 3, filename = NULL, i, ggCall
   
   for (plx in ggCallback) pl <- pl + plx
   
-  conveniencefunctions::cf_outputFigure(pl, filename, ...)
+  conveniencefunctions::cf_outputFigure(pl, filename, 
+                                        width = length(parameters) * 0.5 + 4, height = 21, units = "cm", ...)
   
   pl
   
@@ -2197,7 +2249,7 @@ pd_plotProfile <- function(pd, filename = NULL, ggCallback = NULL) {
 #'
 #' @examples
 subsetPredictionToData <- function(pplot, dplot, NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2, strict_cutTimes = 3,
-                                                                     cutTimes_keepInternal = 3
+                                                                     keepInternal_cutTimes = 3
 )[2]) {
   pplot_out <- pplot
   if (NFLAGsubsetType == 0) return(pplot_out)
@@ -2213,7 +2265,8 @@ subsetPredictionToData <- function(pplot, dplot, NFLAGsubsetType = c(none = 0, s
     dplot_lookup <- dplot_lookup[,list(maxtime = max(time)), by = c("observableId", "conditionId")]
     dplot_lookup <- unique(dplot_lookup)
     pplot_out <- pplot[dplot_lookup, on = c("observableId", "conditionId")]
-    pplot_out <- pplot_out[time <= maxtime]
+    pplot_out <- pplot_out[time <= maxtime * 1.1]
+    pplot_out[,`:=`(maxtime = NULL)]
   }
   
   if (NFLAGsubsetType %in% c(2,4)) {

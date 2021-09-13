@@ -1,0 +1,6 @@
+Parameter assignment information
+mstrust     : studyname, center, fits, cores, optmethod, samplefun, resultPath, stats, narrowing, output
+trust       : objfun, rinit, rmax
+rnorm       : n
+
+

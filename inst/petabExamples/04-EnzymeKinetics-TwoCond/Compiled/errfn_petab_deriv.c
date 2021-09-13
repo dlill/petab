@@ -1,6 +1,6 @@
 #include <R.h>
  #include <math.h>
- void errfn_petab_deriv_yw0vugo2 ( double * x, double * y, double * p, int * n, int * k, int * l ) {
+ void errfn_petab_deriv_ctbb94dp ( double * x, double * y, double * p, int * n, int * k, int * l ) {
  for(int i = 0; i< *n; i++) {
  y[0+i**l] = (p[0])*(x[9+i**k]) ;
 y[4+i**l] = (p[0])*(x[13+i**k]) ;
