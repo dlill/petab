@@ -13,13 +13,14 @@ pd_predictAndPlot2(
   opt.mstrust = pd_parf_opt.mstrust(),
   opt.profile = pd_parf_opt.profile(FALSE),
   opt.L1 = pd_parf_opt.L1(FALSE),
-  NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2)[2],
+  NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2, strict_cutTimes = 3,
+    keepInternal_cutTimes = 3)["strict_cutTimes"],
   FLAGsummarizeProfilePredictions = TRUE,
   FLAGmeanLine = FALSE,
   aeslist = petab_plotHelpers_aeslist(),
   ggCallback = list(facet_wrap_paginate(~observableId, nrow = 4, ncol = 4, scales =
     "free"), scale_y_continuous(n.breaks = 5)),
-  opt.sim = list(Ntimes_gt5ParSetIds = 60, predtimes = NULL),
+  opt.sim = list(Ntimes_gt5ParSetIds = 100, predtimes = NULL),
   opt.gg = list(ribbonAlpha = 0.2),
   filename = NULL,
   FLAGfuture = TRUE,
@@ -31,12 +32,37 @@ pd_predictAndPlot2(
 )
 }
 \arguments{
+\item{pd}{}
+
+\item{pe}{to draw other data}
+
 \item{i, j}{data.table arguments working on dco, but note that j will be evaulated in a separate step \emph{after} i}
 
+\item{opt.base, opt.mstrust, opt.profile}{Options to get parameters from parframes for prediction purposes}
+
+\item{NFLAGsubsetType}{subset \emph{species}, \emph{observableId}, \emph{conditionId} and "time".
+\itemize{
+\item 0 none                 : no subsetting
+\item 1 strict               : Only show predictions for conditions where there is data
+\item 2 keepInternal         : For observableIds match conditionIds to data, for internal species, no subsetting
+\item 3 strict_cutTimes      : as 1, but cut time to data for observableIds
+\item 4 keepInternal_cutTimes: as 2, but cut time to data for observableIds
+}}
+
+\item{FLAGsummarizeProfilePredictions}{summarize predictions based on profile likelihoods by ribbon}
+
+\item{FLAGmeanLine}{draw line for mean(data)}
+
+\item{aeslist}{list of aestheticss}
+
+\item{ggCallback}{list(ggplot2 calls), e.g. list(labs(title = "bla"), scale_y_log10())}
+
 \item{filename, FLAGfuture, width, height, scale, units}{Agurments going to \code{\link[conveniencefunctions:cf_outputFigure]{conveniencefunctions::cf_outputFigure()}}}
+
+\item{FLAGreturnPlotData}{return list(data.tables) which go into plotting instead of ggplot}
 }
 \value{
-
+ggplot
 }
 \description{
 Title

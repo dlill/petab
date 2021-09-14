@@ -2,8 +2,8 @@ model_id: petab
 petab_yaml: petab.yaml
 sbml: model_petab.xml
 criteria:
-  AIC: -311.1852584
-  BIC: -258.9756746
+  AIC: -326.1438242
+  BIC: -273.9342404
 parameters:
   E: estimate
   ES: estimate
@@ -23,18 +23,18 @@ parameters:
   sigmaAbs_obsE: estimate
   sigmaRel_obsE: estimate
 estimated_parameters:
-  E: -0.2968811
-  ES: -0.3027395
-  kcat_C1: -1.0213381
-  kcat_C2: -1.0165419
-  offset_E: -4.6016852
-  offset_S: -0.8101807
-  offset_S_C2: -0.5306166
-  P: -0.9495326
-  S: 1.9960995
-  sigma_obsES: -1.0539675
-  sigma_obsP: -0.9854228
-  sigma_obsS: -0.9168795
-  sigma_obsS_C2: -1.0541524
-  sigmaAbs_obsE: 0.6587927
-  sigmaRel_obsE: -0.1402521
+  E: -0.2969806
+  ES: -0.2987519
+  kcat_C1: -1.0184105
+  kcat_C2: -1.0238794
+  offset_E: -4.2821982
+  offset_S: -0.6700033
+  offset_S_C2: -0.3625695
+  P: -1.2919777
+  S: 2.004689
+  sigma_obsES: -1.0131214
+  sigma_obsP: -1.009421
+  sigma_obsS: -0.9649542
+  sigma_obsS_C2: -1.1236892
+  sigmaAbs_obsE: 0.6608338
+  sigmaRel_obsE: -0.1379435

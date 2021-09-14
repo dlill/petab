@@ -23,21 +23,20 @@ pd_cluster_profile(
 use for reoptimization. A bit heuristic, but \code{\link[dMod:profile]{dMod::profile()}} does not support boundaries.
 Therefore, if those parameters were not fixed, one potentially not start from the "optimum"}
 
-\item{profpars}{I suggest to use either 1. pd$pars or 2. hard code the result
+\item{profpars}{I suggest to use either 1. names(pd$pars) or 2. hard code the result
 from \code{\link[=pd_profile_getParsNotYetProfiled]{pd_profile_getParsNotYetProfiled()}}}
 }
 \value{
 
 }
 \description{
-Run profiles on cluster
+Will profile the parameters stored in pd$pars
 }
 \seealso{
 Other Cluster: 
 \code{\link{clusterStatusMessage}()},
 \code{\link{pd_cluster_L1_fitUnbiasedEachMstrust}()},
 \code{\link{pd_cluster_L1_fitUnbiasedEachOnce}()},
-\code{\link{pd_cluster_L1_fitUnbiasedKNECHT}()},
 \code{\link{pd_cluster_L1}()},
 \code{\link{pd_cluster_mstrust}()},
 \code{\link{readPd}()}

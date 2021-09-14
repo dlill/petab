@@ -14,6 +14,9 @@
 ## Installation
 
 ```
+# In ubuntu, it might be necessary to run this in bash
+# sudo apt-get install libxml2-dev
+
 if (Sys.info()["sysname"] == "Windows") {
   options(download.file.method = "wininet")
   devtools::install_url("https://sourceforge.net/projects/sbml/files/libsbml/5.18.0/stable/Windows/R%20interface/libSBML_5.18.0.zip")

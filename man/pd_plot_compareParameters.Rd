@@ -2,7 +2,7 @@
 % Please edit documentation in R/dMod-pd.R
 \name{pd_plot_compareParameters}
 \alias{pd_plot_compareParameters}
-\title{Title}
+\title{Plot multiple parameter vectors in parf as barplots next to each other}
 \usage{
 pd_plot_compareParameters(
   pd,
@@ -21,5 +21,5 @@ pd_plot_compareParameters(
 
 }
 \description{
-Title
+Plot multiple parameter vectors in parf as barplots next to each other
 }

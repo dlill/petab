@@ -4,7 +4,10 @@
 \alias{petab_python_setup}
 \title{Setup the connection to python petab}
 \usage{
-petab_python_setup()
+petab_python_setup(FLAGreturnpetabSelect = FALSE)
+}
+\arguments{
+\item{FLAGreturnpetabSelect}{}
 }
 \value{
 python module, see \code{\link[reticulate:import]{reticulate::import()}}
@@ -26,6 +29,8 @@ use as pe <- petab_python_setup()
 \examples{
 pepy <- petab_python_setup()
 # pepy$lint(pe)
+
+peps <- petab_python_setup(FLAGreturnpetabSelect = TRUE)
 }
 \seealso{
 Other pepy: 

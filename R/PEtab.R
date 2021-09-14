@@ -1067,6 +1067,8 @@ petab_python_reinstall <- function() {
 #'
 #' use as pe <- petab_python_setup()
 #'
+#' @param FLAGreturnpetabSelect 
+#'
 #' @return python module, see [reticulate::import()]
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
@@ -1078,9 +1080,13 @@ petab_python_reinstall <- function() {
 #' @examples
 #' pepy <- petab_python_setup()
 #' # pepy$lint(pe)
-petab_python_setup <- function() {
+#' 
+#' peps <- petab_python_setup(FLAGreturnpetabSelect = TRUE)
+petab_python_setup <- function(FLAGreturnpetabSelect = FALSE) {
   if (!"petab" %in% reticulate::virtualenv_list()){
     reticulate::virtualenv_install("petab", "petab", ignore_installed = TRUE)
+    reticulate::virtualenv_install("petab", "petab-select", ignore_installed = TRUE)
+    
   }
   
   # Stupid RStudio "ich mach mein eigenes environment variables ding"
@@ -1091,8 +1097,10 @@ petab_python_setup <- function() {
   
   message("Using petab virtualenv\n")
   reticulate::use_virtualenv("petab")
+  if (FLAGreturnpetabSelect) return(reticulate::import("petab_select"))
   reticulate::import("petab")
 }
+
 
 
 # -------------------------------------------------------------------------#

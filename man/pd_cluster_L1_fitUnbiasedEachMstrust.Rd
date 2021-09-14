@@ -35,7 +35,6 @@ Fit model on cluster
 Other Cluster: 
 \code{\link{clusterStatusMessage}()},
 \code{\link{pd_cluster_L1_fitUnbiasedEachOnce}()},
-\code{\link{pd_cluster_L1_fitUnbiasedKNECHT}()},
 \code{\link{pd_cluster_L1}()},
 \code{\link{pd_cluster_mstrust}()},
 \code{\link{pd_cluster_profile}()},

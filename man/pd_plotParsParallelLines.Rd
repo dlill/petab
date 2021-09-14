@@ -2,7 +2,7 @@
 % Please edit documentation in R/dMod-pd.R
 \name{pd_plotParsParallelLines}
 \alias{pd_plotParsParallelLines}
-\title{Title}
+\title{Plot resulting parameters from mstrust}
 \usage{
 pd_plotParsParallelLines(
   pd,
@@ -14,7 +14,7 @@ pd_plotParsParallelLines(
 )
 }
 \arguments{
-\item{pd}{}
+\item{pd}{pd with field pd$result$mstrust}
 
 \item{stepMax}{maximum step of waterfall}
 
@@ -31,7 +31,7 @@ pd_plotParsParallelLines(
 ggplot
 }
 \description{
-Title
+This plot is inspired by the Plot from the Tutorial on modeling by Villaverde
 }
 \seealso{
 Other plotting: 
