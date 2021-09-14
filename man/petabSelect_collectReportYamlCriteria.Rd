@@ -4,13 +4,13 @@
 \alias{petabSelect_collectReportYamlCriteria}
 \title{Ensure consistent naming of Criteria}
 \usage{
-petabSelect_collectReportYamlCriteria(AIC, BIC)
+petabSelect_collectReportYamlCriteria(AIC, BIC, AICc)
 }
 \arguments{
-\item{AIC, BIC}{numeric(1L), the respective criteria}
+\item{AIC, BIC, AICc}{numeric(1L), the respective criteria}
 }
 \value{
-list(AIC, BIC)
+list(AIC, BIC, AICc)
 }
 \description{
 Ensure consistent naming of Criteria

@@ -23,7 +23,8 @@ pd <- petab_exampleRead("01-EnzymeKinetics", "pd")
 \seealso{
 Other Example functions: 
 \code{\link{petab_exampleList}()},
-\code{\link{petab_examplePath}()}
+\code{\link{petab_examplePath}()},
+\code{\link{petab_select_examplePath}()}
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)

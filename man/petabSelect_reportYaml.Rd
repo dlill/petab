@@ -24,7 +24,7 @@ petabSelect_reportYaml(
 
 \item{estimated_parameters}{named list of numeric parameters}
 
-\item{criteria}{list(LL, AIC, BIC)}
+\item{criteria}{list(LL, AIC, BIC, AICc)}
 }
 \value{
 simply a list of the supplied objects

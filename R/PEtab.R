@@ -692,7 +692,6 @@ petab_files <- function(filename, FLAGTestCase = FALSE, FLAGreturnList = FALSE) 
 }
 
 
-petab_files_fromYAML <- function()
 
 
 #' Read PEtab files

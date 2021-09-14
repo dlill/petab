@@ -18,7 +18,8 @@ petab_exampleList()
 \seealso{
 Other Example functions: 
 \code{\link{petab_examplePath}()},
-\code{\link{petab_exampleRead}()}
+\code{\link{petab_exampleRead}()},
+\code{\link{petab_select_examplePath}()}
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
