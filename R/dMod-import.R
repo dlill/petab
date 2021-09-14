@@ -1074,7 +1074,7 @@ getParametersSBML <- function(parameters, model){
 #' @importFrom dMod addReaction
 #' @export
 #'
-getReactionsSBML <- function(model, conditions){
+getReactionsSBML <- function(model, conditions, rates){
   # m = libSBML::readSBML(model)$getModel()
   m = readSBML(model)$getModel()
   

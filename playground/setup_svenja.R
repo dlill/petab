@@ -18,9 +18,9 @@ selection_problem <- peps$Problem$from_yaml("inst/petab_select_examples/0002/sel
 model_space <- selection_problem$model_space
 
 # find neighbours of the model in the model space
-peps$model_space$ModelSpace$neighbors(candidate_space = model_space, limit = NULL, exclude = TRUE)
+# peps$model_space$ModelSpace$neighbors(candidate_space = model_space, limit = NULL, exclude = TRUE)
 
-model_space$parameter_ids
+# model_space$parameter_ids
 
 mypars <- structure(rep(0, length(model_space$parameter_ids)), names = model_space$parameter_ids)
 
@@ -37,7 +37,11 @@ test_models <-  model_space$neighbors(candidate_space)
 dir.create("bla")
 test_models[[1]]$to_petab(output_path = "bla")
 
-pe<-readPetab("bla")
+pe<-readPetab("bla/problem.yaml")
+
+debugonce("getReactionsSBML")
+pd <- importPEtabSBML_indiv("bla/problem.yaml", NFLAGcompile = "0")
+
 
 # -------------------------------------------------------------------------#
 # 2 read PEtab of initial model ----

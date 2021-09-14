@@ -591,16 +591,14 @@ petab <- function(
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @export
-#' @importFrom tools file_ext
+#' @importFrom tools file_path_sans_ext
 #'
 #' @examples
 #' # same:
 #' petab_modelname_path("Models/Example")
 #' petab_modelname_path("Models/Example.petab")
 petab_modelname_path <- function(filename) {
-  if (tools::file_ext(filename) == "petab")
-    filename <- gsub(".petab$", "", filename)
-  modelname <- basename(filename)
+  modelname <- basename(tools::file_path_sans_ext(filename))
   path <- filename
   list(modelname = modelname, path = path)
 }
@@ -651,19 +649,19 @@ petab_files <- function(filename, FLAGTestCase = FALSE, FLAGreturnList = FALSE) 
     yaml_content <- yaml::read_yaml(filename)
     
     out <- c(
-      yaml                       = filename,
-      experimentalCondition      = file.path(path, yaml_content$problems[[1]]$condition_files[[1]]),
-      measurementData            = file.path(path, yaml_content$problems[[1]]$measurement_files[[1]]),
-      modelXML                   = file.path(path, yaml_content$problems[[1]]$sbml_files[[1]]),
+      yaml                       = basename(filename),
+      experimentalCondition      = yaml_content$problems[[1]]$condition_files[[1]],
+      measurementData            = yaml_content$problems[[1]]$measurement_files[[1]],
+      modelXML                   = yaml_content$problems[[1]]$sbml_files[[1]],
       # [ ] not very elegant. Remove rds when sbml is stable
       # model                      = paste0("_model"                     , ".rds"),
-      observables                = file.path(path, yaml_content$problems[[1]]$observable_files[[1]]),
-      parameters                 = file.path(path, yaml_content$parameter_file),
+      observables                = yaml_content$problems[[1]]$observable_files[[1]],
+      parameters                 = yaml_content$parameter_file,
       #simulatedData              = paste0("_simulatedData"             , ".tsv"),
       #visualizationSpecification = paste0("_visualizationSpecification", ".tsv"),
       #meta                       = paste0("_meta"                      , ".rds"),
       #metaInformation            = paste0("_metaInformation"           , ".yaml"),
-      reportYaml                 = file.path(path, "report.yaml")
+      reportYaml                 = "report.yaml"
     )
     
   } else {
