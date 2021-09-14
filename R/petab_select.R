@@ -4,15 +4,15 @@
 
 #' Ensure consistent naming of Criteria
 #'
-#' @param AIC,BIC  numeric(1L), the respective criteria
+#' @param AIC,BIC,AICc  numeric(1L), the respective criteria
 #'
-#' @return list(AIC, BIC)
+#' @return list(AIC, BIC, AICc)
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family petab select
-petabSelect_collectReportYamlCriteria <- function(AIC, BIC) {
-  list(AIC = AIC, BIC = BIC)
+petabSelect_collectReportYamlCriteria <- function(AIC, BIC, AICc) {
+  list(AIC = AIC, BIC = BIC, AICc = AICc)
 }
 
 
@@ -24,7 +24,7 @@ petabSelect_collectReportYamlCriteria <- function(AIC, BIC) {
 #' @param sbml filename of sbml
 #' @param parameters named list of numeric entries for fixed parameters and "estimate" for estimated parameters
 #' @param estimated_parameters named list of numeric parameters
-#' @param criteria list(LL, AIC, BIC)
+#' @param criteria list(LL, AIC, BIC, AICc)
 #'
 #' @return simply a list of the supplied objects
 #' @export
@@ -135,11 +135,20 @@ pd_petabSelect_collectEstimatedParameters <- function(pd) {
 #'
 #' @examples
 pd_petabSelect_collectReportYamlCriteria <- function(pd) {
-  LL <- if (!is.null(pd$result$mstrust)) min(pd$result$mstrust$value) else if (!is.null(pd$result$base)) min(pd$result$base$value) else if (!is.null(pd$result$base_obsParsFitted)) min(pd$result$base_obsParsFitted$value) else pd$obj(pd$pars)
-  AIC <- LL + sum(pd$pe$parameters$estimate) * 2
-  BIC <- LL + sum(pd$pe$parameters$estimate) * log(nrow(pd$pe$measurementData))
+  # load petab_select as peps
+  peps <- petab_python_setup(FLAGreturnpetabSelect = T)
   
-  petabSelect_collectReportYamlCriteria(AIC = AIC, BIC = BIC)
+  LL <- if (!is.null(pd$result$mstrust)) min(pd$result$mstrust$value) else if (!is.null(pd$result$base)) min(pd$result$base$value) else if (!is.null(pd$result$base_obsParsFitted)) min(pd$result$base_obsParsFitted$value) else pd$obj(pd$pars)
+  nllh <- LL/2
+  
+  n_estimated <- sum(pd$pe$parameters$estimate)
+  n_measurements <- nrow(pd$pe$measurementData)
+  
+  AIC <- peps$calculate_aic(n_estimated, nllh)
+  BIC <- peps$calculate_bic(n_estimated, nllh, n_measurements, n_priors = 0)
+  AICc <- peps$calculate_aicc(n_estimated, nllh, n_measurements, n_priors = 0)
+
+  petabSelect_collectReportYamlCriteria(AIC = AIC, BIC = BIC, AICc = AICc)
 }
 
 
