@@ -4,7 +4,7 @@
 \alias{getReactionsSBML}
 \title{Import reactions from SBML.}
 \usage{
-getReactionsSBML(model, conditions)
+getReactionsSBML(model, conditions, rates)
 }
 \arguments{
 \item{model}{SBML file as .xml}

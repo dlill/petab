@@ -1103,7 +1103,7 @@ getReactionsSBML <- function(model, conditions, rates){
   N_fundefs <- m$getNumFunctionDefinitions()
   if (N_fundefs > 0){
     for (fun in 0:(N_fundefs-1)){
-      reactions$rates <- smblImport_replaceFunctions(m, rates)
+      reactions$rates <- smblImport_replaceFunctions(m = m, fun = fun, rates = reactions$rates)
       # substitute m$getRule(0)$getVariable() by m$getRule(0)$getFormula()
       #print(formulaToL3String(mymath$getChild(mymath$getNumChildren()-1)))
     }
@@ -1181,45 +1181,6 @@ getReactionsSBML <- function(model, conditions, rates){
   reactions <- as.eqnlist(mydata, compartments)
   
   return(list(reactions=reactions, events=events, reactions_orig=reactions_orig, preeqEvents=preeqEvents, mystates=mystates))
-}
-# ..  -----
-
-# function from Frank
-#' importFrom libSBML formulaToL3String
-function_def_to_string <- function(fun)
-{
-  if (is.null(fun)) return;
-  id <- fun$getId()
-  
-  math <- fun$getMath()
-  if (is.null(math)) return;
-  
-  # the function will be of the form lambda(a, b, formula)
-  # so the last child of the AST_Node is the actual math everything in front of it
-  # the arguments
-  #
-  # So to generate the desired output function_definition_id(args) = math
-  # we use:
-  
-  
-  num_children <- math$getNumChildren()
-  
-  result <- paste(id, '(', sep="")
-  for (i in 1:(num_children-1) ) # this leaves out the last one
-  {
-    # result <- paste(result, libSBML::formulaToL3String(math$getChild(i-1)), sep="")
-    result <- paste(result, formulaToL3String(math$getChild(i-1)), sep="")
-    
-    if (i < (num_children-1))
-      result <- paste(result, ', ', sep="")
-    
-  }
-  
-  # result <- paste(result, ') = ', libSBML::formulaToL3String(math$getChild(num_children - 1)), sep="")
-  result <- paste(result, ') = ', formulaToL3String(math$getChild(num_children - 1)), sep="")
-  
-  return (result)
-  
 }
 
 #' Import Data from PEtab
@@ -1365,11 +1326,10 @@ sbmlImport_getReactionDetails <- function(m, reaction, compartments) {
     Productstring <- paste0(Productstring, " + ",
                             paste0(eq$getProduct(s)$getStoichiometry(), "*", eq$getProduct(s)$getSpecies()))
   }
-  formula <- eq$getKineticLaw()$getFormula()
-  if(stringr::str_detect(formula, "Function")) {
-    rate <- formula # to be double checked  # works for Borghans now
-  } else
-    rate <- gsub("pow", "", gsub(", ", "**", formula))
+  rate <- eq$getKineticLaw()$getFormula()
+  if (stringr::str_detect(rate, "pow")) {
+    rate <- gsub("pow", "", gsub(", ", "**", rate))
+  }
   #rate <- replaceOperation("pow", "**", eq$getKineticLaw()$getFormula())
   if(!is.null(compartments)){
     if(Reduce("|", stringr::str_detect(rate, unique(compartments)))){
@@ -1384,19 +1344,71 @@ sbmlImport_getReactionDetails <- function(m, reaction, compartments) {
   list(from = Reactantstring, to = Productstring,rate = rate)
 }
 
-smblImport_replaceFunctions <- function(m, rates) {
-  mymath <- m$getFunctionDefinition(fun)$getMath()
-  # print(fun)
-  string <- function_def_to_string(m$getFunctionDefinition(fun)) %>% gsub(" ","",.)
-  # print(string)
-  first <- strsplit(string, "=")[[1]][1]
-  second <- strsplit(string, "=")[[1]][2]
-  # print(first)
-  # print(second)
-  first <- gsub("\\(", "\\\\\\(", first)
-  second <- gsub("\\(", "\\\\\\(", second)
-  gsub(first, second, reactions$rates)
+#' Replace function calls by their mathematical expressions
+#'
+#' @param m sbml model
+#' @param fun an integer with a function id (badly refactored)
+#' @param rates reaction rate formulas
+#'
+#' @return modified rates
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family SBML import
+#' @importFrom cOde replaceSymbols
+smblImport_replaceFunctions <- function(m, fun, rates) {
+    mymath <- m$getFunctionDefinition(fun)$getMath()
+    fun <- m$getFunctionDefinition(fun)
+    funInfo <- sbmlImport_getFunctionInfo(fun)
+    
+    idx <- grep(funInfo$funName, rates)
+    for (i in idx) {
+      # 1. Replace function arguments by supplied arguments in rate, see petab_select/testcase0001 SBML for nontrivial examples
+      # https://stackoverflow.com/questions/546433/regular-expression-to-match-balanced-parentheses
+      regexExtractArguments <- paste0(".*", funInfo$funName, "(", "\\((?:[^)(]*(?R)?)*+\\)", ").*")
+      argsInRateEqn <- gsub(regexExtractArguments, "\\1", rates[i], perl = TRUE)
+      argsInRateEqn <- gsub("^\\(|\\)$", "", argsInRateEqn)
+      argsInRateEqn <- strsplit(argsInRateEqn, ",", T)[[1]]
+      funBody <- cOde::replaceSymbols(funInfo$funArgs, argsInRateEqn,funInfo$funBody)
+      
+      # 2. Replace function call in rate by funBody
+      regexMatchFunCall <- paste0( "(", funInfo$funName, "\\((?:[^)(]*(?R)?)*+\\)", ")")
+      cat("Replacing ", unique(gsub(paste0(".*",regexMatchFunCall, ".*"), "\\1", rates[i], perl = TRUE)), " by ", funBody, "\n")
+      rates[i] <- gsub(regexMatchFunCall, funBody, rates[i], perl = TRUE)
+    }
+    
+    rates
 }
+
+
+
+#' Get function info
+#' 
+#' function adapted from Frank
+#'
+#' @param fun some sbml-thingy representation of a function
+#'
+#' @return list with infos about the funciton
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family SBML import
+#' importFrom libSBML formulaToL3String
+sbmlImport_getFunctionInfo <- function(fun) {
+  if (is.null(fun)) return;
+  id <- fun$getId()
+  
+  math <- fun$getMath()
+  if (is.null(math)) return;
+  
+  num_children <- math$getNumChildren()
+  
+  funInfo <- list(
+    funName = id,
+    funArgs = vapply(seq_len(num_children-1), function(i) formulaToL3String(math$getChild(i-1)), FUN.VALUE = "a"),
+    funBody = formulaToL3String(math$getChild(num_children - 1))
+  )
+  funInfo
+}
+
 
 sbmlImport_getEventStrings <- function(reactions, events = NULL) {
   for(fun in c("piecewise")){

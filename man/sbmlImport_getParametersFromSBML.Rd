@@ -21,7 +21,8 @@ sbmlImport_getCompartmentsFromSBML(modelfile)
 }
 \seealso{
 Other SBML import: 
-\code{\link{sbmlImport_getCompartmentsFromSBML}()}
+\code{\link{sbmlImport_getCompartmentsFromSBML}()},
+\code{\link{smblImport_replaceFunctions}()}
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)

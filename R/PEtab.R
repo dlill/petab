@@ -1078,6 +1078,8 @@ petab_python_reinstall <- function() {
   unlink("~/.local/share/r-reticulate/", T)
   reticulate::use_virtualenv("petab")
   reticulate::virtualenv_install("petab", "petab", ignore_installed = TRUE)
+  reticulate::virtualenv_install("petab", "petab-select", ignore_installed = TRUE)
+  "reinstalled petab in virtual environment"
 }
 
 

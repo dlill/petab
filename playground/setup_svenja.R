@@ -1,8 +1,10 @@
 # -------------------------------------------------------------------------#
 # 0 load packages ----
 # -------------------------------------------------------------------------#
+try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 # R packages
-library(petab)
+# library(petab)
+devtools::load_all()
 
 # petab python package
 pepy <- petab_python_setup()
@@ -13,7 +15,7 @@ peps <- petab_python_setup(FLAGreturnpetabSelect = T)
 # 1 select initial model  ----
 # -------------------------------------------------------------------------#
 
-selection_problem <- peps$Problem$from_yaml("inst/petab_select_examples/0002/selection_problem.yaml")
+selection_problem <- peps$Problem$from_yaml("../inst/petab_select_examples/0002/selection_problem.yaml")
 # test <- yaml::read_yaml("inst/petab_select_examples/0002/selection_problem.yaml")
 model_space <- selection_problem$model_space
 
@@ -33,20 +35,19 @@ initial_virtual_model <-  peps$Model(
 candidate_space <- peps$ForwardCandidateSpace(initial_virtual_model)
 test_models <-  model_space$neighbors(candidate_space)
 
-
 dir.create("bla")
 test_models[[1]]$to_petab(output_path = "bla")
 
 pe<-readPetab("bla/problem.yaml")
+petab_plotData(pe)
 
-debugonce("getReactionsSBML")
 pd <- importPEtabSBML_indiv("bla/problem.yaml", NFLAGcompile = "0")
-
+pd_predictAndPlot2(pd)
 
 # -------------------------------------------------------------------------#
 # 2 read PEtab of initial model ----
 # -------------------------------------------------------------------------#
-
+pd_petabSelect_reportYaml(pd, FALSE)
 
 
 # -------------------------------------------------------------------------#
