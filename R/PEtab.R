@@ -625,6 +625,8 @@ petab_files <- function(filename, FLAGTestCase = FALSE, FLAGreturnList = FALSE) 
   modelname <- petab_modelname_path(filename)$modelname
   path      <- petab_modelname_path(filename)$path
   
+  FLAGFromYaml <- grepl(".yaml$", filename)
+  
   # [ ] warning("model refers to rds instead of xml\n")
   out <- NULL
   if (FLAGTestCase) {
@@ -643,6 +645,27 @@ petab_files <- function(filename, FLAGTestCase = FALSE, FLAGreturnList = FALSE) 
       metaInformation            = paste0("_metaInformation"           , ".yaml"),
       reportYaml                 = paste0(modelname, "_report"          , ".yaml")
       )
+  } else if (FLAGFromYaml) {
+
+    path <- dirname(filename)
+    yaml_content <- yaml::read_yaml(filename)
+    
+    out <- c(
+      yaml                       = filename,
+      experimentalCondition      = file.path(path, yaml_content$problems[[1]]$condition_files[[1]]),
+      measurementData            = file.path(path, yaml_content$problems[[1]]$measurement_files[[1]]),
+      modelXML                   = file.path(path, yaml_content$problems[[1]]$sbml_files[[1]]),
+      # [ ] not very elegant. Remove rds when sbml is stable
+      # model                      = paste0("_model"                     , ".rds"),
+      observables                = file.path(path, yaml_content$problems[[1]]$observable_files[[1]]),
+      parameters                 = file.path(path, yaml_content$parameter_file),
+      #simulatedData              = paste0("_simulatedData"             , ".tsv"),
+      #visualizationSpecification = paste0("_visualizationSpecification", ".tsv"),
+      #meta                       = paste0("_meta"                      , ".rds"),
+      #metaInformation            = paste0("_metaInformation"           , ".yaml"),
+      reportYaml                 = file.path(path, "report.yaml")
+    )
+    
   } else {
     out <- c(
       yaml                       = paste0(modelname, ".yaml"),
@@ -660,11 +683,16 @@ petab_files <- function(filename, FLAGTestCase = FALSE, FLAGreturnList = FALSE) 
       reportYaml                 = paste0(modelname, "_report"          , ".yaml")
       )
   }
+  
+  
   nm <- names(out)
   out <- setNames(file.path(path, out), nm)
   if (FLAGreturnList) out <- as.list(out)
   out
 }
+
+
+petab_files_fromYAML <- function()
 
 
 #' Read PEtab files
