@@ -1004,8 +1004,11 @@ petab_lint <- function(pe) {
       if (any(logscale_but_zero)) stop("Fixed parameters on log-scale, but their nominal value is zero: ",
                                        paste0(parsNotEstimatedNotLin$parameterId[logscale_but_zero], collapse = ","))
     }
-  }
-  
+    parsNotLinNominal0 <- pe$parameters[nominalValue == 0 & parameterScale != "lin"]
+    if (nrow(parsNotEstimatedNotLin)) stop("Parameters on log-scale, but their nominal value is zero: ",
+                                           paste0(parsNotLinNominal0$parameterId, collapse = ","))
+}
+
   # meta
   if (!is.null(pe$meta$parameterFormulaInjection)) {
     names_overwritten <- pe$meta$parameterFormulaInjection$parameterId %in% names(pe$experimentalCondition)
