@@ -99,11 +99,11 @@ petabSelect_readReportYaml <- function(filename) {
 #' @examples
 as.data.table.reportYaml <- function(reportYaml) {
   data.table::data.table(model_id             = reportYaml$model_id,
-             petab_yaml           = reportYaml$petab_yaml,
-             nEstimatedPars       = length(reportYaml$estimated_parameters),
-             AIC                  = reportYaml$criteria$AIC, 
-             AICc                 = reportYaml$criteria$AICc,
-             BIC                  = reportYaml$criteria$BIC 
+                         nEstimatedPars       = length(reportYaml$estimated_parameters),
+                         `-2LL`               = reportYaml$criteria$AIC - 2 * length(reportYaml$estimated_parameters),
+                         AIC                  = reportYaml$criteria$AIC, 
+                         AICc                 = reportYaml$criteria$AICc,
+                         BIC                  = reportYaml$criteria$BIC 
   )
 }
 
@@ -269,4 +269,37 @@ petabSelect_compareModels <- function(reportYamlFilenames, sort_by = "BIC") {
   tab
 }
 
+#' Likelihood ratio test
+#'
+#' @param comparisonTable output from [petabSelect_compareModels()] with two nested models
+#' @param alpha Significance level of statistical test
+#'
+#' @return Prints a message, returns the printed table invisbly
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family petab select
+#' @importFrom tibble tribble
+#' @importFrom data.table data.table
+#'
+#' @examples
+#' comparisonTable <- data.table(tibble::tribble(
+#' ~model_id, ~nEstimatedPars   , ~`-2LL`, 
+#' "Model_full"   ,            2, 5,
+#' "Model_reduced",            1, 9))
+petabSelect_LRT <- function(comparisonTable, alpha = 0.05) {
+  comparisonTable <- comparisonTable[order(`-2LL`)]
+  likelihoodRatio <- diff(comparisonTable[["-2LL"]])
+  df <- -diff(comparisonTable[["nEstimatedPars"]])
+  pValue <- 1-pchisq(likelihoodRatio, df)
+  if (round(pValue,16) == 0) pValue <- "<1e-16"
+  
+  tab <- data.table::data.table(df = df, chisq = likelihoodRatio, `p(X>=chisq)` = pValue)
+  cat("H0: Reduced model equally good as full model\n-------------------------------------------\n")
+  print(tab)
+  if (pValue <= alpha) {
+    cat("-------------------------------------------\nH0 is rejected, reduced model is worse than full model (p =",alpha,")\n")
+  } else cat("H0 is not rejected, reduction is plausible (p =",alpha,")\n")
+  invisible(tab)
+}
 

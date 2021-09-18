@@ -27,6 +27,7 @@ Other petab select:
 \code{\link{pd_petabSelect_collectParameters}()},
 \code{\link{pd_petabSelect_collectReportYamlCriteria}()},
 \code{\link{pd_petabSelect_reportYaml}()},
+\code{\link{petabSelect_LRT}()},
 \code{\link{petabSelect_collectReportYamlCriteria}()},
 \code{\link{petabSelect_readReportYaml}()},
 \code{\link{petabSelect_reportYaml}()},

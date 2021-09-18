@@ -33,6 +33,7 @@ Other petab select:
 \code{\link{pd_petabSelect_collectEstimatedParameters}()},
 \code{\link{pd_petabSelect_collectParameters}()},
 \code{\link{pd_petabSelect_collectReportYamlCriteria}()},
+\code{\link{petabSelect_LRT}()},
 \code{\link{petabSelect_collectReportYamlCriteria}()},
 \code{\link{petabSelect_compareModels}()},
 \code{\link{petabSelect_readReportYaml}()},
