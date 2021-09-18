@@ -24,7 +24,7 @@ petabSelect_reportYaml(
 
 \item{estimated_parameters}{named list of numeric parameters}
 
-\item{criteria}{list(LL, AIC, BIC, AICc)}
+\item{criteria}{list(AIC, BIC, AICc)}
 }
 \value{
 simply a list of the supplied objects
@@ -34,11 +34,14 @@ Collect all information for the reportYaml
 }
 \seealso{
 Other petab select: 
+\code{\link{as.data.table.reportYaml}()},
 \code{\link{pd_petabSelect_collectEstimatedParameters}()},
 \code{\link{pd_petabSelect_collectParameters}()},
 \code{\link{pd_petabSelect_collectReportYamlCriteria}()},
 \code{\link{pd_petabSelect_reportYaml}()},
 \code{\link{petabSelect_collectReportYamlCriteria}()},
+\code{\link{petabSelect_compareModels}()},
+\code{\link{petabSelect_readReportYaml}()},
 \code{\link{petabSelect_writeReportYaml}()}
 }
 \author{

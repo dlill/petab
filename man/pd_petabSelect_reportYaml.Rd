@@ -29,10 +29,13 @@ file.edit(tf)
 }
 \seealso{
 Other petab select: 
+\code{\link{as.data.table.reportYaml}()},
 \code{\link{pd_petabSelect_collectEstimatedParameters}()},
 \code{\link{pd_petabSelect_collectParameters}()},
 \code{\link{pd_petabSelect_collectReportYamlCriteria}()},
 \code{\link{petabSelect_collectReportYamlCriteria}()},
+\code{\link{petabSelect_compareModels}()},
+\code{\link{petabSelect_readReportYaml}()},
 \code{\link{petabSelect_reportYaml}()},
 \code{\link{petabSelect_writeReportYaml}()}
 }
