@@ -302,7 +302,6 @@ petab_mutateDCO <- function(pe, i, j) {
   pe_out
 }
 
-
 # -------------------------------------------------------------------------#
 # Initializers of core objects ----
 # -------------------------------------------------------------------------#
@@ -1005,7 +1004,7 @@ petab_lint <- function(pe) {
                                        paste0(parsNotEstimatedNotLin$parameterId[logscale_but_zero], collapse = ","))
     }
     parsNotLinNominal0 <- pe$parameters[nominalValue == 0 & parameterScale != "lin"]
-    if (nrow(parsNotEstimatedNotLin)) stop("Parameters on log-scale, but their nominal value is zero: ",
+    if (nrow(parsNotLinNominal0)) stop("Parameters on log-scale, but their nominal value is zero: ",
                                            paste0(parsNotLinNominal0$parameterId, collapse = ","))
 }
 
@@ -1515,6 +1514,32 @@ petab_getParametersExperimentalCondition <- function(experimentalCondition) {
   ec <- do.call(c,ec)
   ec <- unique(ec)
   ec
+}
+
+
+#' Hash a petab
+#' 
+#' The difficulty is that data.tables have attributes specific to R sessions
+#' 
+#' @param pe petab
+#'
+#' @return a digest
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family petab helpers
+#' @importFrom digest digest
+#'
+#' @examples
+#' # Should evaluate to TRUE, else the petab has changed
+#' petab_hash(petab_exampleRead("01","pe")) == "45281114c1d5f92ca00f9f2171379ba2"
+petab_hash <- function(pe) {
+  undatatable <- function(x) {
+    if(is.data.table(x)) data.frame(x) else x}
+  pe$model <- lapply(pe$model, undatatable)
+  pe$meta <- lapply(pe$meta, undatatable)
+  pe <- lapply(pe, undatatable)
+  digest::digest(pe)
 }
 
 
