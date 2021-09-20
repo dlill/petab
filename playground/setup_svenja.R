@@ -35,25 +35,41 @@ initial_virtual_model <-  peps$Model(
 candidate_space <- peps$ForwardCandidateSpace(initial_virtual_model)
 test_models <-  model_space$neighbors(candidate_space)
 
-dir.create("bla")
-test_models[[1]]$to_petab(output_path = "bla")
-
-pe<-readPetab("bla/problem.yaml")
-petab_plotData(pe)
-
-pd <- importPEtabSBML_indiv("bla/problem.yaml", NFLAGcompile = "0")
-pd_predictAndPlot2(pd)
-
 # -------------------------------------------------------------------------#
-# 2 read PEtab of initial model ----
-# -------------------------------------------------------------------------#
-pd_petabSelect_reportYaml(pd, FALSE)
-
-
-# -------------------------------------------------------------------------#
-# 3 evaluate model and write yaml ----
+# 2 iterate through current models and generate report.yaml(s) ----
 # -------------------------------------------------------------------------#
 
+lapply(test_models, function(model){
+  id <- as.character(model$model_id)
+  print(id)
+  sink("/dev/null")
+  # create model folder
+  modelpath <- paste0("SelectionProblem/", id, "/petab")
+  dir.create(modelpath, recursive = T)
+  # generate petab
+  test_models[[1]]$to_petab(output_path = modelpath)
+  # generate pd
+      # pe<-readPetab(file.path(modelpath,"problem.yaml"))
+      # petab_plotData(pe)
+  pd <- importPEtabSBML_indiv(file.path(modelpath,"problem.yaml"), 
+                              NFLAGcompile = "0", 
+                              .compiledFolder = file.path(modelpath,"../CompiledObjects"))
+  # evaluate pd (better use ms_trust!)
+  pd_predictAndPlot2(pd)
+  # write yaml
+  pd_petabSelect_reportYaml(pd, FLAGwriteYaml = T)
+  sink()
+})
+
 # -------------------------------------------------------------------------#
-# 4 select next candidates ----
+# 3 select best model ----
+# -------------------------------------------------------------------------#
+
+
+
+
+
+
+# -------------------------------------------------------------------------#
+# 4 select next neighbours ----
 # -------------------------------------------------------------------------#
