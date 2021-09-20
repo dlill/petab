@@ -269,6 +269,21 @@ petabSelect_compareModels <- function(reportYamlFilenames, sort_by = "BIC") {
   tab
 }
 
+#' List yaml files in subdirectories based on a pattern
+#'
+#' @param path 
+#' @param pattern 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+petabSelect_searchYamls <- function(path, pattern) {
+  pattern <- paste0(pattern, ".*_report.yaml$")
+  list.files(path, pattern, recursive = T, full.names = TRUE)
+}
+
+
 #' Likelihood ratio test
 #'
 #' @param comparisonTable output from [petabSelect_compareModels()] with two nested models
