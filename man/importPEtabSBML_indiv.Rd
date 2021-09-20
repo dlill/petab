@@ -5,7 +5,7 @@
 \title{Import an SBML model and corresponding PEtab objects}
 \usage{
 importPEtabSBML_indiv(
-  filename = "enzymeKinetics/enzymeKinetics.petab",
+  filename = "enzymeKinetics/enzymeKinetics.yaml",
   testCases = FALSE,
   path2TestCases = "PEtabTests/",
   .compiledFolder = file.path("CompiledObjects"),

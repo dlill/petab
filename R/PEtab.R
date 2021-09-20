@@ -660,7 +660,7 @@ petab_files <- function(filename, FLAGTestCase = FALSE, FLAGreturnList = FALSE) 
       #visualizationSpecification = paste0("_visualizationSpecification", ".tsv"),
       #meta                       = paste0("_meta"                      , ".rds"),
       #metaInformation            = paste0("_metaInformation"           , ".yaml"),
-      reportYaml                 = "report.yaml"
+      reportYaml                 = paste0(tools::file_path_sans_ext(basename(filename)), "_report.yaml")
     )
     
   } else {

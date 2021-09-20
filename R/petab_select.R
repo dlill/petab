@@ -220,14 +220,21 @@ pd_petabSelect_collectReportYamlCriteria <- function(pd) {
 #' file.edit(tf)
 pd_petabSelect_reportYaml <- function(pd, FLAGwriteYaml = TRUE) {
   
-  # [ ] Paths are debatable. Current choice: 
-  #   * In the reportYaml, the petab_yaml should be a relative file.path from the directory of reportYaml
-  #   * Currently, the reportYaml is written to the same directory as the petab itself and the relative file.paths are implemented by not walking any directories.
   path                 <- dirname(dirname(pd$filenameParts$.compiledFolder))
-  model_id             <- basename(dirname(path))
-  problem_id           <- pd$filenameParts$modelname
-  petab_yaml           <- basename(petab_files(paste0(path, "/", problem_id,".yaml"))["yaml"])
-  sbml                 <- basename(petab_files(paste0(path, "/", problem_id,".yaml"))["modelXML"])
+  # >>>> This is not very intuitive and only specific to petabSelect problems as set up in petabSelect(). 
+  # However, I'd like to use the reportYamls outside of petabSelect, as it's very useful to compare models also in a manual model reduction. 
+  # If we want to differentiate "problem_id" and "model_id", we should have different fields in the petab_yaml 
+  # And, why do we define problem_id but don't use it afterwards?
+  # <<<<<<<<<<< ----
+  # for me this wrote model_id as ".."
+  # model_id             <- basename(dirname(path))
+  # problem_id           <- pd$filenameParts$modelname
+  
+  model_id <- pd$filenameParts$modelname
+  
+  # for backwards compatibility
+  petab_yaml           <- pd_guessPetabYaml(pd)
+  sbml                 <- petab_files(petab_yaml)[["modelXML"]]
   parameters           <- pd_petabSelect_collectParameters(pd)
   estimated_parameters <- pd_petabSelect_collectEstimatedParameters(pd)
   criteria             <- pd_petabSelect_collectReportYamlCriteria(pd)
@@ -235,7 +242,7 @@ pd_petabSelect_reportYaml <- function(pd, FLAGwriteYaml = TRUE) {
   reportYaml <- petabSelect_reportYaml(model_id, petab_yaml, sbml, parameters, estimated_parameters, criteria)
   
   if (FLAGwriteYaml) {
-    filename <- petab_files(paste0(path, "/", problem_id,".yaml"))["reportYaml"]
+    filename <- petab_files(petab_yaml)[["reportYaml"]]
     petabSelect_writeReportYaml(reportYaml, filename = filename)
     cat("Report yaml written to ", filename, "\n")
     return(invisible(reportYaml)) # if writing to disk, don't print

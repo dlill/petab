@@ -109,6 +109,24 @@ pd_files <- function(filenameParts) {
   )
 }
 
+#' Title
+#'
+#' @param pd 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+pd_guessPetabYaml <- function(pd) {
+  if (!is.null(pd$filenameParts$petabYaml)) {
+    pd$filenameParts$petabYaml
+  } else { 
+    wup <- list.files(file.path(pd$filenameParts$.currentFolder, pd$filenameParts$.compiledFolder, ".."), "yaml", recursive = T, full.names = TRUE) # guessing
+    grep("report", wup, value = TRUE, invert = TRUE)
+  }
+}
+
+
 
 # -------------------------------------------------------------------------#
 # Manipulating fns ----

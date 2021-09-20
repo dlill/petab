@@ -1891,7 +1891,7 @@ pdIndiv_getBaseScales <- function(cg, scalesOuter) {
 #' @importFrom conveniencefunctions dMod_saveMstrust
 #'
 #' @export
-importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.petab",
+importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml",
                                   testCases = FALSE,
                                   path2TestCases = "PEtabTests/",
                                   .compiledFolder = file.path("CompiledObjects"),
@@ -1910,7 +1910,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   path      <- petab_modelname_path(filename)$path
   modelname <- petab_modelname_path(filename)$modelname
   files     <- petab_files(filename, FLAGTestCase = testCases, FLAGreturnList = TRUE)
-  filenameParts = list(modelname = modelname,.currentFolder = mywd,.compiledFolder = .compiledFolder,type = "indiv")
+  filenameParts = list(modelname = modelname, .currentFolder = mywd, .compiledFolder = .compiledFolder, type = "indiv", petabYaml = if(grepl("yaml", filename)) filename else NULL)
   rdsfile   <- pd_files(filenameParts)$rdsfile
   
   # .. Read PEtab tables -----
