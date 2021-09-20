@@ -1,0 +1,16 @@
+model_id: M1_4_0
+petab_yaml: problem.yaml
+sbml: model.xml
+criteria:
+  AIC: -1.7330139
+  BIC: -2.3577355
+  AICc: 10.2669861
+parameters:
+  k1: 0.2
+  k2: estimate
+  k3: estimate
+  sigma_x2: estimate
+estimated_parameters:
+  k2: 0.1
+  k3: 0.0
+  sigma_x2: 0.15
