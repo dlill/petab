@@ -1072,12 +1072,14 @@ pepy_sample_parameter_startpoints <- function(pe, n_starts = 100L, seed = 1L, FL
 #' @family pepy
 #' @importFrom reticulate use_virtualenv virtualenv_install
 #' 
-petab_python_reinstall <- function() {
-  message("Please restart RStudio. If that doesn't help call this function again")
-  if (readline("enter 'yes' to continue") != "yes") return("Nothing was done")
-  # Hacky version for Linux only
-  unlink("~/.virtualenvs/petab", T)
-  unlink("~/.local/share/r-reticulate/", T)
+petab_python_installPackages <- function(FLAGcleanInstall = FALSE) {
+  if (FLAGcleanInstall){
+    # Hacky version for Linux only
+    message("Please restart RStudio. If that doesn't help call this function again")
+    if (readline("enter 'yes' to continue") != "yes") return("Nothing was done")
+    unlink("~/.virtualenvs/petab", T)
+    unlink("~/.local/share/r-reticulate/", T)
+  }
   reticulate::use_virtualenv("petab")
   reticulate::virtualenv_install("petab", "petab", ignore_installed = TRUE)
   reticulate::virtualenv_install("petab", "petab-select", ignore_installed = TRUE)
@@ -1095,7 +1097,12 @@ petab_python_reinstall <- function() {
 #' * imports and returns petab
 #'
 #' use as pe <- petab_python_setup()
-#'
+#'  
+#' If this function fails, try one of these: 
+#'   1. Restart RStudio from your terminal
+#'   2. petab::petab_python_installPackages(TRUE)
+#'   3. Recreate the *.Rproj file of your current project
+#'  
 #' @param FLAGreturnpetabSelect 
 #'
 #' @return python module, see [reticulate::import()]
@@ -1112,17 +1119,20 @@ petab_python_reinstall <- function() {
 #' 
 #' peps <- petab_python_setup(FLAGreturnpetabSelect = TRUE)
 petab_python_setup <- function(FLAGreturnpetabSelect = FALSE) {
+  
+  # Necessary due to reticulate/rstudio interaction 
+  mywd <- getwd()
+  on.exit(setwd(mywd))
+  setwd("~")
+  
   if (!"petab" %in% reticulate::virtualenv_list()){
-    reticulate::virtualenv_install("petab", "petab", ignore_installed = TRUE)
-    reticulate::virtualenv_install("petab", "petab-select", ignore_installed = TRUE)
-    
+    petab_python_installPackages(FLAGcleanInstall = FALSE)
   }
   
   # Stupid RStudio "ich mach mein eigenes environment variables ding"
   # PATH <- Sys.getenv("PATH")
   # PATH <- paste0(file.path(Sys.getenv("HOME"), ".virtualenvs/petab/bin"), ":", PATH)
   # Sys.setenv(PATH = PATH)
-  message("======================\nIf this function fails, restart RStudio from your terminal and/or recreate the *.Rproj file of your current project \n==============")
   
   message("Using petab virtualenv\n")
   reticulate::use_virtualenv("petab")

@@ -29,7 +29,7 @@ FLAGincludeCurrent = TRUE
 }
 \seealso{
 Other pepy: 
-\code{\link{petab_python_reinstall}()},
+\code{\link{petab_python_installPackages}()},
 \code{\link{petab_python_setup}()}
 }
 \author{
