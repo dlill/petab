@@ -4,7 +4,7 @@
 \alias{petab_python_installPackages}
 \title{Reinstall the python setup}
 \usage{
-petab_python_installPackages(FLAGcleanInstall = FALSE)
+petab_python_installPackages(FLAGcleanInstall = FALSE, FLAGforcePip = FALSE)
 }
 \value{
 nothing, installs the virtualenv again

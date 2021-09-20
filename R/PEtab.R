@@ -1070,9 +1070,9 @@ pepy_sample_parameter_startpoints <- function(pe, n_starts = 100L, seed = 1L, FL
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family pepy
-#' @importFrom reticulate use_virtualenv virtualenv_install
+#' @importFrom reticulate virtualenv_create use_virtualenv virtualenv_install
 #' 
-petab_python_installPackages <- function(FLAGcleanInstall = FALSE) {
+petab_python_installPackages <- function(FLAGcleanInstall = FALSE, FLAGforcePip = FALSE) {
   if (FLAGcleanInstall){
     # Hacky version for Linux only
     message("Please restart RStudio. If that doesn't help call this function again")
@@ -1080,13 +1080,12 @@ petab_python_installPackages <- function(FLAGcleanInstall = FALSE) {
     unlink("~/.virtualenvs/petab", T)
     unlink("~/.local/share/r-reticulate/", T)
   }
+  if (FLAGforcePip) reticulate::virtualenv_create("petab", pip_version = "21.2.4")
   reticulate::use_virtualenv("petab")
   reticulate::virtualenv_install("petab", "petab", ignore_installed = TRUE)
   reticulate::virtualenv_install("petab", "petab-select", ignore_installed = TRUE)
-  "reinstalled petab in virtual environment"
+  "installed petab in virtual environment"
 }
-
-
 
 #' Setup the connection to python petab
 #'
