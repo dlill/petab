@@ -302,7 +302,6 @@ petab_mutateDCO <- function(pe, i, j) {
   pe_out
 }
 
-
 # -------------------------------------------------------------------------#
 # Initializers of core objects ----
 # -------------------------------------------------------------------------#
@@ -1004,8 +1003,11 @@ petab_lint <- function(pe) {
       if (any(logscale_but_zero)) stop("Fixed parameters on log-scale, but their nominal value is zero: ",
                                        paste0(parsNotEstimatedNotLin$parameterId[logscale_but_zero], collapse = ","))
     }
-  }
-  
+    parsNotLinNominal0 <- pe$parameters[nominalValue == 0 & parameterScale != "lin"]
+    if (nrow(parsNotLinNominal0)) stop("Parameters on log-scale, but their nominal value is zero: ",
+                                           paste0(parsNotLinNominal0$parameterId, collapse = ","))
+}
+
   # meta
   if (!is.null(pe$meta$parameterFormulaInjection)) {
     names_overwritten <- pe$meta$parameterFormulaInjection$parameterId %in% names(pe$experimentalCondition)
@@ -1068,21 +1070,22 @@ pepy_sample_parameter_startpoints <- function(pe, n_starts = 100L, seed = 1L, FL
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family pepy
-#' @importFrom reticulate use_virtualenv virtualenv_install
+#' @importFrom reticulate virtualenv_create use_virtualenv virtualenv_install
 #' 
-petab_python_reinstall <- function() {
-  message("Please restart RStudio. If that doesn't help call this function again")
-  if (readline("enter 'yes' to continue") != "yes") return("Nothing was done")
-  # Hacky version for Linux only
-  unlink("~/.virtualenvs/petab", T)
-  unlink("~/.local/share/r-reticulate/", T)
+petab_python_installPackages <- function(FLAGcleanInstall = FALSE, FLAGforcePip = FALSE) {
+  if (FLAGcleanInstall){
+    # Hacky version for Linux only
+    message("Please restart RStudio. If that doesn't help call this function again")
+    if (readline("enter 'yes' to continue") != "yes") return("Nothing was done")
+    unlink("~/.virtualenvs/petab", T)
+    unlink("~/.local/share/r-reticulate/", T)
+  }
+  if (FLAGforcePip) reticulate::virtualenv_create("petab", pip_version = "21.2.4")
   reticulate::use_virtualenv("petab")
   reticulate::virtualenv_install("petab", "petab", ignore_installed = TRUE)
   reticulate::virtualenv_install("petab", "petab-select", ignore_installed = TRUE)
-  "reinstalled petab in virtual environment"
+  "installed petab in virtual environment"
 }
-
-
 
 #' Setup the connection to python petab
 #'
@@ -1093,7 +1096,12 @@ petab_python_reinstall <- function() {
 #' * imports and returns petab
 #'
 #' use as pe <- petab_python_setup()
-#'
+#'  
+#' If this function fails, try one of these: 
+#'   1. Restart RStudio from your terminal
+#'   2. petab::petab_python_installPackages(TRUE)
+#'   3. Recreate the *.Rproj file of your current project
+#'  
 #' @param FLAGreturnpetabSelect 
 #'
 #' @return python module, see [reticulate::import()]
@@ -1110,17 +1118,20 @@ petab_python_reinstall <- function() {
 #' 
 #' peps <- petab_python_setup(FLAGreturnpetabSelect = TRUE)
 petab_python_setup <- function(FLAGreturnpetabSelect = FALSE) {
+  
+  # Necessary due to reticulate/rstudio interaction 
+  mywd <- getwd()
+  on.exit(setwd(mywd))
+  setwd("~")
+  
   if (!"petab" %in% reticulate::virtualenv_list()){
-    reticulate::virtualenv_install("petab", "petab", ignore_installed = TRUE)
-    reticulate::virtualenv_install("petab", "petab-select", ignore_installed = TRUE)
-    
+    petab_python_installPackages(FLAGcleanInstall = FALSE)
   }
   
   # Stupid RStudio "ich mach mein eigenes environment variables ding"
   # PATH <- Sys.getenv("PATH")
   # PATH <- paste0(file.path(Sys.getenv("HOME"), ".virtualenvs/petab/bin"), ":", PATH)
   # Sys.setenv(PATH = PATH)
-  message("======================\nIf this function fails, restart RStudio from your terminal and/or recreate the *.Rproj file of your current project \n==============")
   
   message("Using petab virtualenv\n")
   reticulate::use_virtualenv("petab")
@@ -1512,6 +1523,32 @@ petab_getParametersExperimentalCondition <- function(experimentalCondition) {
   ec <- do.call(c,ec)
   ec <- unique(ec)
   ec
+}
+
+
+#' Hash a petab
+#' 
+#' The difficulty is that data.tables have attributes specific to R sessions
+#' 
+#' @param pe petab
+#'
+#' @return a digest
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family petab helpers
+#' @importFrom digest digest
+#'
+#' @examples
+#' # Should evaluate to TRUE, else the petab has changed
+#' petab_hash(petab_exampleRead("01","pe")) == "45281114c1d5f92ca00f9f2171379ba2"
+petab_hash <- function(pe) {
+  undatatable <- function(x) {
+    if(is.data.table(x)) data.frame(x) else x}
+  pe$model <- lapply(pe$model, undatatable)
+  pe$meta <- lapply(pe$meta, undatatable)
+  pe <- lapply(pe, undatatable)
+  digest::digest(pe)
 }
 
 

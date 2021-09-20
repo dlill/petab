@@ -24,7 +24,7 @@ petabSelect_collectReportYamlCriteria <- function(AIC, BIC, AICc) {
 #' @param sbml filename of sbml
 #' @param parameters named list of numeric entries for fixed parameters and "estimate" for estimated parameters
 #' @param estimated_parameters named list of numeric parameters
-#' @param criteria list(LL, AIC, BIC, AICc)
+#' @param criteria list(AIC, BIC, AICc)
 #'
 #' @return simply a list of the supplied objects
 #' @export
@@ -61,6 +61,52 @@ petabSelect_writeReportYaml <- function(reportYaml, filename = petab_files(repor
   yaml::write_yaml(reportYaml, file = filename)
   invisible(reportYaml)
 }
+
+
+#' Read report yaml content
+#'
+#' @param filename file path
+#'
+#' @return the yaml contents as list
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family petab select
+#' @importFrom yaml read_yaml
+#'
+#' @examples
+#' pd <- petab_exampleRead("04", "pd")
+#' reportYaml <- pd_petabSelect_reportYaml(pd,F)
+#' tf <- tempfile(fileext = ".yaml")
+#' petabSelect_writeReportYaml(reportYaml, tf)
+#' reportYaml_fromFile <- petabSelect_readReportYaml(tf)
+#' 
+petabSelect_readReportYaml <- function(filename) {
+  yaml::read_yaml(filename)
+}
+
+#' Title
+#'
+#' @param reportYaml 
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family petab select
+#' @importFrom data.table data.table
+#'
+#' @examples
+as.data.table.reportYaml <- function(reportYaml) {
+  data.table::data.table(model_id             = reportYaml$model_id,
+                         nEstimatedPars       = length(reportYaml$estimated_parameters),
+                         `-2LL`               = reportYaml$criteria$AIC - 2 * length(reportYaml$estimated_parameters),
+                         AIC                  = reportYaml$criteria$AIC, 
+                         AICc                 = reportYaml$criteria$AICc,
+                         BIC                  = reportYaml$criteria$BIC 
+  )
+}
+
 
 # -------------------------------------------------------------------------#
 # petab-dMod based reporting ----
@@ -196,3 +242,65 @@ pd_petabSelect_reportYaml <- function(pd, FLAGwriteYaml = TRUE) {
   }
   reportYaml
 }
+
+
+
+# -------------------------------------------------------------------------#
+# Comparing models ----
+# -------------------------------------------------------------------------#
+
+#' Compare models
+#'
+#' @param reportYamlFilenames 
+#' @param sort_by column to sort models
+#'
+#' @return data.table
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family petab select
+#' @importFrom data.table rbindlist
+#'
+#' @examples
+#' # TODO
+petabSelect_compareModels <- function(reportYamlFilenames, sort_by = "BIC") {
+  reportYamls <- lapply(reportYamlFilenames, petabSelect_readReportYaml)
+  tab <- data.table::rbindlist(lapply(reportYamls, as.data.table.reportYaml))
+  tab <- tab[eval(parse(text = paste0("order(", sort_by, ")")))]
+  tab
+}
+
+#' Likelihood ratio test
+#'
+#' @param comparisonTable output from [petabSelect_compareModels()] with two nested models
+#' @param alpha Significance level of statistical test
+#'
+#' @return Prints a message, returns the printed table invisbly
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family petab select
+#' @importFrom tibble tribble
+#' @importFrom data.table data.table
+#'
+#' @examples
+#' comparisonTable <- data.table(tibble::tribble(
+#' ~model_id, ~nEstimatedPars   , ~`-2LL`, 
+#' "Model_full"   ,            2, 5,
+#' "Model_reduced",            1, 9))
+petabSelect_LRT <- function(comparisonTable, alpha = 0.05) {
+  comparisonTable <- comparisonTable[order(`-2LL`)]
+  likelihoodRatio <- diff(comparisonTable[["-2LL"]])
+  df <- -diff(comparisonTable[["nEstimatedPars"]])
+  pValue <- 1-pchisq(likelihoodRatio, df)
+  if (round(pValue,16) == 0) pValue <- "<1e-16"
+  
+  tab <- data.table::data.table(df = df, chisq = likelihoodRatio, `p(X>=chisq)` = pValue)
+  cat("H0: Reduced model equally good as full model\n-------------------------------------------\n")
+  print(tab)
+  if (pValue <= alpha) {
+    cat("-------------------------------------------\nH0 is rejected, reduced model is worse than full model (p =",alpha,")\n")
+  } else cat("H0 is not rejected, reduction is plausible (p =",alpha,")\n")
+  invisible(tab)
+}
+

@@ -25,6 +25,13 @@ python module, see \code{\link[reticulate:import]{reticulate::import()}}
 }
 \details{
 use as pe <- petab_python_setup()
+
+If this function fails, try one of these:
+\enumerate{
+\item Restart RStudio from your terminal
+\item petab::petab_python_installPackages(TRUE)
+\item Recreate the *.Rproj file of your current project
+}
 }
 \examples{
 pepy <- petab_python_setup()
@@ -35,7 +42,7 @@ peps <- petab_python_setup(FLAGreturnpetabSelect = TRUE)
 \seealso{
 Other pepy: 
 \code{\link{pepy_sample_parameter_startpoints}()},
-\code{\link{petab_python_reinstall}()}
+\code{\link{petab_python_installPackages}()}
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)

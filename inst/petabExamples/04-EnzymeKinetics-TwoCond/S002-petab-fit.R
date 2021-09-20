@@ -1,7 +1,5 @@
-devtools::load_all("~/Promotion/Promotion/Projects/petab")
-setwd("~")
-petab_python_setup()
 try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
+devtools::load_all("~/Promotion/Promotion/Projects/petab")
 # -------------------------------------------------------------------------#
 # Fit ----
 # -------------------------------------------------------------------------#

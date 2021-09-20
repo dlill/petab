@@ -1913,10 +1913,19 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   filenameParts = list(modelname = modelname,.currentFolder = mywd,.compiledFolder = .compiledFolder,type = "indiv")
   rdsfile   <- pd_files(filenameParts)$rdsfile
   
+  # .. Read PEtab tables -----
+  pe <- readPetab(filename)
+  
   # .. Read previously imported files -----
   dir.create(.compiledFolder, showWarnings = FALSE)
-  if (NFLAGcompile == 3)
-    NFLAGcompile <- as.numeric(!inputFileChanged(files[[1]], rdsfile))*2 # Um die Ecke wegen suboptimaler NFLAGcompile Definition
+  if (NFLAGcompile == 3){
+    if (file.exists(rdsfile)) {
+      peOld <- readRDS(rdsfile)$pe
+      NFLAGcompile <- as.numeric(petab_hash(pe) == petab_hash(peOld)) * 2 # Um die Ecke wegen suboptimaler NFLAGcompile Definition
+    } else {
+    NFLAGcompile <- 0 
+    }
+  }
   
   if(NFLAGcompile > 0) {
     pd <- readPd(rdsfile)
@@ -1934,9 +1943,6 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.peta
   
   ## load required packages
   require(libSBML) # => Not very nice, better explicitly import the required functions
-  
-  # .. Read PEtab tables -----
-  pe <- readPetab(filename)
   
   # .. Model Definition - Equations -----
   dummy            <- getReactionsSBML(files$modelXML, files$experimentalCondition)
