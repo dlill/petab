@@ -801,6 +801,7 @@ clusterStatusMessage <- function(FLAGjobDone, FLAGjobPurged, FLAGjobRecover) {
 pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_nodes = 10, 
                                identifier = "mstrust", FLAGforcePurge = FALSE, opt.parameter_startpoints = "sample") {
   # .. General job handling -----
+  cat("* use 5 digit identifier instead of 3")
   jobnm <- paste0("mstrust_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))
   
   fileJobDone    <- conveniencefunctions::dMod_files(.outputFolder, identifier)[["mstrust"]]
@@ -927,6 +928,8 @@ pd_cluster_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfi
   }
   
   # .. Set up job -----
+  cat("* use 5 digit identifier instead of 3\n")
+  cat("* use fitrank in identifier")
   jobnm <- paste0("profile_", gsub("(S[0-9-]+-[0-9]+).*", "\\1", basename(.outputFolder)))
   
   var_list <- dMod::profile_pars_per_node(profpars, 16)
