@@ -1128,11 +1128,6 @@ petab_python_setup <- function(FLAGreturnpetabSelect = FALSE) {
     petab_python_installPackages(FLAGcleanInstall = FALSE)
   }
   
-  # Stupid RStudio "ich mach mein eigenes environment variables ding"
-  # PATH <- Sys.getenv("PATH")
-  # PATH <- paste0(file.path(Sys.getenv("HOME"), ".virtualenvs/petab/bin"), ":", PATH)
-  # Sys.setenv(PATH = PATH)
-  
   message("Using petab virtualenv\n")
   reticulate::use_virtualenv("petab")
   if (FLAGreturnpetabSelect) return(reticulate::import("petab_select"))

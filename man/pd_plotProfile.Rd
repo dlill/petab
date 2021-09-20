@@ -21,6 +21,7 @@ Title
 }
 \seealso{
 Other plotting: 
+\code{\link{pd_plotParsParallelLines2}()},
 \code{\link{pd_plotParsParallelLines}()},
 \code{\link{petab_plotHelpers_aeslist}()},
 \code{\link{petab_plotHelpers_meanMeasurementsValue}()},

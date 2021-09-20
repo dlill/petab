@@ -17,6 +17,7 @@ Title
 }
 \seealso{
 Other plotting: 
+\code{\link{pd_plotParsParallelLines2}()},
 \code{\link{pd_plotParsParallelLines}()},
 \code{\link{pd_plotProfile}()},
 \code{\link{petab_plotHelpers_aeslist}()},

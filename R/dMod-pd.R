@@ -1951,6 +1951,72 @@ pd_plotParsParallelLines <- function(pd, stepMax = 3, filename = NULL, i, ggCall
 
 
 
+#' Plot resulting parameters from mstrust
+#' 
+#' This plot is inspired by the Plot from the Tutorial on modeling by Villaverde
+#'
+#' @param pd pd with field pd$result$mstrust
+#' @param stepMax maximum step of waterfall
+#' @param filename for plotting
+#' @param i subset the data.table on their names c("parameterId", "parameterType", "fitrank", "step", "stepsize", 
+#'                                                "index", "value", "converged", "iterations", "estValue")
+#' @param ggCallback for plotting
+#' @param ... output to [conveniencefunctions::cf_outputFigure()]
+#'
+#' @return ggplot
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family plotting
+#' @importFrom data.table melt
+#' @importFrom conveniencefunctions cfggplot cf_outputFigure
+#'
+#' @examples
+pd_plotParsParallelLines2 <- function(pd, stepMax = 3, filename = NULL, i, ggCallback = NULL, ...) {
+  
+  si <- substitute(i)
+  mi <- missing(i)
+  
+  parf <- pd$result$mstrust
+  
+  parameters <- attr(parf, "parameters")
+  
+  p <- as.data.table(as.data.frame(parf))
+  p <- data.table::melt(p, measure.vars = parameters, variable.name = "parameterId", variable.factor = FALSE, value.name = "estValue", verbose = F)
+  pt <- petab_getParameterType(pd$pe)
+  p <- pt[p, on="parameterId"]
+  p <- p[order(parameterType)]
+  p[,`:=`(parameterId = factor(parameterId, unique(parameterId)))]
+  p[,`:=`(parameterType = factor(parameterType, c("noiseParameters", "observableParameters", "other", "L1")))]
+  p <- p[step <= stepMax]
+  
+  if (!mi) p <- p[eval(si)]
+  
+  p[,`:=`(step = paste0(step,": ", stepsize))]
+  
+  pl <- conveniencefunctions::cfggplot(p, aes(parameterId, estValue, group = fitrank, color = step)) + 
+    facet_grid(~parameterType, scales = "free_x", space = "free_x") + 
+    geom_point(alpha = 0.1) + 
+    geom_line( alpha = 0.1) + 
+    scale_color_cf() + 
+    # guides(color = FALSE) +
+    theme(axis.text.x = element_text(angle = 90),
+          panel.grid.major.y = element_line(color="grey90")) + 
+    geom_blank()
+  
+  for (plx in ggCallback) pl <- pl + plx
+  
+  conveniencefunctions::cf_outputFigure(pl, filename, 
+                                        width = length(parameters) * 0.5 + 5, height = 21, units = "cm", ...)
+  
+  pl
+  
+}
+
+
+
+
+
 #' Title
 #'
 #' @param x
