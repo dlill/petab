@@ -595,10 +595,10 @@ petab <- function(
 #' @examples
 #' # same:
 #' petab_modelname_path("Models/Example")
-#' petab_modelname_path("Models/Example.petab")
+#' petab_modelname_path("Models/Example/Example.yaml")
 petab_modelname_path <- function(filename) {
   modelname <- basename(tools::file_path_sans_ext(filename))
-  path <- filename
+  path <- if (grepl("yaml",filename)) dirname(filename) else filename
   list(modelname = modelname, path = path)
 }
 
@@ -619,12 +619,11 @@ petab_modelname_path <- function(filename) {
 #' petab_files("Models/Example")
 petab_files <- function(filename, FLAGTestCase = FALSE, FLAGreturnList = FALSE) {
   
+  FLAGFromYaml <- grepl(".yaml$", filename)  & file.exists(filename)
+  
   modelname <- petab_modelname_path(filename)$modelname
   path      <- petab_modelname_path(filename)$path
   
-  FLAGFromYaml <- grepl(".yaml$", filename)
-  
-  # [ ] warning("model refers to rds instead of xml\n")
   out <- NULL
   if (FLAGTestCase) {
     out <- c(
@@ -643,7 +642,7 @@ petab_files <- function(filename, FLAGTestCase = FALSE, FLAGreturnList = FALSE) 
       reportYaml                 = paste0(modelname, "_report"          , ".yaml")
       )
   } else if (FLAGFromYaml) {
-
+    
     path <- dirname(filename)
     yaml_content <- yaml::read_yaml(filename)
     
@@ -656,10 +655,10 @@ petab_files <- function(filename, FLAGTestCase = FALSE, FLAGreturnList = FALSE) 
       # model                      = paste0("_model"                     , ".rds"),
       observables                = yaml_content$problems[[1]]$observable_files[[1]],
       parameters                 = yaml_content$parameter_file,
-      #simulatedData              = paste0("_simulatedData"             , ".tsv"),
-      #visualizationSpecification = paste0("_visualizationSpecification", ".tsv"),
-      #meta                       = paste0("_meta"                      , ".rds"),
-      #metaInformation            = paste0("_metaInformation"           , ".yaml"),
+      # simulatedData              = paste0("_simulatedData"             , ".tsv"),
+      # visualizationSpecification = paste0("_visualizationSpecification", ".tsv"),
+      # meta                       = paste0("_meta"                      , ".rds"),
+      # metaInformation            = paste0("_metaInformation"           , ".yaml"),
       reportYaml                 = paste0(tools::file_path_sans_ext(basename(filename)), "_report.yaml")
     )
     
@@ -680,7 +679,6 @@ petab_files <- function(filename, FLAGTestCase = FALSE, FLAGreturnList = FALSE) 
       reportYaml                 = paste0(modelname, "_report"          , ".yaml")
       )
   }
-  
   
   nm <- names(out)
   out <- setNames(file.path(path, out), nm)
@@ -758,7 +756,8 @@ writePetab <- function(pe, filename = "petab/model") {
                            measurement_files = basename(files["measurementData"]),
                            parameter_file    = basename(files["parameters"]),
                            observable_files  = basename(files["observables"]),
-                           yaml_file         = files["yaml"])
+                           yaml_file         = files["yaml"], 
+                           relative_paths = FALSE)
   
   # [ ] Hack: Remove once sbml export is stable
   if ("model" %in% names(pe)) pe$modelXML <- pe$model
