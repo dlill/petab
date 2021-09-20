@@ -13,6 +13,7 @@ pd_predictAndPlot2(
   opt.mstrust = pd_parf_opt.mstrust(),
   opt.profile = pd_parf_opt.profile(FALSE),
   opt.L1 = pd_parf_opt.L1(FALSE),
+  parf = NULL,
   NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2, strict_cutTimes = 3,
     keepInternal_cutTimes = 3)["strict_cutTimes"],
   FLAGsummarizeProfilePredictions = TRUE,
@@ -39,6 +40,8 @@ pd_predictAndPlot2(
 \item{i, j}{data.table arguments working on dco, but note that j will be evaulated in a separate step \emph{after} i}
 
 \item{opt.base, opt.mstrust, opt.profile}{Options to get parameters from parframes for prediction purposes}
+
+\item{parf}{parframe to simulate with. if supplied, opt.base,opt.mstrust,opt.profile are meaningless}
 
 \item{NFLAGsubsetType}{subset \emph{species}, \emph{observableId}, \emph{conditionId} and "time".
 \itemize{

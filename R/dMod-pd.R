@@ -1663,6 +1663,7 @@ pd_predictAndPlot <- function(pd, i,
 #' @param pd 
 #' @param pe to draw other data
 #' @param i,j data.table arguments working on dco, but note that j will be evaulated in a separate step *after* i
+#' @param parf parframe to simulate with. if supplied, opt.base,opt.mstrust,opt.profile are meaningless
 #' @param opt.base,opt.mstrust,opt.profile Options to get parameters from parframes for prediction purposes
 #' @param NFLAGsubsetType subset *species*, *observableId*, *conditionId* and "time".
 #'   * 0 none                 : no subsetting
@@ -1710,6 +1711,7 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
                                opt.mstrust = pd_parf_opt.mstrust(),
                                opt.profile = pd_parf_opt.profile(FALSE),
                                opt.L1 = pd_parf_opt.L1(FALSE),
+                               parf = NULL,
                                NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2, strict_cutTimes = 3,keepInternal_cutTimes = 3)["strict_cutTimes"],
                                FLAGsummarizeProfilePredictions = TRUE,
                                FLAGmeanLine = FALSE,
@@ -1737,7 +1739,7 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
   dplot[,`:=`(observableId=factor(observableId, petab_plotHelpers_variableOrder(pd)))]
   
   # .. Prediction -----
-  parf <- pd_parf_collect(pd, opt.base = opt.base, opt.mstrust = opt.mstrust, opt.profile = opt.profile, opt.L1 = opt.L1)
+  if (is.null(parf)) parf <- pd_parf_collect(pd, opt.base = opt.base, opt.mstrust = opt.mstrust, opt.profile = opt.profile, opt.L1 = opt.L1)
   if (nrow(parf) > 5) {
     pd$times <- pd_predtimes(pd, N = opt.sim$Ntimes_gt5ParSetIds)
     if (!opt.profile$include) cat("Predicting for more than 5 parameter sets. Are you sure?")
