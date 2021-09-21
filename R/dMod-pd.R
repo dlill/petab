@@ -801,8 +801,7 @@ clusterStatusMessage <- function(FLAGjobDone, FLAGjobPurged, FLAGjobRecover) {
 pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_nodes = 10, 
                                identifier = "mstrust", FLAGforcePurge = FALSE, opt.parameter_startpoints = "sample") {
   # .. General job handling -----
-  cat("* use 5 digit identifier instead of 3")
-  jobnm <- paste0("mstrust_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))
+  jobnm <- paste0("mstrust_", identifier, "_", gsub("-","_",gsub("(S\\d+(-\\d+)?).*", "\\1", basename(.outputFolder))))
   
   fileJobDone    <- conveniencefunctions::dMod_files(.outputFolder, identifier)[["mstrust"]]
   fileJobPurged  <- file.path(dirname(fileJobDone), paste0(".", jobnm, "jobPurged"))
@@ -829,8 +828,8 @@ pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_node
       FLAGincludeCurrent <- seed == 1
       
       if (identical(opt.parameter_startpoints, "sample")){
-      center <- pepy_sample_parameter_startpoints(pd$pe, n_starts = n_startsPerNode, seed = seed, 
-                                                  FLAGincludeCurrent = FLAGincludeCurrent)
+        center <- pepy_sample_parameter_startpoints(pd$pe, n_starts = n_startsPerNode, seed = seed, 
+                                                    FLAGincludeCurrent = FLAGincludeCurrent)
       } else {
         center <- opt.parameter_startpoints
       }
@@ -868,7 +867,7 @@ pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_node
   # .. Get results -----
   if (!FLAGjobDone & !FLAGjobPurged) {
     if (job$check()) {
-      Sys.sleep(2) # avoid being blocked
+      Sys.sleep(1) # avoid being blocked
       job$get()
       fitlist  <- if (exists("cluster_result")) do.call(c, cluster_result) else {NULL
         #cf_dMod_rescueFits()
@@ -881,11 +880,14 @@ pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_node
       fits <- conveniencefunctions::cf_as.parframe(fits)
       conveniencefunctions::dMod_saveMstrust(fit = fits, path = .outputFolder, 
                                              identifier = identifier, FLAGoverwrite = TRUE)
-      
-      return("Job done. You can check out the results by running `readPd` which will load the fit into pd$result$fits. Re-run this function once more to purge the job.")
+      savedFits <- readRDS(fileJobDone)
+      if (nrow(savedFits) != (n_startsPerNode * n_nodes)){
+        return("Job done, but some fits had errors. You can check out the results by running `readPd` which will load the fit into pd$result$fits. Re-run this function once more to purge the job.")
+      } else cat("Job done and all went fine.\n")
     }
   }
   
+  FLAGjobDone    <- file.exists(fileJobDone)
   if (FLAGjobDone & !FLAGjobPurged) {
     if (readline("Purge job. Are you sure? Type yes: ") == "yes"){
       job$purge(purge_local = TRUE)
