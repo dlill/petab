@@ -2018,21 +2018,27 @@ pd_plotParsParallelLines2 <- function(pd, stepMax = 3, filename = NULL, i, ggCal
   if (!mi) p <- p[eval(si)]
   
   p[,`:=`(step = paste0(step,": ", stepsize))]
+  p[,`:=`(step = factor(step))]
+  p <- p[order(step, decreasing = TRUE)]
+  
+  
   
   pl <- conveniencefunctions::cfggplot(p, aes(parameterId, estValue, group = fitrank, color = step)) + 
     facet_grid(~parameterType, scales = "free_x", space = "free_x") + 
-    geom_point(alpha = 0.1) + 
-    geom_line( alpha = 0.1) + 
+    geom_point(aes(alpha = step)) + 
     scale_color_cf() + 
-    # guides(color = FALSE) +
-    theme(axis.text.x = element_text(angle = 90),
-          panel.grid.major.y = element_line(color="grey90")) + 
+    scale_alpha_manual(values = c(0.15,rep(0.08,20))) + 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+          panel.grid.major.y = element_line(color="grey95"),
+          panel.grid.major.x = element_line(color="grey95")
+          ) + 
     geom_blank()
-  
+  # Hack to draw lines in order: best step on top
+  for (sx in sort(unique(p$step),decreasing = TRUE)) pl <- pl + geom_line(aes(alpha = step), data = p[step == sx])
   for (plx in ggCallback) pl <- pl + plx
   
   conveniencefunctions::cf_outputFigure(pl, filename, 
-                                        width = length(parameters) * 0.5 + 5, height = 21, units = "cm", ...)
+                                        width = length(parameters) * 0.5 + 5, height = 16, units = "cm", ...)
   
   pl
   
