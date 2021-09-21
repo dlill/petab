@@ -1,6 +1,6 @@
-model_id: M1_4_0
-petab_yaml: problem.yaml
-sbml: model.xml
+model_id: problem
+petab_yaml: SelectionProblem/M1_4_0/petab/problem.yaml
+sbml: SelectionProblem/M1_4_0/petab/model.xml
 criteria:
   AIC: -1.7330139
   BIC: -2.3577355

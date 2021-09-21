@@ -322,10 +322,15 @@ pd_profile_getParsNotYetProfiled <- function(pd, .outputFolder, FLAGreturnVector
 #' @examples
 pd_updateEstPars <- function(pd, parsEst, FLAGupdatePE = TRUE, FLAGsavePd = FALSE) {
   # [ ] don't overwrite, just load from Results
-  pd$pars[names(parsEst)] <- parsEst
-  
-  pd$result$base <- conveniencefunctions::pars2parframe(pd$pars, parameterSetId = "Base", obj = pd$obj)
-  
+  if(is.parframe(parsEst)) {
+    pd$result$mstrust <- parsEst
+    parsEst <- as.parvec(parsEst)
+    pd$pars[names(parsEst)] <- parsEst
+  } else {
+    pd$pars[names(parsEst)] <- parsEst
+    pd$result$base <- conveniencefunctions::pars2parframe(pd$pars, parameterSetId = "Base", obj = pd$obj)
+    }
+
   if (FLAGupdatePE) {
     cat("pd$pe pars have been *set*")
     petab_setPars_estScale(pd$pe, parsEst)}
@@ -637,6 +642,60 @@ pd_fit <- function(pd, NFLAGsavePd = 1, iterlim = 1000, printIter = TRUE, traceF
   pd
 }
 
+
+#' Run mstrust
+#'
+#' @param pd
+#' @param NFLAGsavePd 3 as an option doesn't make sense hre
+#'
+#' @return
+#' @export
+#' @author svenja kemmer
+#' @md
+#'
+#' @family pd
+#' @family pd fitting
+#'
+#' @importFrom dMod mstrust
+#'
+#' @examples
+pd_mstrust <- function(pd, NFLAGsavePd = T, iterlim = 1000, nfits = 5, id) {
+  
+  .outputFolder <- paste0("SelectionProblem/", id)
+  
+  fit_par <- pd$pars
+  fit_fix <- pd$fixed
+  
+  parlower <- petab_getParameterBoundaries(pd$pe, "lower")
+  parupper <- petab_getParameterBoundaries(pd$pe, "upper")
+  
+  # file.copy(file.path(pd$filenameParts$.currentFolder, pd$filenameParts$.compiledFolder, "/"), ".", recursive = TRUE)
+  # loadDLL(pd$obj_data);
+  # 
+  # center <- pepy_sample_parameter_startpoints(pe = pd$pe, n_starts = nfits, seed = 1, FLAGincludeCurrent = 1)
+  center <- fit_par                                             
+
+  out <- dMod::mstrust(objfun = pd$obj,
+                       center = center, 
+                       studyname = paste0("SelectionProblem/", id, "/Results/trial"),
+                       rinit = 1, rmax = 10, 
+                       iterlim = iterlim, 
+                       fits = nfits,
+                       cores = detectFreeCores(),
+                       fixed = fit_fix,
+                       parlower = parlower, 
+                       parupper = parupper)
+                           
+  myframe <- as.parframe(out)
+  conveniencefunctions::dMod_saveMstrust(fit = myframe, path = .outputFolder, 
+                                         identifier = paste0(nfits, "fits"), FLAGoverwrite = TRUE)
+  bestfit <- as.parvec(myframe, 1)
+                       
+  if (!myframe$converged[1]) warning("Fit not converged, please try increasing 'iterlim' (was ", iterlim,")")
+  
+  pd <- pd_updateEstPars(pd, parsEst = myframe, FLAGupdatePE = TRUE, FLAGsavePd = NFLAGsavePd)
+  pd
+}
 
 
 # fit_hierarchical -----
