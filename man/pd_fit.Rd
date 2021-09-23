@@ -15,6 +15,10 @@ pd_fit(pd, NFLAGsavePd = 1, iterlim = 1000, printIter = TRUE, traceFile = NULL)
 \description{
 Run a fit only for observation parameters
 }
+\seealso{
+Other pd: 
+\code{\link{pd_mstrust}()}
+}
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }

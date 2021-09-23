@@ -1069,7 +1069,7 @@ pepy_sample_parameter_startpoints <- function(pe, n_starts = 100L, seed = 1L, FL
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family pepy
-#' @importFrom reticulate virtualenv_create use_virtualenv virtualenv_install
+#' @importFrom reticulate virtualenv_create use_virtualenv virtualenv_install install_python use_python
 #' 
 petab_python_installPackages <- function(FLAGcleanInstall = FALSE, FLAGforcePip = FALSE) {
   if (FLAGcleanInstall){

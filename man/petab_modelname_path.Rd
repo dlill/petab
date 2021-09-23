@@ -18,7 +18,7 @@ Consistent file names
 \examples{
 # same:
 petab_modelname_path("Models/Example")
-petab_modelname_path("Models/Example.petab")
+petab_modelname_path("Models/Example/Example.yaml")
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
