@@ -1079,7 +1079,11 @@ petab_python_installPackages <- function(FLAGcleanInstall = FALSE, FLAGforcePip 
     unlink("~/.virtualenvs/petab", T)
     unlink("~/.local/share/r-reticulate/", T)
   }
-  if (FLAGforcePip) reticulate::virtualenv_create("petab", pip_version = "21.2.4")
+  
+  pyversion <- "3.9.7"
+  pyver <- reticulate::install_python(pyversion)
+  reticulate::use_python(pyver, TRUE)
+  
   reticulate::use_virtualenv("petab")
   reticulate::virtualenv_install("petab", "petab", ignore_installed = TRUE)
   reticulate::virtualenv_install("petab", "petab-select", ignore_installed = TRUE)
