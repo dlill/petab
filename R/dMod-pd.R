@@ -1,8 +1,20 @@
 # -------------------------------------------------------------------------#
 # pd-"Class" ----
 # -------------------------------------------------------------------------#
-# [ ] pd should be its own "class" with clearly defined names
+# [ ] pd should be its own class with clearly defined names and some print functions
 # pd <- function()
+
+# pd <- list(
+# pe,
+# dModAtoms,
+# obj,
+# prd,
+# times,
+# pars,
+# parameterTables (formerly result),
+# L1 = list,
+# info = list(filenameParts, ...)
+# )
 
 
 # -------------------------------------------------------------------------#
