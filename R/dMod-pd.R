@@ -4,17 +4,50 @@
 # [ ] pd should be its own class with clearly defined names and some print functions
 # pd <- function()
 
-# pd <- list(
-# pe,
-# dModAtoms,
-# obj,
-# prd,
-# times,
-# pars,
-# parameterTables (formerly result),
-# L1 = list,
-# info = list(filenameParts, ...)
-# )
+#' 
+#'
+#' @param pe 
+#' @param dModAtoms 
+#' @param obj 
+#' @param prd 
+#' @param times 
+#' @param pars 
+#' @param parameterTables 
+#' @param L1 
+#' @param pdInfo 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+initPd <- function(pe, dModAtoms, obj, prd, times, pars, parameterTables, L1, pdInfo, ...) {
+  pd <- list(
+  pe,
+  dModAtoms,
+  obj,
+  prd,
+  times,
+  pars,
+  parameterTables,
+  L1,
+  pdInfo, 
+  ...
+  )
+}
+
+
+#' Title
+#'
+#' @param filenameParts 
+#' @param ... 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+initPd <- function(filenameParts, ...) {
+  list(filenameParts, ...)
+}
 
 
 # -------------------------------------------------------------------------#

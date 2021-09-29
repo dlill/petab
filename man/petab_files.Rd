@@ -4,7 +4,7 @@
 \alias{petab_files}
 \title{List petab files}
 \usage{
-petab_files(filename, FLAGTestCase = FALSE, FLAGreturnList = FALSE)
+petab_files(filename)
 }
 \arguments{
 \item{filename}{"path/to/modelname.petab". Will generate filenames like
@@ -21,6 +21,7 @@ list or character vector of file paths
 List petab files
 }
 \examples{
+filename <- "Models/petabFolder/mypetab.yaml"
 petab_files("Models/Example")
 }
 \author{

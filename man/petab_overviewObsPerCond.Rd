@@ -4,12 +4,19 @@
 \alias{petab_overviewObsPerCond}
 \title{Generate overview table which observables are in which condition}
 \usage{
-petab_overviewObsPerCond(pe, Ntruncate = 1000, ...)
+petab_overviewObsPerCond(
+  pe,
+  Ntruncate = 1000,
+  FLAGincludedatasetId = TRUE,
+  ...
+)
 }
 \arguments{
 \item{pe}{\code{\link[=petab]{petab()}} object}
 
 \item{Ntruncate}{truncate pasted observables at this many characters}
+
+\item{FLAGincludedatasetId}{summarize per conditionId, datasetId and replicateId}
 
 \item{...}{arguments going to \code{\link[conveniencefunctions:cfoutput_MdTable]{conveniencefunctions::cfoutput_MdTable()}}}
 }

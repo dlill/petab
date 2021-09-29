@@ -17,6 +17,10 @@ pd with pd$result$pd$base_obsParsFitted
 \description{
 Fit only obsPars
 }
+\seealso{
+Other pd fitting: 
+\code{\link{pd_mstrust}()}
+}
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }

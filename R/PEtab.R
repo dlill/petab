@@ -616,32 +616,19 @@ petab_modelname_path <- function(filename) {
 #' @export
 #'
 #' @examples
+#' filename <- "Models/petabFolder/mypetab.yaml"
 #' petab_files("Models/Example")
-petab_files <- function(filename, FLAGTestCase = FALSE, FLAGreturnList = FALSE) {
+petab_files <- function(filename) {
   
-  FLAGFromYaml <- grepl(".yaml$", filename)  & file.exists(filename)
+  FLAGisYaml <- grepl(".yaml$", filename)  
+  FLAGFromYaml <- FLAGisYaml  & file.exists(filename)
   
   modelname <- petab_modelname_path(filename)$modelname
   path      <- petab_modelname_path(filename)$path
   
   out <- NULL
-  if (FLAGTestCase) {
-    out <- c(
-      yaml                       = paste0(modelname, ".yaml"),
-      experimentalCondition      = paste0("_experimentalCondition"     , ".tsv"),
-      measurementData            = paste0("_measurementData"           , ".tsv"),
-      modelXML                   = paste0("_model"                     , ".xml"),
-      # [ ] not very elegant. Remove rds when sbml is stable
-      model                      = paste0("_model"                     , ".rds"),
-      observables                = paste0("_observables"               , ".tsv"),
-      parameters                 = paste0("_parameters"                , ".tsv"),
-      simulatedData              = paste0("_simulatedData"             , ".tsv"),
-      visualizationSpecification = paste0("_visualizationSpecification", ".tsv"),
-      meta                       = paste0("_meta"                      , ".rds"),
-      metaInformation            = paste0("_metaInformation"           , ".yaml"),
-      reportYaml                 = paste0(modelname, "_report"          , ".yaml")
-      )
-  } else if (FLAGFromYaml) {
+  
+  if (FLAGFromYaml) {
     
     path <- dirname(filename)
     yaml_content <- yaml::read_yaml(filename)
@@ -652,40 +639,59 @@ petab_files <- function(filename, FLAGTestCase = FALSE, FLAGreturnList = FALSE) 
       measurementData            = yaml_content$problems[[1]]$measurement_files[[1]],
       modelXML                   = yaml_content$problems[[1]]$sbml_files[[1]],
       # [ ] not very elegant. Remove rds when sbml is stable
-      # model                      = paste0("_model"                     , ".rds"),
+      model                      = yaml_content$problems[[1]]$model_files[[1]],
       observables                = yaml_content$problems[[1]]$observable_files[[1]],
       parameters                 = yaml_content$parameter_file,
       # simulatedData              = paste0("_simulatedData"             , ".tsv"),
       # visualizationSpecification = paste0("_visualizationSpecification", ".tsv"),
-      # meta                       = paste0("_meta"                      , ".rds"),
-      # metaInformation            = paste0("_metaInformation"           , ".yaml"),
+      meta                      = yaml_content$problems[[1]]$meta_files[[1]],
+      metaInformation       = yaml_content$problems[[1]]$metaInformation_files[[1]],
       reportYaml                 = paste0(tools::file_path_sans_ext(basename(filename)), "_report.yaml")
     )
     
   } else {
-    out <- c(
-      yaml                       = paste0(modelname, ".yaml"),
-      experimentalCondition      = paste0("experimentalCondition_"     , modelname, ".tsv"),
-      measurementData            = paste0("measurementData_"           , modelname, ".tsv"),
-      modelXML                   = paste0("model_"                     , modelname, ".xml"),
-      # [ ] not very elegant. Remove rds when sbml is stable
-      model                      = paste0("model_"                     , modelname, ".rds"),
-      observables                = paste0("observables_"               , modelname, ".tsv"),
-      parameters                 = paste0("parameters_"                , modelname, ".tsv"),
-      simulatedData              = paste0("simulatedData_"             , modelname, ".tsv"),
-      visualizationSpecification = paste0("visualizationSpecification_", modelname, ".tsv"),
-      meta                       = paste0("meta_"                      , modelname, ".rds"),
-      metaInformation            = paste0("metaInformation_"           , modelname, ".yaml"),
-      reportYaml                 = paste0(modelname, "_report"          , ".yaml")
-      )
+    out <- petab_files_default(modelname)
+
   }
   
-  nm <- names(out)
-  out <- setNames(file.path(path, out), nm)
-  if (FLAGreturnList) out <- as.list(out)
   out
 }
 
+
+#' Get default filenames
+#'
+#' @param modelname 
+#' @param path 
+#'
+#' @return list of file.paths
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family petab_files
+#' @importFrom stats setNames
+#'
+#' @examples
+#' petab_files_default("modelname", "path")
+petab_files_default <- function(modelname, path) {
+  c(
+    yaml                       = paste0(modelname, ".yaml"),
+    experimentalCondition      = paste0("experimentalCondition_"     , modelname, ".tsv"),
+    measurementData            = paste0("measurementData_"           , modelname, ".tsv"),
+    modelXML                   = paste0("model_"                     , modelname, ".xml"),
+    # [ ] not very elegant. Remove rds when sbml is stable
+    model                      = paste0("model_"                     , modelname, ".rds"),
+    observables                = paste0("observables_"               , modelname, ".tsv"),
+    parameters                 = paste0("parameters_"                , modelname, ".tsv"),
+    simulatedData              = paste0("simulatedData_"             , modelname, ".tsv"),
+    visualizationSpecification = paste0("visualizationSpecification_", modelname, ".tsv"),
+    meta                       = paste0("meta_"                      , modelname, ".rds"),
+    metaInformation            = paste0("metaInformation_"           , modelname, ".yaml"),
+    reportYaml                 = paste0(modelname, "_report"          , ".yaml")
+  )
+  nm <- names(out)
+  out <- stats::setNames(file.path(path, out), nm)
+  as.list(out)
+}
 
 
 
@@ -1004,9 +1010,9 @@ petab_lint <- function(pe) {
     }
     parsNotLinNominal0 <- pe$parameters[nominalValue == 0 & parameterScale != "lin"]
     if (nrow(parsNotLinNominal0)) stop("Parameters on log-scale, but their nominal value is zero: ",
-                                           paste0(parsNotLinNominal0$parameterId, collapse = ","))
-}
-
+                                       paste0(parsNotLinNominal0$parameterId, collapse = ","))
+  }
+  
   # meta
   if (!is.null(pe$meta$parameterFormulaInjection)) {
     names_overwritten <- pe$meta$parameterFormulaInjection$parameterId %in% names(pe$experimentalCondition)
@@ -1408,6 +1414,7 @@ petab_plotData <- function(petab,
 #'
 #' @param pe [petab()] object
 #' @param Ntruncate truncate pasted observables at this many characters
+#' @param FLAGincludedatasetId summarize per conditionId, datasetId and replicateId
 #' @param ... arguments going to [conveniencefunctions::cfoutput_MdTable()]
 #'
 #' @return prints table to console or writes it to disk
@@ -1416,11 +1423,11 @@ petab_plotData <- function(petab,
 #' @md
 #' @family Overview Tables
 #' @importFrom conveniencefunctions cfoutput_MdTable
-petab_overviewObsPerCond <- function(pe, Ntruncate = 1000, ...) {
+petab_overviewObsPerCond <- function(pe, Ntruncate = 1000, FLAGincludedatasetId = TRUE, ...) {
   dx <- petab_joinDCO(pe)
   if ("conditionName" %in% names(dx)) dx[,`:=`(conditionName = conditionId)]
-  dx <- dx[,list(observableId = paste0(sort(unique(observableId)), collapse = ",")),
-           by = c("conditionId", "conditionName")]
+  bycols <- if (FLAGincludedatasetId) c("conditionId", "datsetId", "replicateId") else c("conditionId")
+  dx <- dx[,list(observableId = paste0(sort(unique(observableId)), collapse = ",")), by = bycols]
   dx <- dx[,`:=`(observableId = substr(observableId, 1, Ntruncate))]
   conveniencefunctions::cfoutput_MdTable(dx, ...)
 }
@@ -1447,6 +1454,8 @@ petab_overviewDCONames <- function(pe) {
   
   print(columns)
 }
+
+
 
 # -------------------------------------------------------------------------#
 # Very small helpers ----
