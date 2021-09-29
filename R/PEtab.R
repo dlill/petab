@@ -618,10 +618,10 @@ petab_modelname_path <- function(filename) {
 #' @examples
 #' filename <- "Models/petabFolder/mypetab.yaml"
 #' petab_files("Models/Example")
-petab_files <- function(filename) {
+petab_files <- function(filename, FLAGoverwrite = FALSE) {
   
-  FLAGisYaml <- grepl(".yaml$", filename)  
-  FLAGFromYaml <- FLAGisYaml  & file.exists(filename)
+  FLAGisYaml   <- grepl(".yaml$", filename)  
+  FLAGFromYaml <- FLAGisYaml  & file.exists(filename) & !FLAGoverwrite
   
   modelname <- petab_modelname_path(filename)$modelname
   path      <- petab_modelname_path(filename)$path
@@ -629,31 +629,10 @@ petab_files <- function(filename) {
   out <- NULL
   
   if (FLAGFromYaml) {
-    
-    path <- dirname(filename)
-    yaml_content <- yaml::read_yaml(filename)
-    
-    out <- c(
-      yaml                       = basename(filename),
-      experimentalCondition      = yaml_content$problems[[1]]$condition_files[[1]],
-      measurementData            = yaml_content$problems[[1]]$measurement_files[[1]],
-      modelXML                   = yaml_content$problems[[1]]$sbml_files[[1]],
-      # [ ] not very elegant. Remove rds when sbml is stable
-      model                      = yaml_content$problems[[1]]$model_files[[1]],
-      observables                = yaml_content$problems[[1]]$observable_files[[1]],
-      parameters                 = yaml_content$parameter_file,
-      # simulatedData              = paste0("_simulatedData"             , ".tsv"),
-      # visualizationSpecification = paste0("_visualizationSpecification", ".tsv"),
-      meta                      = yaml_content$problems[[1]]$meta_files[[1]],
-      metaInformation       = yaml_content$problems[[1]]$metaInformation_files[[1]],
-      reportYaml                 = paste0(tools::file_path_sans_ext(basename(filename)), "_report.yaml")
-    )
-    
+    out <- petab_files_fromYaml(filename)
   } else {
-    out <- petab_files_default(modelname)
-
+    out <- petab_files_default(modelname, path)
   }
-  
   out
 }
 
@@ -673,7 +652,7 @@ petab_files <- function(filename) {
 #' @examples
 #' petab_files_default("modelname", "path")
 petab_files_default <- function(modelname, path) {
-  c(
+  out <- list(
     yaml                       = paste0(modelname, ".yaml"),
     experimentalCondition      = paste0("experimentalCondition_"     , modelname, ".tsv"),
     measurementData            = paste0("measurementData_"           , modelname, ".tsv"),
@@ -688,9 +667,47 @@ petab_files_default <- function(modelname, path) {
     metaInformation            = paste0("metaInformation_"           , modelname, ".yaml"),
     reportYaml                 = paste0(modelname, "_report"          , ".yaml")
   )
-  nm <- names(out)
-  out <- stats::setNames(file.path(path, out), nm)
-  as.list(out)
+  out <- lapply(out, function(x) file.path(path, x))
+  out
+}
+
+#' Read list of filenames from a petabYaml
+#'
+#' @param filename file.path to petab.yaml
+#'
+#' @return list of filenames
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family petab files
+#' @importFrom yaml read_yaml
+#' @importFrom tools file_path_sans_ext
+#'
+#' @examples
+#' filename <- file.path(petab_examplePath("01"), "petab.yaml")
+#' petab_files_fromYaml(filename)
+petab_files_fromYaml <- function(filename) {
+  path <- dirname(filename)
+  yaml_content <- yaml::read_yaml(filename)
+  if (length(yaml_content$problems) > 1) 
+    stop("More than one 'problems' section is not yet supported. If you want to implement it, consider that several petab_combine* functions exist already.")
+  out <- list(
+    yaml                       = basename(filename),
+    experimentalCondition      = yaml_content$problems[[1]]$condition_files[[1]],
+    measurementData            = yaml_content$problems[[1]]$measurement_files[[1]],
+    modelXML                   = yaml_content$problems[[1]]$sbml_files[[1]],
+    # [ ] not very elegant. Remove rds when sbml is stable
+    model                      = yaml_content$problems[[1]]$model_files[[1]],
+    observables                = yaml_content$problems[[1]]$observable_files[[1]],
+    parameters                 = yaml_content$parameter_file,
+    # simulatedData              = paste0("_simulatedData"             , ".tsv"),
+    visualizationSpecification = yaml_content$problems[[1]]$visualization_files[[1]],
+    meta                      = yaml_content$meta_file[[1]],
+    metaInformation           = yaml_content$metaInformation_file[[1]],
+    reportYaml                = paste0(tools::file_path_sans_ext(basename(filename)), "_report.yaml")
+  )
+  out <- lapply(out, function(x) file.path(path, x))
+  out
 }
 
 
@@ -800,6 +817,55 @@ writePetab <- function(pe, filename = "petab/model") {
   
   cat("Success?")
   invisible(pe)
+}
+
+
+# -------------------------------------------------------------------------#
+# petab yaml ----
+# -------------------------------------------------------------------------#
+
+#' Gather all filenames in the list structure of a petab.yaml
+#'
+#' @param condition_files,measurement_files,observable_files,sbml_files,visualization_files,meta_file,metaInformation_file,parameter_file file.path of length 1 or NULL
+#' @param filename file.path to write yaml to
+#' 
+#' 
+#' @return list of these objects, with sublist "problems"
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family petab_files
+#' @importFrom yaml write_yaml
+#'
+#' @examples
+#' petabYaml(parameter_file = "wup", 
+#' condition_files = NULL, measurement_files = "bla", observable_files = NULL, sbml_files = NULL, visualization_files = NULL,
+#' meta_file = NULL, metaInformation_file = ""bam")
+petabYaml <- function(parameter_file = NULL, 
+                      condition_files = NULL, measurement_files = NULL, observable_files = NULL, sbml_files = NULL, visualization_files = NULL,
+                      meta_file = NULL, metaInformation_file = NULL,
+                      filename = NULL
+                      ) {
+  
+  if (length(condition_files) > 1 || length(measurement_files) > 1 || length(observable_files) > 1 || length(sbml_files) > 1 || length(visualization_files) > 1)
+    stop("Only one problem allowed")
+  
+  yaml_content <- list(format_version = 1, # Hard coded for a reason...
+       parameter_file = parameter_file, 
+       problems = list(list( # One problem
+         condition_files = condition_files, 
+         measurement_files = measurement_files, 
+         observable_files = observable_files, 
+         sbml_files = sbml_files, 
+         visualization_files = visualization_files)), 
+       meta_file = meta_file, 
+       metaInformation_file = metaInformation_file)
+  
+  if (!is.null(filename)) {
+    yaml::write_yaml(yaml_content, filename) 
+    return(invisible(yaml_content))
+  }
+  yaml_content
 }
 
 
