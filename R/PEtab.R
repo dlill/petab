@@ -187,6 +187,12 @@ petab_columns <- function(pe = NULL) {
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @export
+#' @family dco
+#' 
+#' @examples 
+#' pe <- petab_exampleRead("01")
+#' dco <- petab_joinDCO(pe)
+#' bla <- petab_unjoinDCO(dco,pe)
 petab_joinDCO <- function(pe, FLAGincludeMetaInformation = TRUE) {
   if (length(pe$measurementData$preequilibrationConditionId) &&
       any(!is.na(pe$preequilibrationConditionId)))
@@ -203,13 +209,7 @@ petab_joinDCO <- function(pe, FLAGincludeMetaInformation = TRUE) {
     # dco <- data.table(dco, as.data.table(units))
     
     # Expand petab_columns
-    pc <- pe$meta$metaInformation$petab_columns
-    for (nm in names(pc)) {
-      varnames <- strsplit(pc[[nm]], "_")[[1]]
-      keep <- which(!varnames %in% names(dco)) # don't overwrite existing columns
-      if (length(keep)) 
-        dco[,(varnames[keep]):=(eval(parse(text = paste0('tstrsplit(',nm,', "_", keep = keep)'))))]
-    }
+    dco <- dco_expandMetaColumns(dco, pe)
   }
   dco
 }
@@ -223,6 +223,10 @@ petab_joinDCO <- function(pe, FLAGincludeMetaInformation = TRUE) {
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @export
+#' @family dco
+#' 
+#' @examples 
+#' # see ?petab_joinDCO
 petab_unjoinDCO <- function(DCO, pe = NULL) {
   # Get standard column names
   pc <- petab_columns(pe = pe)
@@ -271,9 +275,21 @@ petab_unjoinDCO <- function(DCO, pe = NULL) {
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @export
+#' @family dco
 #'
 #' @examples
-#' # todo!!
+#' # 1. supply i and j, mutate in rows defined by i. Important: Need to assign!
+#' pe <- petab_exampleRead("02")
+#' pe <- petab_mutateDCO(pe, replicateId == 2 & observableId == "obsE", `:=`(observableId = "obsE_special", observableFormula = "log(E)/log(7)"))
+#' pe
+#' # 2. supply i only. Subset to rows
+#' pe <- petab_exampleRead("02")
+#' pe <- petab_mutateDCO(pe, replicateId == 2 & observableId == "obsE")
+#' pe
+#' # 3. supply j only. Mutate all rows
+#' pe <- petab_exampleRead("02")
+#' pe <- petab_mutateDCO(pe, j = `:=`(observableId = "obsE_special", observableFormula = "log(E)/log(7)", observableName = "obsE_special", noiseFormula = "1"))
+#' pe
 petab_mutateDCO <- function(pe, i, j) {
   
   mi <- missing(i)
@@ -301,6 +317,45 @@ petab_mutateDCO <- function(pe, i, j) {
   pe_out <- petab_unjoinDCO(dco, pe)
   pe_out
 }
+
+
+
+
+
+
+#' Expand 
+#'
+#' @param dco dco without meta columns
+#' @param pe pe. If meta$emtaInformation$petab_columns specification present, this information will be used to generate new columns
+#' 
+#' Example:
+#' pe$meta$emtaInformation$petab_columns = list(replicateId = "replicate_gel_experiment", conditionId = "cellline_stimulus")
+#' will split 
+#' a) the replicateId column into three columns called "replicate", "gel" and "experiment" which are added to the dco
+#' b) the conditionId column into cellline and stimulus
+#' 
+#' @return dco
+#' @importFrom data.table tstrsplit
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family dco
+dco_expandMetaColumns <- function(dco, pe) {
+  pc <- pe$meta$metaInformation$petab_columns
+  for (nm in names(pc)) {
+    varnames <- strsplit(pc[[nm]], "_")[[1]]
+    keep <- which(!varnames %in% names(dco)) # don't overwrite existing columns
+    if (length(keep)) 
+      dco[,(varnames[keep]):=(eval(parse(text = paste0('tstrsplit(',nm,', "_", keep = keep)'))))]
+  }
+  dco
+}
+
+
+
+
+
+
+
 
 # -------------------------------------------------------------------------#
 # Initializers of core objects ----
@@ -605,7 +660,6 @@ petab_modelname_path <- function(filename) {
 
 #' List petab files
 #'
-#' @param FLAGTestCase generate TestCases filename
 #' @param filename "path/to/modelname.petab". Will generate filenames like
 #'        "path/to/modelname/model_modelname.xml"
 #' @param FLAGreturnList return list or vector?
@@ -716,7 +770,6 @@ petab_files_fromYaml <- function(filename) {
 #'
 #' @param modelname
 #' @param path
-#' @param FLAGTestCase
 #'
 #' @return
 #' @export
@@ -726,9 +779,11 @@ petab_files_fromYaml <- function(filename) {
 #' @importFrom data.table fread
 #'
 #' @examples
-readPetab <- function(filename, FLAGTestCase = FALSE) {
+readPetab <- function(filename) {
   
-  files <- petab_files(filename = filename, FLAGTestCase = FLAGTestCase)
+  files <- petab_files(filename = filename)
+  # might break if more than one "problem" is in the yaml
+  files <- unlist(files, recursive = F)
   files <- files[file.exists(files)]
   # tables
   files_tsv <- grep("tsv", files, value = TRUE)

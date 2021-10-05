@@ -4,13 +4,11 @@
 \alias{petab_files}
 \title{List petab files}
 \usage{
-petab_files(filename)
+petab_files(filename, FLAGoverwrite = FALSE)
 }
 \arguments{
 \item{filename}{"path/to/modelname.petab". Will generate filenames like
 "path/to/modelname/model_modelname.xml"}
-
-\item{FLAGTestCase}{generate TestCases filename}
 
 \item{FLAGreturnList}{return list or vector?}
 }

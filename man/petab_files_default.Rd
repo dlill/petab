@@ -20,6 +20,10 @@ Get default filenames
 \examples{
 petab_files_default("modelname", "path")
 }
+\seealso{
+Other petab_files: 
+\code{\link{petabYaml}()}
+}
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }

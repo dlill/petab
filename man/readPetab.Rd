@@ -4,10 +4,10 @@
 \alias{readPetab}
 \title{Read PEtab files}
 \usage{
-readPetab(filename, FLAGTestCase = FALSE)
+readPetab(filename)
 }
 \arguments{
-\item{FLAGTestCase}{}
+\item{path}{}
 }
 \value{
 

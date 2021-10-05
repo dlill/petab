@@ -15,6 +15,18 @@ petab_joinDCO(pe, FLAGincludeMetaInformation = TRUE)
 \description{
 Create one big table containing measurementData, observables and experimentalCondition
 }
+\examples{
+pe <- petab_exampleRead("01")
+dco <- petab_joinDCO(pe)
+bla <- petab_unjoinDCO(dco,pe)
+}
+\seealso{
+Other dco: 
+\code{\link{dco_expandMetaColumns}()},
+\code{\link{petab_mutateDCO}()},
+\code{\link{petab_unjoinDCO}()}
+}
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }
+\concept{dco}

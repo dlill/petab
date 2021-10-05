@@ -20,8 +20,26 @@ pe with modified DCO
 If j is supplied, the full dco is always returned and no subsetting is done!
 }
 \examples{
-# todo!!
+# 1. supply i and j, mutate in rows defined by i. Important: Need to assign!
+pe <- petab_exampleRead("02")
+pe <- petab_mutateDCO(pe, replicateId == 2 & observableId == "obsE", `:=`(observableId = "obsE_special", observableFormula = "log(E)/log(7)"))
+pe
+# 2. supply i only. Subset to rows
+pe <- petab_exampleRead("02")
+pe <- petab_mutateDCO(pe, replicateId == 2 & observableId == "obsE")
+pe
+# 3. supply j only. Mutate all rows
+pe <- petab_exampleRead("02")
+pe <- petab_mutateDCO(pe, j = `:=`(observableId = "obsE_special", observableFormula = "log(E)/log(7)", observableName = "obsE_special", noiseFormula = "1"))
+pe
+}
+\seealso{
+Other dco: 
+\code{\link{dco_expandMetaColumns}()},
+\code{\link{petab_joinDCO}()},
+\code{\link{petab_unjoinDCO}()}
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }
+\concept{dco}

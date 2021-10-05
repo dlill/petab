@@ -17,6 +17,16 @@ pe with measurementData,experimentalCondition,Observables replaced by the column
 \description{
 Unjoin DataConditonObs
 }
+\examples{
+# see ?petab_joinDCO
+}
+\seealso{
+Other dco: 
+\code{\link{dco_expandMetaColumns}()},
+\code{\link{petab_joinDCO}()},
+\code{\link{petab_mutateDCO}()}
+}
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }
+\concept{dco}
