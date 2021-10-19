@@ -2,18 +2,23 @@
 % Please edit documentation in R/SBML-Export.R
 \name{getSpeciesInfo}
 \alias{getSpeciesInfo}
-\title{Title}
+\title{Extract speciesInfo data.table from equationlist}
 \usage{
 getSpeciesInfo(equationList)
 }
 \arguments{
-\item{el}{}
+\item{el}{equationList}
 }
 \value{
-
+data.table(speciesName, compName, initialAmount)
 }
 \description{
-Title
+Extract speciesInfo data.table from equationlist
+}
+\examples{
+library(dMod)
+example(eqnlist)
+getSpeciesInfo(f)
 }
 \seealso{
 Other SBML export: 

@@ -10,10 +10,15 @@ getParInfo(equationList)
 \item{el}{equationList}
 }
 \value{
-data.table
+data.table(parName,parValue,parUnit)
 }
 \description{
 Extract parInfo data.table from equationlist
+}
+\examples{
+library(dMod)
+example(eqnlist)
+getParInfo(f)
 }
 \seealso{
 Other SBML export: 

@@ -26,7 +26,7 @@ eqnlist_addDefaultCompartment <- function(equationList, compName) {
 #'
 #' @param el equationList
 #'
-#' @return data.table
+#' @return data.table(parName,parValue,parUnit)
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
@@ -34,6 +34,9 @@ eqnlist_addDefaultCompartment <- function(equationList, compName) {
 #' @family SBML export
 #'
 #' @examples
+#' library(dMod)
+#' example(eqnlist)
+#' getParInfo(f)
 getParInfo <- function(equationList) {
   parName <- setdiff(getParameters(equationList), c(equationList$states, equationList$volumes))
   parInfo <- data.table::data.table(parName = parName)
@@ -44,36 +47,42 @@ getParInfo <- function(equationList) {
 
 
 
-#' Title
+#' Extract speciesInfo data.table from equationlist
 #'
-#' @param el 
+#' @param el equationList
 #'
-#' @return
+#' @return data.table(speciesName, compName, initialAmount)
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family SBML export
 #'
 #' @examples
+#' library(dMod)
+#' example(eqnlist)
+#' getSpeciesInfo(f)
 getSpeciesInfo <- function(equationList){
   data.table(speciesName = equationList$states,
              compName    = equationList$volumes,
              initialAmount = 0)
 }
 
-#' Title
+#' get compartmentInfo
 #'
-#' @param el 
+#' @param el equationlist
 #'
-#' @return
+#' @return data.table(compName, compSize)
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family SBML export
 #'
 #' @examples
+#' library(dMod)
+#' example(eqnlist)
+#' getCompartmentInfo(f)
 getCompartmentInfo <- function(equationList) {
-  ci <- data.table(compName = unique(equationList$volumes),
+  data.table(compName = unique(equationList$volumes),
                    compSize = 1)
 }
 
@@ -163,20 +172,22 @@ getReactionInfo <- function(equationList, parInfo = getParInfo(equationList)) {
   re
 }
 
-#' Title
+#' Assemble unitInfo
+#' 
+#' Some default units, some others
+#' 
+#' @param unitName character vector
+#' @param unitKind list of character vectors
+#' @param exponent list of numeric vectors
 #'
-#' @param unitNameSubset 
-#' @param unitName 
-#' @param unitKind list
-#' @param exponent list
-#'
-#' @return
+#' @return data.table(unitName, unitKind, exponent)
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family SBML export
 #'
 #' @examples
+#' getUnitInfo()
 getUnitInfo <- function(unitName = NULL, unitKind = NULL, exponent = NULL) {
   # Default list of units
   unitInfo <- data.table(tibble::tribble(
@@ -204,7 +215,7 @@ getUnitInfo <- function(unitName = NULL, unitKind = NULL, exponent = NULL) {
 # libSBML helper functions ----
 # -------------------------------------------------------------------------#
 
-#' Title
+#' Initialize the sbml document
 #'
 #' @param modelname String
 #' @param sbmlDoc return value from a call like `SBMLDocument(level = 2, version = 4)`
@@ -545,7 +556,7 @@ sbml_validateSBML <- function(sbmlDoc)
 # -------------------------------------------------------------------------#
 
 
-#' Title
+#' Write sbml model to filename
 #'
 #' @param modelname 
 #' @param filename 
@@ -555,13 +566,13 @@ sbml_validateSBML <- function(sbmlDoc)
 #' @param parInfo 
 #' @param compartmentInfo 
 #'
-#' @return
-#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
-#' @md
+#' @return NULL, called for side effect 
 #' @export
-#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family SBML export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @importFrom tibble tribble
+#' @importFrom purrr transpose
 #'
 #' @examples
 #' library(conveniencefunctions)
@@ -615,10 +626,11 @@ sbml_exportEquationList <- function(equationList,
   for (x in parInfoList)         do.call(sbml_addOneParameter,   c(list(model = model),x))
   for (x in reactionInfoList)    do.call(sbml_addOneReaction,    c(list(model = model),x))
   
-  # Validate and write to file
+  # Promote parameters to global parameters - this is an sbml thingy
   props = ConversionProperties();
   ConversionProperties_addOption(props, "promoteLocalParameters", TRUE, "Promotes all Local Parameters to Global ones");
   
+  # Validate and write to file
   sbml_validateSBML(sbmlDoc) 
   writeSBML(sbmlDoc, filename = filename)
   invisible(NULL)

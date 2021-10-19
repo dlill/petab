@@ -2,7 +2,7 @@
 % Please edit documentation in R/SBML-Export.R
 \name{sbml_exportEquationList}
 \alias{sbml_exportEquationList}
-\title{Title}
+\title{Write sbml model to filename}
 \usage{
 sbml_exportEquationList(
   equationList,
@@ -30,10 +30,10 @@ sbml_exportEquationList(
 \item{compartmentInfo}{}
 }
 \value{
-
+NULL, called for side effect
 }
 \description{
-Title
+Write sbml model to filename
 }
 \examples{
 library(conveniencefunctions)
@@ -79,8 +79,6 @@ Other SBML export:
 \code{\link{sbml_validateSBML}()}
 }
 \author{
-Daniel Lill (daniel.lill@physik.uni-freiburg.de)
-
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }
 \concept{SBML export}

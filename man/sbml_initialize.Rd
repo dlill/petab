@@ -2,7 +2,7 @@
 % Please edit documentation in R/SBML-Export.R
 \name{sbml_initialize}
 \alias{sbml_initialize}
-\title{Title}
+\title{Initialize the sbml document}
 \usage{
 sbml_initialize(modelname = "EnzymaticReaction", sbmlDoc)
 }
@@ -15,7 +15,7 @@ sbml_initialize(modelname = "EnzymaticReaction", sbmlDoc)
 a libsbml model representation
 }
 \description{
-Title
+Initialize the sbml document
 }
 \seealso{
 Other SBML export: 

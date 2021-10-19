@@ -2,18 +2,23 @@
 % Please edit documentation in R/SBML-Export.R
 \name{getCompartmentInfo}
 \alias{getCompartmentInfo}
-\title{Title}
+\title{get compartmentInfo}
 \usage{
 getCompartmentInfo(equationList)
 }
 \arguments{
-\item{el}{}
+\item{el}{equationlist}
 }
 \value{
-
+data.table(compName, compSize)
 }
 \description{
-Title
+get compartmentInfo
+}
+\examples{
+library(dMod)
+example(eqnlist)
+getCompartmentInfo(f)
 }
 \seealso{
 Other SBML export: 

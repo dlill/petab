@@ -2,24 +2,25 @@
 % Please edit documentation in R/SBML-Export.R
 \name{getUnitInfo}
 \alias{getUnitInfo}
-\title{Title}
+\title{Assemble unitInfo}
 \usage{
 getUnitInfo(unitName = NULL, unitKind = NULL, exponent = NULL)
 }
 \arguments{
-\item{unitName}{}
+\item{unitName}{character vector}
 
-\item{unitKind}{list}
+\item{unitKind}{list of character vectors}
 
-\item{exponent}{list}
-
-\item{unitNameSubset}{}
+\item{exponent}{list of numeric vectors}
 }
 \value{
-
+data.table(unitName, unitKind, exponent)
 }
 \description{
-Title
+Some default units, some others
+}
+\examples{
+getUnitInfo()
 }
 \seealso{
 Other SBML export: 
