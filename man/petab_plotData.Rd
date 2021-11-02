@@ -37,6 +37,38 @@ ggplot
 \description{
 Automatic multipage export in the background with the future package and ggforce::facet_wrap_paginate
 }
+\examples{
+
+pe <- petab_exampleRead(exampleName = "03", "pe")
+
+# Plot data
+petab_plotData(pe)
+
+# Plot dose response: subset and remap aes(x)
+petab_plotData(pe, i = conditionName == "dose response 30 min", aeslist = list(x = ~Epo))
+
+# Change layout, scale and theme via ggCallback
+petab_plotData(pe, i = conditionName == "dose response 30 min", aeslist = list(x = ~Epo),
+               ggCallback = list(facet_wrap(~observableId, scales = "free"), 
+                                 scale_x_log10(breaks =unique(pe$experimentalCondition[conditionName=="dose response 30 min", Epo])),
+                                     theme_bw()))
+
+# Add datapointId, plot data points with labels
+pe <- petab_exampleRead(exampleName = "01", "pe")
+pe <- petab_mutateDCO(pe,j=`:=`(datapointId = paste0(datasetId, "_", 1:.N)))
+petab_plotData(pe, ggCallback = list(facet_wrap(~observableId, scales = "free"),
+                                     ggrepel::geom_text_repel(aes(x= time, y = measurement, label = datapointId), color = "grey", size = 2)))
+
+Save plot to multipage pdf
+td <- tempdir()
+petab_plotData(pe,
+               ggCallback = list(facet_wrap_paginate(~observableId, nrow = 1, ncol = 2, scales = "free"),
+                                 ggrepel::geom_text_repel(aes(x= time, y = measurement, label = datapointId), color = "grey", size = 1)),
+               filename = file.path(td, "plot.pdf"),
+               width = 15.5, heightrel = 8/16, scale = 1, units = "cm")
+system(paste0("nautilus ", td), wait = FALSE)
+
+}
 \seealso{
 Other plotData: 
 \code{\link{petab_duplicateControls}()}
