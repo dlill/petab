@@ -439,8 +439,6 @@ petab_measurementData <- function(
     d <- d[!is.na(measurement)]
   }
   
-  
-  
   d[base::order(simulationConditionId, observableId, time)]
 }
 
@@ -627,7 +625,7 @@ petab <- function(
   meta = NULL,
   ...
 ) {
-  cat("Sorting tables with base::order()\n")
+  # Sorting tables with base::order()
   # Do type coercion and initialize list
   if(!is.null(model))                 model                 = do.call(petab_model, model)
   if(!is.null(experimentalCondition)) experimentalCondition = do.call(petab_experimentalCondition, experimentalCondition)
