@@ -13,13 +13,16 @@ petab_measurementData(
   noiseParameters = list(1, "error_ADD_obsi;error_REL_obsi")[[1]],
   datasetId = NA,
   replicateId = NA,
-  preequilibrationConditionId = NA
+  preequilibrationConditionId = NA,
+  datapointId = NA
 )
 }
 \arguments{
 \item{observableParameters}{numeric string or NA}
 
 \item{noiseParameters}{numeric, string or NA: Measurement noise or parameter name}
+
+\item{datapointId:}{Deviating from original petab, a unique identifier of each data point}
 }
 \description{
 Constructor for Measurements

@@ -401,7 +401,7 @@ petab_experimentalCondition <- function(
 #' @param replicateId
 #' @param preequilibrationConditionId
 #' @param noiseParameters numeric, string or NA: Measurement noise or parameter name
-#'
+#' @param datapointId: Deviating from original petab, a unique identifier of each data point
 #'
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
@@ -417,7 +417,8 @@ petab_measurementData <- function(
   noiseParameters             = list(1, "error_ADD_obsi;error_REL_obsi")[[1]],
   datasetId                   = NA,
   replicateId                 = NA,
-  preequilibrationConditionId = NA
+  preequilibrationConditionId = NA,
+  datapointId                 = NA
 ) {
   d <- data.table(
     observableId                = as.character(observableId),
@@ -428,8 +429,18 @@ petab_measurementData <- function(
     observableParameters        = as.character(observableParameters),
     noiseParameters             = as.character(noiseParameters),
     datasetId                   = as.character(datasetId),
-    replicateId                 = as.character(replicateId)
+    replicateId                 = as.character(replicateId),
+    datapointId                 = as.character(datapointId)
   )
+  
+  if (any(is.na(d$measurement))) {
+    cat("Removing missing measurements: \n")
+    print(d[is.na(measurement), c("observableId", "simulationConditionId", "datapointId")])
+    d <- d[!is.na(measurement)]
+  }
+  
+  
+  
   d[base::order(simulationConditionId, observableId, time)]
 }
 
@@ -829,12 +840,12 @@ writePetab <- function(pe, filename = "petab/model") {
   modelname <- gsub(".petab$","", basename(filename))
   
   # Write yaml
-  pepy$create_problem_yaml(sbml_files        = basename(files["modelXML"]),
-                           condition_files   = basename(files["experimentalCondition"]),
-                           measurement_files = basename(files["measurementData"]),
-                           parameter_file    = basename(files["parameters"]),
-                           observable_files  = basename(files["observables"]),
-                           yaml_file         = files["yaml"], 
+  pepy$create_problem_yaml(sbml_files        = basename(files[["modelXML"]]),
+                           condition_files   = basename(files[["experimentalCondition"]]),
+                           measurement_files = basename(files[["measurementData"]]),
+                           parameter_file    = basename(files[["parameters"]]),
+                           observable_files  = basename(files[["observables"]]),
+                           yaml_file         = files[["yaml"]], 
                            relative_paths = FALSE)
   
   # [ ] Hack: Remove once sbml export is stable
@@ -1105,11 +1116,11 @@ petab_lint <- function(pe) {
     warning("These rows are duplicates in measurementData: ", paste0(dupes, collapse = ","))
     errlist <- c(errlist, list(measurementDataDupes = dupes))}
   
-  if (any(is.na(pe$measurementData$time)))
+  if (any(is.na(pe$measurementData$time))){
+    cat("Missing times here: \n")
+    print(pe$measurementData[is.na(time), unique(.SD), .SDcols = c("observableId", "simulationConditionId")])
     stop("Petab contains missing times")
-  if (any(is.na(pe$measurementData$measurement)))
-    stop("Petab contains missing times")
-  
+  }
   
   # observables
   dupes <- which(duplicated(pe$observables$observableID))
