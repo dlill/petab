@@ -1906,12 +1906,11 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
   on.exit({setwd(mywd)})
   
   # .. Define path to SBML, PEtab and pd files -----
-  filename  <- path.expand(filename)
-  path      <- petab_modelname_path(filename)$path
-  modelname <- petab_modelname_path(filename)$modelname
-  files     <- petab_files(filename, FLAGTestCase = testCases, FLAGreturnList = TRUE)
-  filenameParts = list(modelname = modelname, .currentFolder = mywd, .compiledFolder = .compiledFolder, type = "indiv", petabYaml = if(grepl("yaml", filename)) filename else NULL)
-  rdsfile   <- pd_files(filenameParts)$rdsfile
+  filename      <- path.expand(filename)
+  modelname     <- petab_modelname_path(filename)$modelname
+  files         <- petab_files(filename)
+  filenameParts <- list(modelname = modelname, .currentFolder = mywd, .compiledFolder = .compiledFolder, type = "indiv", petabYaml = if(grepl("yaml", filename)) filename else NULL)
+  rdsfile       <- pd_files(filenameParts)$rdsfile
   
   # .. Read PEtab tables -----
   pe <- readPetab(filename)
