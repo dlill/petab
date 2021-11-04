@@ -1596,12 +1596,12 @@ petab_plotData <- function(petab,
 #' @family Overview Tables
 #' @importFrom conveniencefunctions cfoutput_MdTable
 petab_overviewObsPerCond <- function(pe, Ntruncate = 1000, FLAGincludedatasetId = TRUE, ...) {
-  dx <- petab_joinDCO(pe)
-  if ("conditionName" %in% names(dx)) dx[,`:=`(conditionName = conditionId)]
-  bycols <- if (FLAGincludedatasetId) c("conditionId", "datsetId", "replicateId") else c("conditionId")
-  dx <- dx[,list(observableId = paste0(sort(unique(observableId)), collapse = ",")), by = bycols]
-  dx <- dx[,`:=`(observableId = substr(observableId, 1, Ntruncate))]
-  conveniencefunctions::cfoutput_MdTable(dx, ...)
+  dco <- petab_joinDCO(pe)
+  if ("conditionName" %in% names(dco)) dco[,`:=`(conditionName = conditionId)]
+  bycols <- if (FLAGincludedatasetId) c("conditionId", "datasetId", "replicateId") else c("conditionId")
+  dco <- dco[,list(observableId = paste0(sort(unique(observableId)), collapse = ",")), by = bycols]
+  dco <- dco[,`:=`(observableId = substr(observableId, 1, Ntruncate))]
+  conveniencefunctions::cfoutput_MdTable(dco, ...)
 }
 
 
