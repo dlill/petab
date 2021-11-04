@@ -860,7 +860,8 @@ writePetab <- function(pe, filename = "petab/model") {
   # Write model+meta rds
   if (!is.null(pe$meta$metaInformation)) {
     # Ugly first bit: write metaInformation separately as yaml
-    yaml::write_yaml(pe$meta$metaInformation, petab_files(filename = filename)["metaInformation"])
+    metaInformation_file <- petab_files(filename = filename)[["metaInformation"]] # Ugly, should be kept in "files" instead of calling petab_files again
+    yaml::write_yaml(pe$meta$metaInformation, metaInformation_file) 
     pe$meta$metaInformation <- NULL
   }
   files_model <- grep("rds", files, value = TRUE)
@@ -1481,7 +1482,7 @@ petab_getMeasurementParsScales <- function(measurementData,parameters) {
 #'
 #' @family plotData
 #'
-#' @importFrom ggforce n_pages
+#' @importFrom ggforce n_pages facet_wrap_paginate
 #' @importFrom conveniencefunctions cf_outputFigure
 #' @importFrom cOde getSymbols
 #'
@@ -1520,13 +1521,18 @@ petab_getMeasurementParsScales <- function(measurementData,parameters) {
 #'                width = 15.5, heightrel = 8/16, scale = 1, units = "cm")
 #' system(paste0("nautilus ", td), wait = FALSE)
 #'
+#' Display second page of multipage plot interactively
+#' petab_plotData(pe,
+#'                ggCallback = list(facet_wrap_paginate(~observableId, nrow = 1, ncol = 2, scales = "free", page = 2),
+#'                                  ggrepel::geom_text_repel(aes(x= time, y = measurement, label = datapointId), color = "grey", size = 1)))
+
+#'
 petab_plotData <- function(petab,
                            i,j,
                            aeslist = NULL,
                            FLAGUseObservableTransformation = TRUE,
                            FLAGmeanLine = TRUE,
-                           ggCallback = list(
-                             facet_wrap_paginate(~observableId, nrow = 4, ncol = 4, scales = "free")),
+                           ggCallback = list(),
                            ...
 ) {
   
@@ -1563,6 +1569,7 @@ petab_plotData <- function(petab,
   
   # Create plot
   pl <- cfggplot(dplot)
+  pl <- pl + ggforce::facet_wrap_paginate(~observableId, nrow = 4, ncol = 4, scales = "free", page = 1)
   if (FLAGmeanLine) { # Add first so te lines don't mask the points
     aesmean0 <- list(linetype = ~conditionId, group = as.formula(paste0("~ interaction(", paste0(setdiff(byvars, c("time")), collapse = ", "), ")")))
     aesmeanlist <- c(aeslist, aesmean0[setdiff(names(aesmean0), names(aeslist))])
@@ -1572,7 +1579,8 @@ petab_plotData <- function(petab,
   for (plx in ggCallback) pl <- pl + plx
   
   # Print paginate message so user doesnt forget about additional pages
-  message("Plot has ", ggforce::n_pages(pl), " pages\n")
+  npages <- ggforce::n_pages(pl)
+  if (length(npages) && npages > 1) message("Plot has ", npages, " pages. View them via passing a ggCallback with facet_wrap_paginate(..., page=N) (see examples) \n")
   
   # output
   cf_outputFigure(pl = pl, ...)

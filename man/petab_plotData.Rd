@@ -11,8 +11,7 @@ petab_plotData(
   aeslist = NULL,
   FLAGUseObservableTransformation = TRUE,
   FLAGmeanLine = TRUE,
-  ggCallback = list(facet_wrap_paginate(~observableId, nrow = 4, ncol = 4, scales =
-    "free")),
+  ggCallback = list(),
   ...
 )
 }
@@ -67,6 +66,11 @@ petab_plotData(pe,
                filename = file.path(td, "plot.pdf"),
                width = 15.5, heightrel = 8/16, scale = 1, units = "cm")
 system(paste0("nautilus ", td), wait = FALSE)
+
+Display second page of multipage plot interactively
+petab_plotData(pe,
+               ggCallback = list(facet_wrap_paginate(~observableId, nrow = 1, ncol = 2, scales = "free", page = 2),
+                                 ggrepel::geom_text_repel(aes(x= time, y = measurement, label = datapointId), color = "grey", size = 1)))
 
 }
 \seealso{
