@@ -17,7 +17,8 @@ Print available names in the DCO
 }
 \seealso{
 Other Overview Tables: 
-\code{\link{petab_overviewObsPerCond}()}
+\code{\link{petab_overviewObsPerCond}()},
+\code{\link{petab_overview}()}
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)

@@ -28,6 +28,10 @@ petab_metaInformation_getPatterns(mi)
 mi <- yaml::read_yaml(text = "measurementData:\n  measurement:\n    unit: absolute_conc")
 petab_metaInformation_getPatterns(mi)
 }
+\seealso{
+Other metaInformation: 
+\code{\link{dco_expandPatterns}()}
+}
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }

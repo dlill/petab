@@ -2,7 +2,7 @@
 % Please edit documentation in R/PEtab.R
 \name{dco_expandPatterns}
 \alias{dco_expandPatterns}
-\title{Expand}
+\title{Expand columns which have a specified pattern}
 \usage{
 dco_expandPatterns(dco, pe)
 }
@@ -21,15 +21,19 @@ b) the conditionId column into cellline and stimulus}
 dco
 }
 \description{
-Expand
+Expand columns which have a specified pattern
 }
 \seealso{
 Other dco: 
 \code{\link{petab_joinDCO}()},
 \code{\link{petab_mutateDCO}()},
 \code{\link{petab_unjoinDCO}()}
+
+Other metaInformation: 
+\code{\link{petab_metaInformation_getPatterns}()}
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }
 \concept{dco}
+\concept{metaInformation}

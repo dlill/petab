@@ -10,10 +10,10 @@ petab_joinDCO(pe, FLAGincludeMetaInformation = TRUE)
 \item{petab}{\link{petab}}
 }
 \value{
-
+data.table
 }
 \description{
-Create one big table containing measurementData, observables and experimentalCondition
+conditionId is joined with simulationConditionId
 }
 \examples{
 pe <- petab_exampleRead("01")

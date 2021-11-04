@@ -14,7 +14,7 @@ petab_experimentalCondition(conditionId, conditionName = NA, ...)
 \item{...}{parameterOrSpeciesOrCompartmentId1. Numeric (value) or string (different parameterId)}
 }
 \value{
-
+data.table
 }
 \description{
 https://petab.readthedocs.io/en/stable/documentation_data_format.html#condition-table

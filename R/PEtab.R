@@ -181,6 +181,7 @@ petab_columns <- function(pe = NULL) {
 }
 
 
+
 # -------------------------------------------------------------------------#
 # DCO ----
 # -------------------------------------------------------------------------#
@@ -188,9 +189,11 @@ petab_columns <- function(pe = NULL) {
 
 #' Create one big table containing measurementData, observables and experimentalCondition
 #'
+#' conditionId is joined with simulationConditionId 
+#'
 #' @param petab [petab]
 #'
-#' @return
+#' @return data.table
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @export
@@ -330,7 +333,7 @@ petab_mutateDCO <- function(pe, i, j) {
 
 
 
-#' Expand 
+#' Expand columns which have a specified pattern
 #'
 #' @param dco dco without meta columns
 #' @param pe pe. If meta$emtaInformation$petab_columns specification present, this information will be used to generate new columns
@@ -346,6 +349,8 @@ petab_mutateDCO <- function(pe, i, j) {
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family dco
+#' @family metaInformation
+#' 
 dco_expandPatterns <- function(dco, pe) {
   
   patterns <- petab_metaInformation_getPatterns(pe$meta$metaInformation)
@@ -378,7 +383,7 @@ dco_expandPatterns <- function(dco, pe) {
 #' @param conditionName character Condition ID for plotting
 #' @param ... parameterOrSpeciesOrCompartmentId1. Numeric (value) or string (different parameterId)
 #'
-#' @return
+#' @return data.table
 #'
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
@@ -1642,6 +1647,42 @@ petab_overviewDCONames <- function(pe) {
   columns$metaInformation <- metaNames
   
   print(columns)
+}
+
+
+#' Print some overview stuff
+#'
+#' @param pe pe
+#' @param FLAGcolumns,FLAGmetaInformation,FLAGobsPerCond include this and that info?
+#' @param ... arguments going to [petab_overviewObsPerCond()]
+#'
+#' @return Prints some stuff to console
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family Overview Tables
+#' @importFrom yaml as.yaml
+#' @importFrom conveniencefunctions cfoutput_MdTable
+#'
+#' @examples
+#' petab_overview(petab_exampleRead("01", "pe"))
+petab_overview <- function(pe, FLAGcolumns = TRUE, FLAGmetaInformation = TRUE, FLAGobsPerCond = TRUE, ...) {
+  if (FLAGcolumns){
+    cat("Available columns\n==================\n")
+    pc <- petab_columns(pe)
+    pc <- lapply(pc, function(x) paste0(x, collapse = ", "))
+    conveniencefunctions::cfoutput_MdTable(data.table(Table = names(pc), Columns = unlist(pc, F,F)), FLAGsummaryRow = FALSE)
+  }
+  if (FLAGmetaInformation) {
+    cat("\n")
+    cat("MetaInformation\n=================\n")
+    cat(yaml::as.yaml(pe$meta$metaInformation))
+  }
+  if (FLAGobsPerCond) {
+    cat("\nObservableId per condition\n======================\n")
+    petab_overviewObsPerCond(pe, ...)
+  }
+  # To be continued
 }
 
 

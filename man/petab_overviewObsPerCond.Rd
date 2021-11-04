@@ -28,7 +28,8 @@ Generate overview table which observables are in which condition
 }
 \seealso{
 Other Overview Tables: 
-\code{\link{petab_overviewDCONames}()}
+\code{\link{petab_overviewDCONames}()},
+\code{\link{petab_overview}()}
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
