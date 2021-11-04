@@ -22,7 +22,7 @@ bla <- petab_unjoinDCO(dco,pe)
 }
 \seealso{
 Other dco: 
-\code{\link{dco_expandMetaColumns}()},
+\code{\link{dco_expandPatterns}()},
 \code{\link{petab_mutateDCO}()},
 \code{\link{petab_unjoinDCO}()}
 }

@@ -141,9 +141,9 @@ petab_dput <- function(pe, variable) {
 }
 
 
-#' Title
+#' Get list of column names in petab
 #'
-#' @param pe NULL: Default names, [petab()] Actual names in petab
+#' @param pe NULL: Default names, [petab()] Actual names present in petab
 #'
 #' @return list of column names
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
@@ -156,7 +156,8 @@ petab_columns <- function(pe = NULL) {
   if(!is.null(pe)) {
     pc <- lapply(pe[c("experimentalCondition","measurementData","observables","parameters")], names)
     
-    metaInformation <- pe$meta$metaInformation$petab_columns
+    # If a "pattern" is given, add those hypothetical column names as well
+    metaInformation <- petab_metaInformation_getPatterns(pe$meta$metaInformation)
     metaInformation <- lapply(metaInformation, function(mi) strsplit(mi, "_")[[1]])
     metaInformation <- do.call(c, metaInformation)
     metaInformation <- unname(metaInformation)
@@ -178,6 +179,12 @@ petab_columns <- function(pe = NULL) {
        parameters = p,
        metaInformation = metaInformation)
 }
+
+
+# -------------------------------------------------------------------------#
+# DCO ----
+# -------------------------------------------------------------------------#
+
 
 #' Create one big table containing measurementData, observables and experimentalCondition
 #'
@@ -209,7 +216,7 @@ petab_joinDCO <- function(pe, FLAGincludeMetaInformation = TRUE) {
     # dco <- data.table(dco, as.data.table(units))
     
     # Expand petab_columns
-    dco <- dco_expandMetaColumns(dco, pe)
+    dco <- dco_expandPatterns(dco, pe)
   }
   dco
 }
@@ -339,10 +346,12 @@ petab_mutateDCO <- function(pe, i, j) {
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family dco
-dco_expandMetaColumns <- function(dco, pe) {
-  pc <- pe$meta$metaInformation$petab_columns
-  for (nm in names(pc)) {
-    varnames <- strsplit(pc[[nm]], "_")[[1]]
+dco_expandPatterns <- function(dco, pe) {
+  
+  patterns <- petab_metaInformation_getPatterns(pe$meta$metaInformation)
+  
+  for (nm in names(patterns)) {
+    varnames <- strsplit(patterns[[nm]], "_")[[1]]
     keep <- which(!varnames %in% names(dco)) # don't overwrite existing columns
     if (length(keep)) 
       dco[,(varnames[keep]):=(eval(parse(text = paste0('tstrsplit(',nm,', "_", keep = keep)'))))]
@@ -1735,6 +1744,8 @@ petab_hash <- function(pe) {
 }
 
 
+
+
 # -------------------------------------------------------------------------#
 # Pars ----
 # -------------------------------------------------------------------------#
@@ -2042,6 +2053,42 @@ petab_fixErrorModel <- function(pe) {
   petab_applyInverseObservableTransformation(pe)
 }
 
+# -------------------------------------------------------------------------#
+# metaInformation ----
+# -------------------------------------------------------------------------#
+
+#' Get "patterns" from metaInformation
+#'
+#' @param pe pe with pe$meta$metaInformation
+#'
+#' @return list(column_name = "pattern")
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family metaInformation
+#'
+#' @examples
+#' # In two tables
+#' mi <- yaml::read_yaml(text = "measurementData:\n  measurement:\n    unit: absolute_conc\n    lloq: ~\n  time:\n    unit: hours\n  replicateId:\n    pattern: experiment_replicate_technicalReplicate\nexperimentalCondition:\n  conditionId:\n    pattern: cellline_TGFb_Statin\n  TGFb:\n    unit: ng/ul\n  Statin:\n    unit: ug/ml\n")
+#' petab_metaInformation_getPatterns(mi)
+#' 
+#' # In one table
+#' mi <- yaml::read_yaml(text = "measurementData:\n  measurement:\n    unit: absolute_conc\n    lloq: ~\n  time:\n    unit: hours\n  experimentalCondition:\n  conditionId:\n    pattern: cellline_TGFb_Statin\n  TGFb:\n    unit: ng/ul\n  Statin:\n    unit: ug/ml\n")
+#' petab_metaInformation_getPatterns(mi)
+#' 
+#' # No pattern
+#' mi <- yaml::read_yaml(text = "measurementData:\n  measurement:\n    unit: absolute_conc")
+#' petab_metaInformation_getPatterns(mi)
+petab_metaInformation_getPatterns <- function(mi) {
+  mi <- mi[intersect(names(mi), c("experimentalCondition", "measurementData", "observables"))]
+  patterns <- lapply(unname(mi), function(x) {
+    patterns_x <- lapply(x, function(y) y$pattern)
+    patterns_x <- do.call(c, patterns_x)
+  }) 
+  patterns <- do.call(c, patterns)
+  patterns <- as.list(patterns)
+  patterns
+}
 
 
 

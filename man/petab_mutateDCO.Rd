@@ -35,7 +35,7 @@ pe
 }
 \seealso{
 Other dco: 
-\code{\link{dco_expandMetaColumns}()},
+\code{\link{dco_expandPatterns}()},
 \code{\link{petab_joinDCO}()},
 \code{\link{petab_unjoinDCO}()}
 }

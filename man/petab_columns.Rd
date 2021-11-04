@@ -2,18 +2,18 @@
 % Please edit documentation in R/PEtab.R
 \name{petab_columns}
 \alias{petab_columns}
-\title{Title}
+\title{Get list of column names in petab}
 \usage{
 petab_columns(pe = NULL)
 }
 \arguments{
-\item{pe}{NULL: Default names, \code{\link[=petab]{petab()}} Actual names in petab}
+\item{pe}{NULL: Default names, \code{\link[=petab]{petab()}} Actual names present in petab}
 }
 \value{
 list of column names
 }
 \description{
-Title
+Get list of column names in petab
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
