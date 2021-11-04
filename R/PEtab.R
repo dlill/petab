@@ -196,7 +196,7 @@ petab_columns <- function(pe = NULL) {
 petab_joinDCO <- function(pe, FLAGincludeMetaInformation = TRUE) {
   if (length(pe$measurementData$preequilibrationConditionId) &&
       any(!is.na(pe$preequilibrationConditionId)))
-    warning("DCO might not be able to handle preequilibrationConditionId")
+    warning("conditionId is joined with simulationConditionId")
   
   dco <- copy(pe$measurementData)
   dco <- pe$experimentalCondition[dco, on = c("conditionId" = "simulationConditionId")]
@@ -379,13 +379,11 @@ petab_experimentalCondition <- function(
   conditionName = NA,
   ...) {
   pe_ex_Pars <- list(...)
-  if (length(pe_ex_Pars)) {
-    nm_fixed <- vapply(setNames(nm = names(pe_ex_Pars)), function(nm) {suppressWarnings(any(!is.na(as.numeric(pe_ex_Pars[[nm]]))))}, FUN.VALUE = TRUE)
-    if (any(nm_fixed)) warning("The numeric values in experimentalCondition are assumed on estScale. The following parameters are affected: ", paste0(names(nm_fixed)[nm_fixed], collapse = ", "))
-  }
   d <- data.table(conditionId =   as.character(conditionId),
                   conditionName = as.character(conditionName),
                   as.data.table(pe_ex_Pars))
+  
+  # Sorting tables with base::order() because of some specific use case I had once.
   d[base::order(conditionId)]
 }
 
@@ -625,7 +623,7 @@ petab <- function(
   meta = NULL,
   ...
 ) {
-  # Sorting tables with base::order()
+  
   # Do type coercion and initialize list
   if(!is.null(model))                 model                 = do.call(petab_model, model)
   if(!is.null(experimentalCondition)) experimentalCondition = do.call(petab_experimentalCondition, experimentalCondition)
@@ -1094,11 +1092,15 @@ petab_combine <- function(pe1,pe2, NFLAGconflict = c("stop" = 0, "use_pe1" = 1, 
 #' @export
 #'
 #' @examples
+#' petab_lint(petab_exampleRead("01", "pe))
+#' # Todo: Implement an example where the petab 
 petab_lint <- function(pe) {
   
-  # Basic weeoe mwaaxr
+  # Basic linting, collect error messages here
   
   # [ ] Implement access to petab.lint
+  
+  # Collect all errors in a list
   errlist <- list()
   
   # experimentalCondition
@@ -1107,6 +1109,11 @@ petab_lint <- function(pe) {
     warning("These rows are duplicates in conditionId :", paste0(head(dupes,10), collapse = ","), "...")
     errlist <- c(errlist, list(conditionIdDupes = dupes))}
   
+  nm_fixed <- setdiff(names(pe$experimentalCondition), c("conditionId", "conditionName"))
+  if (length(nm_fixed)) {
+    nm_fixed <- vapply(setNames(nm = nm_fixed), function(nm) {suppressWarnings(any(!is.na(as.numeric(pe$experimentalCondition[[nm]]))))}, FUN.VALUE = TRUE)
+    if (any(nm_fixed)) warning("The numeric values in experimentalCondition are assumed on estScale. The following parameters are affected: ", paste0(names(nm_fixed)[nm_fixed], collapse = ", "))
+  }
   
   # measurementData
   dupes <- which(duplicated(pe$measurementData))
@@ -1125,7 +1132,6 @@ petab_lint <- function(pe) {
   if(length(dupes)) {
     warning("These rows are duplicates in observableId: ", paste0(head(dupes,10), collapse = ","), "...")
     errlist <- c(errlist, list(observableIdDupes = dupes))}
-  
   
   # parameters
   if (!is.null(pe$parameters)) {
