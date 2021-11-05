@@ -345,6 +345,7 @@ petab_mutateDCO <- function(pe, i, j) {
 #' b) the conditionId column into cellline and stimulus
 #' 
 #' @return dco
+#' @export
 #' @importFrom data.table tstrsplit
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
