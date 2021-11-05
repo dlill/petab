@@ -20,9 +20,6 @@ pe with updated
 Mainly for plotting, e.g. such that mean-lines start at zero
 }
 \seealso{
-Other plotData: 
-\code{\link{petab_plotData}()}
-
 Other measurementData: 
 \code{\link{petab_applyInverseObservableTransformation}()},
 \code{\link{petab_applyObservableTransformation}()},

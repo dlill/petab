@@ -162,6 +162,7 @@ petab_columns <- function(pe = NULL) {
     metaInformation <- do.call(c, metaInformation)
     metaInformation <- unname(metaInformation)
     pc <- c(pc, list(metaInformation = metaInformation))
+    pc <- c(pc, list(dco = names(petab_joinDCO(pe))))
     
     return(pc)
   }
@@ -204,9 +205,13 @@ petab_columns <- function(pe = NULL) {
 #' dco <- petab_joinDCO(pe)
 #' bla <- petab_unjoinDCO(dco,pe)
 petab_joinDCO <- function(pe, FLAGincludeMetaInformation = TRUE) {
+  
   if (length(pe$measurementData$preequilibrationConditionId) &&
       any(!is.na(pe$preequilibrationConditionId)))
     warning("conditionId is joined with simulationConditionId")
+  
+  if (is.null(pe$experimentalCondition)) stop("no experimentalCondition table to join on. You can create a dummy table with \npetab_experimentalCondition(unique(pe$measurementData$simulationConditionId))")
+  if (is.null(pe$observables)) stop("no observables table to join on. You can create a dummy table with \npetab_observables(unique(pe$measurementData$observableId))")
   
   dco <- copy(pe$measurementData)
   dco <- pe$experimentalCondition[dco, on = c("conditionId" = "simulationConditionId")]
@@ -1495,7 +1500,7 @@ petab_getMeasurementParsScales <- function(measurementData,parameters) {
 #'
 #' @return ggplot
 #'
-#' @family plotData
+#' @family plotting
 #'
 #' @importFrom ggforce n_pages facet_wrap_paginate
 #' @importFrom conveniencefunctions cf_outputFigure
@@ -1600,6 +1605,87 @@ petab_plotData <- function(petab,
   # output
   cf_outputFigure(pl = pl, ...)
 }
+
+
+
+#' Mark data points in a plot
+#'
+#' * Opens shiny app 
+#' * Writes clicked points to a file
+#' 
+#' @param plot A plot from petab_plotData. Must have aeslist(customdata~datapointId) mapped
+#' @param fileCSV filename for csv file
+#'
+#' @return Called for side-effect
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family plotting
+#'
+#' @examples
+#' # Plot data
+#' pe <- petab_exampleRead(exampleName = "01", "pe")
+#' pe$measurementData[,`:=`(datapointId = sprintf(paste0("%s_%0",nchar(as.character(.N)), "i"),  datasetId, 1:.N))]
+#' plot <- petab_plotData(pe, aeslist = list(customdata=~datapointId))
+#' 
+#' # Mark outliers
+#' fileCSV <- "~/wup.txt"
+#' petab_markDataPointsShiny_step1(plot, fileCSV)
+#' outliers <- petab_markDataPointsShiny_step2(fileCSV)
+#' 
+#' # Flag them in the original plot
+#' pe$measurementData[,`:=`(outlier = FALSE)]
+#' pe$measurementData[datapointId %in% outliers$datapointId, `:=`(outlier = TRUE)]
+#' petab_plotData(pe, aeslist = list(customdata=~datapointId, shape = ~outlier, size = ~outlier))
+petab_markDataPointsShiny_step1 <- function(plot, fileCSV) {
+
+  library(shiny)
+  library(plotly)
+  
+  if (file.exists(fileCSV)) stop("file exists, please remove file")
+  
+  ui <- fluidPage(
+    plotlyOutput("plot", height = "960px"),
+    verbatimTextOutput("click")
+  )
+  
+  server <- function(input, output, session) {
+    
+    
+    output$plot <- renderPlotly({
+      p <- ggplotly(plot)
+      p %>% 
+        layout(dragmode = "select") %>%
+        event_register("plotly_selecting")
+    })
+    
+    output$click <- renderPrint({
+      d <- event_data("plotly_click")
+      write.table(d, file = fileCSV, append=TRUE, sep=",", row.names = FALSE)
+      if (is.null(d)) "Click events appear here (double-click to clear)" else d
+    })
+  }
+shinyApp(ui, server)
+}
+
+
+#' Post process marked data points
+#' @rdname petab_markDataPointsShiny_step1
+#' @export
+#' @importFrom data.table fread fwrite
+petab_markDataPointsShiny_step2 <- function(fileCSV, filename = NULL, NFLAGtribble = 0) {
+  wup <- readLines(fileCSV)
+  wup <- wup[grepl("\\w",wup)]
+  wup <- wup[grep(",{4}", gsub("[^,]","",wup))] # only keep entries with 5 fields (i.e. entries which have customdata)
+  wup <- wup[!(duplicated(wup) & grepl("pointNumber|curveNumber|customdata", wup))]
+  selectedPoints <- data.table::fread(text = wup)
+  selectedPoints <- selectedPoints[,list(datapointId = customdata)]
+  selectedPoints <- unique(selectedPoints)
+  if (!is.null(filename)) data.table::fwrite(selectedPoints, file = filename)
+  if (NFLAGtribble) conveniencefunctions::cfoutput_MdTable(selectedPoints, NFLAGtribble = NFLAGtribble)
+  selectedPoints
+}
+
 
 # -------------------------------------------------------------------------#
 # Overview tables ----

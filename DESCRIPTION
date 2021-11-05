@@ -25,5 +25,7 @@ Imports:
   stringr,
   yaml
 Suggests: 
+    shiny,
+    plotly,
     testthat,
     covr
