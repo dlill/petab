@@ -7,14 +7,22 @@
 petab_create_parameter_df(pe, observableParameterScale = "log10")
 }
 \arguments{
-\item{measurementData}{}
+\item{pe}{petab without a parameter_df}
+
+\item{observableParameterScale}{"lin", "log" or "log10"}
 }
 \value{
-
+\code{\link[=petab_parameters]{petab_parameters()}} data.table
 }
 \description{
 Original petab function didn't work
 }
+\examples{
+pe <- petab_exampleRead("01", "pe")
+pe$parameters <- NULL
+petab_create_parameter_df(pe)
+}
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }
+\concept{}

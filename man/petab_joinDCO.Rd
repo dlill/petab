@@ -16,9 +16,18 @@ data.table
 conditionId is joined with simulationConditionId
 }
 \examples{
+# Without metaInformation
 pe <- petab_exampleRead("01")
 dco <- petab_joinDCO(pe)
 bla <- petab_unjoinDCO(dco,pe)
+
+# With metaInformation including a "pattern" entry
+pe <- petab_exampleRead("04")
+pe <- petab_mutateDCO(pe, i = conditionId == "C1", j = `:=`(conditionId = "cell1_dose1"))
+pe <- petab_mutateDCO(pe, i = conditionId == "C2", j = `:=`(conditionId = "cell1_dose2"))
+pe$meta$metaInformation <- list(experimentalCondition = list(conditionId = list(pattern = "celltype_dose")))
+dco <- petab_joinDCO(pe)
+dco
 }
 \seealso{
 Other dco: 

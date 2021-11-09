@@ -21,10 +21,26 @@ petab_parameters(
 )
 }
 \arguments{
-\item{objectivePriorParameters}{}
+\item{parameterId}{character}
+
+\item{parameterName}{character}
+
+\item{parameterScale}{"lin", "log", "log10"}
+
+\item{lowerBound, upperBound, nominalValue}{numeric}
+
+\item{estimate}{0 or 1}
+
+\item{initializationPriorType}{see argument suggestions}
+
+\item{initializationPriorParameters}{see argument suggestions}
+
+\item{objectivePriorType}{see argument suggestions}
+
+\item{objectivePriorParameters}{see argument suggestions}
 }
 \value{
-
+data.table
 }
 \description{
 Constructor for Parameters

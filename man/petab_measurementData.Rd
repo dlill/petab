@@ -18,9 +18,23 @@ petab_measurementData(
 )
 }
 \arguments{
+\item{observableId}{character}
+
+\item{simulationConditionId}{character}
+
+\item{measurement}{numeric}
+
+\item{time}{numeric}
+
 \item{observableParameters}{numeric string or NA}
 
 \item{noiseParameters}{numeric, string or NA: Measurement noise or parameter name}
+
+\item{datasetId}{character}
+
+\item{replicateId}{character}
+
+\item{preequilibrationConditionId}{character}
 
 \item{datapointId:}{Deviating from original petab, a unique identifier of each data point}
 }

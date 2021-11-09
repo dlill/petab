@@ -15,10 +15,20 @@ petab_observables(
 )
 }
 \arguments{
-\item{noiseDistribution}{}
+\item{observableId}{character}
+
+\item{observableName}{character}
+
+\item{observableFormula}{character}
+
+\item{observableTransformation}{"lin", "log", "log10"}
+
+\item{noiseFormula}{character}
+
+\item{noiseDistribution}{"normal", "laplace"}
 }
 \value{
-
+data.table
 }
 \description{
 Constructor for Observables

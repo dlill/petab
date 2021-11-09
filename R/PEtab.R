@@ -4,15 +4,21 @@
 
 #' Original petab function didn't work
 #'
-#' @param model
-#' @param measurementData
+#' @param pe petab without a parameter_df
+#' @param observableParameterScale "lin", "log" or "log10"
 #'
-#' @return
+#' @return [petab_parameters()] data.table
+#' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
-#' @export
+#' @family 
+#' @importFrom cOde getSymbols
+#' @importFrom data.table rbindlist
 #'
 #' @examples
+#' pe <- petab_exampleRead("01", "pe")
+#' pe$parameters <- NULL
+#' petab_create_parameter_df(pe)
 petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
   
   model                 <- pe$model
@@ -34,31 +40,31 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
                              nominalValue =  parInfo$parValue)
   
   # HACK: Should this be here or further down? I put it here so the dynamic model is not interrupted
-  if (length(getSymbols(pe$meta$events$value))){
-    par_ev <- petab_parameters(parameterId   = getSymbols(pe$meta$events$value),
-                               parameterName = getSymbols(pe$meta$events$value),
+  if (length(cOde::getSymbols(pe$meta$events$value))){
+    par_ev <- petab_parameters(parameterId   = cOde::getSymbols(pe$meta$events$value),
+                               parameterName = cOde::getSymbols(pe$meta$events$value),
                                nominalValue  = 1,
                                estimate      = 0,
                                parameterScale = "lin") # up to debate
-    par_pa <- rbindlist(list(par_pa, par_ev))
+    par_pa <- data.table::rbindlist(list(par_pa, par_ev))
   }
   
   # Observable parameters
   par_ob <- NULL
-  if (length(getSymbols(measurementData$observableParameters)))
-    par_ob <- petab_parameters(parameterId =  getSymbols(measurementData$observableParameters),
-                               parameterName = getSymbols(measurementData$observableParameters),
+  if (length(cOde::getSymbols(measurementData$observableParameters)))
+    par_ob <- petab_parameters(parameterId =  cOde::getSymbols(measurementData$observableParameters),
+                               parameterName = cOde::getSymbols(measurementData$observableParameters),
                                parameterScale = observableParameterScale)
   
   # MeasurementErrors
   par_meErr <- NULL
-  if (length(getSymbols(measurementData$noiseParameters)))
-    par_meErr <- petab_parameters(parameterId =   getSymbols(measurementData$noiseParameters),
-                                  parameterName = getSymbols(measurementData$noiseParameters),
+  if (length(cOde::getSymbols(measurementData$noiseParameters)))
+    par_meErr <- petab_parameters(parameterId =   cOde::getSymbols(measurementData$noiseParameters),
+                                  parameterName = cOde::getSymbols(measurementData$noiseParameters),
                                   nominalValue = 0.1)
   
   # Get all base-parameters
-  par <- rbindlist(list(par_sp, par_pa, par_ob, par_meErr))
+  par <- data.table::rbindlist(list(par_sp, par_pa, par_ob, par_meErr))
   
   
   # Parameters from experimentalConditions
@@ -74,7 +80,7 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
     # Adjust scales according to inner parameters
     parnamesInner <- setdiff(colnames(experimentalCondition), c("conditionId", "conditionName"))
     for (pxinner in parnamesInner) {
-      pxouter <- getSymbols(experimentalCondition[[pxinner]])
+      pxouter <- cOde::getSymbols(experimentalCondition[[pxinner]])
       parameterScales <- par[parameterId == pxinner,parameterScale]
       if (!length(parameterScales)) next # In this case it's probably a L1-parameter which is dealt with later
       par_ec[parameterId %in% pxouter,`:=`(parameterScale = parameterScales)]
@@ -84,7 +90,7 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
     par <- par[!parameterId %in% parnamesInner]
     
     # Append par_ec
-    par <- rbindlist(list(par, par_ec))
+    par <- data.table::rbindlist(list(par, par_ec))
   }
   
   pfi <- pe$meta$parameterFormulaInjection
@@ -201,9 +207,18 @@ petab_columns <- function(pe = NULL) {
 #' @family dco
 #' 
 #' @examples 
+#' # Without metaInformation
 #' pe <- petab_exampleRead("01")
 #' dco <- petab_joinDCO(pe)
 #' bla <- petab_unjoinDCO(dco,pe)
+#' 
+#' # With metaInformation including a "pattern" entry
+#' pe <- petab_exampleRead("04")
+#' pe <- petab_mutateDCO(pe, i = conditionId == "C1", j = `:=`(conditionId = "cell1_dose1"))
+#' pe <- petab_mutateDCO(pe, i = conditionId == "C2", j = `:=`(conditionId = "cell1_dose2"))
+#' pe$meta$metaInformation <- list(experimentalCondition = list(conditionId = list(pattern = "celltype_dose")))
+#' dco <- petab_joinDCO(pe)
+#' dco
 petab_joinDCO <- function(pe, FLAGincludeMetaInformation = TRUE) {
   
   if (length(pe$measurementData$preequilibrationConditionId) &&
@@ -356,7 +371,6 @@ petab_mutateDCO <- function(pe, i, j) {
 #' @md
 #' @family dco
 #' @family metaInformation
-#' 
 dco_expandPatterns <- function(dco, pe) {
   
   patterns <- petab_metaInformation_getPatterns(pe$meta$metaInformation)
@@ -410,14 +424,14 @@ petab_experimentalCondition <- function(
 
 #' Constructor for Measurements
 #'
-#' @param observableId
-#' @param simulationConditionId
-#' @param measurement
-#' @param time
+#' @param observableId character
+#' @param simulationConditionId character
+#' @param measurement numeric
+#' @param time numeric
 #' @param observableParameters numeric string or NA
-#' @param datasetId
-#' @param replicateId
-#' @param preequilibrationConditionId
+#' @param datasetId character
+#' @param replicateId character
+#' @param preequilibrationConditionId character
 #' @param noiseParameters numeric, string or NA: Measurement noise or parameter name
 #' @param datapointId: Deviating from original petab, a unique identifier of each data point
 #'
@@ -462,14 +476,14 @@ petab_measurementData <- function(
 
 #' Constructor for Observables
 #'
-#' @param observableId
-#' @param observableName
-#' @param observableFormula
-#' @param observableTransformation
-#' @param noiseFormula
-#' @param noiseDistribution
+#' @param observableId character
+#' @param observableName character
+#' @param observableFormula character
+#' @param observableTransformation "lin", "log", "log10"
+#' @param noiseFormula character
+#' @param noiseDistribution "normal", "laplace"
 #'
-#' @return
+#' @return data.table
 #'
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
@@ -494,19 +508,17 @@ petab_observables <- function(
 
 #' Constructor for Parameters
 #'
-#' @param parameterId
-#' @param parameterName
-#' @param parameterScale
-#' @param lowerBound
-#' @param upperBound
-#' @param nominalValue
-#' @param estimate
-#' @param initializationPriorType
-#' @param initializationPriorParameters
-#' @param objectivePriorType
-#' @param objectivePriorParameters
+#' @param parameterId character
+#' @param parameterName character
+#' @param parameterScale "lin", "log", "log10"
+#' @param lowerBound,upperBound,nominalValue numeric
+#' @param estimate 0 or 1
+#' @param initializationPriorType see argument suggestions
+#' @param initializationPriorParameters see argument suggestions
+#' @param objectivePriorType see argument suggestions
+#' @param objectivePriorParameters see argument suggestions
 #'
-#' @return
+#' @return data.table
 #'
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
@@ -571,13 +583,11 @@ petab_model <- function(equationList, events = NA,
 #'
 #' @param parameterFormulaInjection data.table(parameterId, parameterFormula)
 #' @param variableOrder vector of stateIds and observableIds in the order which you want for plotting
-#' @param yaml hierarchichal list, stored in a yaml-file
 #' @param ...
+#' @param metaInformation ordered list potentially containing descriptions of columns, e.g. list(experimentalCondition = list(conditionId = list(patterns = "cellline_dose")), measurementData = list(time = list(unit = "hours"), measurement = list(unit = "value", lloq = 1))) see example of petab_joinDCO
 #'
 #' @return named list of supplied arguments
 #' @export
-#'
-#' @examples
 petab_meta <- function(parameterFormulaInjection = NULL, variableOrder = NULL, metaInformation = NULL,...) {
   list(parameterFormulaInjection = parameterFormulaInjection, variableOrder = variableOrder, metaInformation = metaInformation, ...)
 }
@@ -1496,7 +1506,7 @@ petab_getMeasurementParsScales <- function(measurementData,parameters) {
 #' @param ggCallback additional stuff to add to the ggplot, such as a call to [ggplot2::labs()] or scales
 #' @param FLAGmeanLine draw line connecting the means of groups defined by c("observableId", "time", "conditionId", names(aeslist)=
 #' @param FLAGfuture export asynchronously with the future package
-#' @param filename,width,height,scale,units,... see [ggplot2::ggsave()]
+#' @param ... Arguments to [conveniencefunctions::cf_outputFigure()]
 #'
 #' @return ggplot
 #'
@@ -1532,7 +1542,7 @@ petab_getMeasurementParsScales <- function(measurementData,parameters) {
 #' petab_plotData(pe, ggCallback = list(facet_wrap(~observableId, scales = "free"),
 #'                                      ggrepel::geom_text_repel(aes(x= time, y = measurement, label = datapointId), color = "grey", size = 2)))
 #'
-#' Save plot to multipage pdf
+#' # Save plot to multipage pdf
 #' td <- tempdir()
 #' petab_plotData(pe,
 #'                ggCallback = list(facet_wrap_paginate(~observableId, nrow = 1, ncol = 2, scales = "free"),
@@ -1541,11 +1551,10 @@ petab_getMeasurementParsScales <- function(measurementData,parameters) {
 #'                width = 15.5, heightrel = 8/16, scale = 1, units = "cm")
 #' system(paste0("nautilus ", td), wait = FALSE)
 #'
-#' Display second page of multipage plot interactively
+#' # Display second page of multipage plot interactively
 #' petab_plotData(pe,
 #'                ggCallback = list(facet_wrap_paginate(~observableId, nrow = 1, ncol = 2, scales = "free", page = 2),
 #'                                  ggrepel::geom_text_repel(aes(x= time, y = measurement, label = datapointId), color = "grey", size = 1)))
-
 #'
 petab_plotData <- function(petab,
                            i,j,

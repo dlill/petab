@@ -26,9 +26,9 @@ Can be overriden by aeslist}
 
 \item{ggCallback}{additional stuff to add to the ggplot, such as a call to \code{\link[ggplot2:labs]{ggplot2::labs()}} or scales}
 
-\item{FLAGfuture}{export asynchronously with the future package}
+\item{...}{Arguments to \code{\link[conveniencefunctions:cf_outputFigure]{conveniencefunctions::cf_outputFigure()}}}
 
-\item{filename, width, height, scale, units, ...}{see \code{\link[ggplot2:ggsave]{ggplot2::ggsave()}}}
+\item{FLAGfuture}{export asynchronously with the future package}
 }
 \value{
 ggplot
@@ -58,7 +58,7 @@ pe <- petab_mutateDCO(pe,j=`:=`(datapointId = paste0(datasetId, "_", 1:.N)))
 petab_plotData(pe, ggCallback = list(facet_wrap(~observableId, scales = "free"),
                                      ggrepel::geom_text_repel(aes(x= time, y = measurement, label = datapointId), color = "grey", size = 2)))
 
-Save plot to multipage pdf
+# Save plot to multipage pdf
 td <- tempdir()
 petab_plotData(pe,
                ggCallback = list(facet_wrap_paginate(~observableId, nrow = 1, ncol = 2, scales = "free"),
@@ -67,7 +67,7 @@ petab_plotData(pe,
                width = 15.5, heightrel = 8/16, scale = 1, units = "cm")
 system(paste0("nautilus ", td), wait = FALSE)
 
-Display second page of multipage plot interactively
+# Display second page of multipage plot interactively
 petab_plotData(pe,
                ggCallback = list(facet_wrap_paginate(~observableId, nrow = 1, ncol = 2, scales = "free", page = 2),
                                  ggrepel::geom_text_repel(aes(x= time, y = measurement, label = datapointId), color = "grey", size = 1)))

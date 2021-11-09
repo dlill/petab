@@ -16,9 +16,7 @@ petab_meta(
 
 \item{variableOrder}{vector of stateIds and observableIds in the order which you want for plotting}
 
-\item{...}{}
-
-\item{yaml}{hierarchichal list, stored in a yaml-file}
+\item{metaInformation}{ordered list potentially containing descriptions of columns, e.g. list(experimentalCondition = list(conditionId = list(patterns = "cellline_dose")), measurementData = list(time = list(unit = "hours"), measurement = list(unit = "value", lloq = 1))) see example of petab_joinDCO}
 }
 \value{
 named list of supplied arguments
