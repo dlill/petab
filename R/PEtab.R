@@ -1418,7 +1418,7 @@ petab_createObjPrior <- function(pe, FLAGuseNominalValueAsCenter = FALSE) {
   # [ ] Todo: Move this function to dMod-*.R file
   
   p <- copy(pe$parameters)
-  p <- p[estimate == 1]
+  p <- p[estimate == 1&!is.na(objectivePriorType)]
   
   notImplemented <- which(p$objectivePriorType != "parameterScaleNormal")
   if (length(notImplemented))

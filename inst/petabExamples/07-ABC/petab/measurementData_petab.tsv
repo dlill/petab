@@ -1,0 +1,19 @@
+observableId	preequilibrationConditionId	simulationConditionId	measurement	time	observableParameters	noiseParameters	datasetId	replicateId	datapointId
+obsC		C1	0.853609116027754	25		sigma_obsC	data1	1	1
+obsC		C1	0.954188905269336	25		sigma_obsC	data1	2	7
+obsC		C1	0.854054238126183	25		sigma_obsC	data1	3	13
+obsC		C1	0.96218958181872	30		sigma_obsC	data1	1	2
+obsC		C1	1.01706838923342	30		sigma_obsC	data1	2	8
+obsC		C1	0.757010542941174	30		sigma_obsC	data1	3	14
+obsC		C1	0.888970295633836	35		sigma_obsC	data1	1	3
+obsC		C1	1.02372664132124	35		sigma_obsC	data1	2	9
+obsC		C1	1.08151679515768	35		sigma_obsC	data1	3	15
+obsC		C1	1.1490865652571	40		sigma_obsC	data1	1	4
+obsC		C1	0.950184043404455	40		sigma_obsC	data1	2	10
+obsC		C1	0.975257143886647	40		sigma_obsC	data1	3	16
+obsC		C1	1.02074276104686	45		sigma_obsC	data1	1	5
+obsC		C1	1.1488459296501	45		sigma_obsC	data1	2	11
+obsC		C1	0.986058846514164	45		sigma_obsC	data1	3	17
+obsC		C1	0.914331880573685	50		sigma_obsC	data1	1	6
+obsC		C1	1.03196989638664	50		sigma_obsC	data1	2	12
+obsC		C1	1.09075355680164	50		sigma_obsC	data1	3	18

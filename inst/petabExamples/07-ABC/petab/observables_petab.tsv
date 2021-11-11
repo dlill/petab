@@ -1,0 +1,2 @@
+observableId	observableName	observableFormula	observableTransformation	noiseFormula	noiseDistribution
+obsC	obsC	C	log	noiseParameter1_obsC	normal
