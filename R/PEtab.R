@@ -856,29 +856,21 @@ writePetab <- function(pe, filename = "petab/model") {
   # run linter
   petab_lint(pe)
   
-  
-  # Create folder, load petab
+  # Create folder
   dir.create(petab_modelname_path(filename)$path, FALSE, TRUE)
-  pepy <- petab_python_setup()
   
-  # Get filenames
-  files <- petab_files(filename = filename)
+  # Get filenames of objects to write except for yaml
+  files0 <- petab_files(filename = filename, FLAGoverwrite = TRUE)
   modelname <- gsub(".petab$","", basename(filename))
   
-  # Write yaml
-  pepy$create_problem_yaml(sbml_files        = basename(files[["modelXML"]]),
-                           condition_files   = basename(files[["experimentalCondition"]]),
-                           measurement_files = basename(files[["measurementData"]]),
-                           parameter_file    = basename(files[["parameters"]]),
-                           observable_files  = basename(files[["observables"]]),
-                           yaml_file         = files[["yaml"]], 
-                           relative_paths = FALSE)
-  
-  # [ ] Hack: Remove once sbml export is stable
+  # Hack: Duplicate model, export as RDS as well. 
+  # This makes it possible to "read" a petab instead of "import"ing it. 
+  # To resolve this hack, one would need to parse the sbml model into its original dMod objects. 
+  # But this is currently nested too deeply into the import and not refactored nicely.
   if ("model" %in% names(pe)) pe$modelXML <- pe$model
   
-  # Select files to write
-  files <- files[names(pe)]
+  # Select files to write: Ugly, this removes metaInformation
+  files <- files0[names(pe)]
   files <- files[vapply(pe, function(x) !is.null(x), TRUE)]
   
   # Write tables
@@ -887,28 +879,45 @@ writePetab <- function(pe, filename = "petab/model") {
     lapply(names(files_tsv), function(nm) {
       data.table::fwrite(pe[[nm]], files[[nm]], sep = "\t")})
   
-  # Write model+meta rds
+  # Write metaInformation.yaml
+  file_metaInformation <- NULL
   if (!is.null(pe$meta$metaInformation)) {
-    # Ugly first bit: write metaInformation separately as yaml
-    metaInformation_file <- petab_files(filename = filename)[["metaInformation"]] # Ugly, should be kept in "files" instead of calling petab_files again
-    yaml::write_yaml(pe$meta$metaInformation, metaInformation_file) 
+    # Ugly to split up meta into meta and metaInformation.yaml
+    file_metaInformation <- petab_files(filename = filename)[["metaInformation"]]
+    yaml::write_yaml(pe$meta$metaInformation, file_metaInformation) 
     pe$meta$metaInformation <- NULL
   }
-  files_model <- grep("rds", files, value = TRUE)
-  if (length(files_model))
-    lapply(names(files_model), function(nm) {
+  
+  # Write rds files: model+meta
+  files_rds <- grep("rds", files, value = TRUE)
+  if (length(files_rds))
+    lapply(names(files_rds), function(nm) {
       saveRDS(pe[[nm]], files[[nm]])})
   
   # Write model xml
-  files_model <- grep("xml", files, value = TRUE)
-  if (length(files_model)) {
-    args <- c(pe$model, list(filename = files_model,
+  files_xml <- grep("xml", files, value = TRUE)
+  if (length(files_xml)) {
+    args <- c(pe$model, list(filename = files_xml,
                              modelname = modelname))
     args <- args[setdiff(names(args), "events")] # [ ] Todo: Events
     do.call(sbml_exportEquationList, args)
   }
   
-  cat("Success?")
+  
+  # Write petabYaml
+  files <- c(files, metaInformation = file_metaInformation) # metaInformation due to hacky split up of meta
+  files <- lapply(files, basename)                          # Only use basenames
+  
+  petabYaml(parameter_file = files$parameters,
+            condition_files = files$experimentalCondition,
+            measurement_files = files$measurementData,
+            observable_files = files$observables,
+            sbml_files = files$modelXML,
+            visualization_files = files$visualizationSpecification,
+            meta_file = files$meta,
+            metaInformation_file = files$metaInformation,
+            filename = files0$yaml)
+  
   invisible(pe)
 }
 
@@ -932,8 +941,13 @@ writePetab <- function(pe, filename = "petab/model") {
 #'
 #' @examples
 #' petabYaml(parameter_file = "wup", 
-#' condition_files = NULL, measurement_files = "bla", observable_files = NULL, sbml_files = NULL, visualization_files = NULL,
-#' meta_file = NULL, metaInformation_file = ""bam")
+#' condition_files = NULL, 
+#' measurement_files = "bla", 
+#' observable_files = NULL, 
+#' sbml_files = NULL, 
+#' visualization_files = NULL,
+#' meta_file = NULL, 
+#' metaInformation_file = "bam", filename = "bla.yaml")
 petabYaml <- function(parameter_file = NULL, 
                       condition_files = NULL, measurement_files = NULL, observable_files = NULL, sbml_files = NULL, visualization_files = NULL,
                       meta_file = NULL, metaInformation_file = NULL,
@@ -943,7 +957,7 @@ petabYaml <- function(parameter_file = NULL,
   if (length(condition_files) > 1 || length(measurement_files) > 1 || length(observable_files) > 1 || length(sbml_files) > 1 || length(visualization_files) > 1)
     stop("Only one problem allowed")
   
-  yaml_content <- list(format_version = 1, # Hard coded for a reason...
+  yaml_content <- list(format_version = 1, # Update if necessary
                        parameter_file = parameter_file, 
                        problems = list(list( # One problem
                          condition_files = condition_files, 
