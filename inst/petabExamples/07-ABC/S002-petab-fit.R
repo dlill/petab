@@ -14,7 +14,7 @@ path2TestCases = "PEtabTests/"
 
 # ..  -----
 
-pd <- importPEtabSBML_indiv(filename, NFLAGcompile = 0, .compiledFolder = "Compiled", SFLAGbrowser = "0")
+pd <- importPEtabSBML_indiv(filename, NFLAGcompile = 2, .compiledFolder = "Compiled", SFLAGbrowser = "0")
 
 # Test model
 pd_predictAndPlot2(pd, i = time > 10)
@@ -41,13 +41,28 @@ parf <- expand.grid(A = myfit$argument[["A"]],
                     k_BC = myfit$argument[["k_BC"]] + seq(-1,1,0.1),
                     sigma_obsC = myfit$argument[["sigma_obsC"]])
 rownames(parf) <- NULL
-parf <- parframe(parf, parameters = names(parf))                    
+parf$parameterSetId <- factor(1:nrow(parf), levels = as.character(1:nrow(parf)))
+parf <- parframe(parf, parameters = names(pd$pars))                    
 
 objvals <- lapply(seq_len(nrow(parf)), function(i) pd$obj(as.parvec(parf,i))$value)
 
 p <- data.table(parf, objval = do.call(c, objvals))
 
-cfggplot(p, aes(k_AB, k_BC, color = log10(objval - min(objval)+0.01), fill = log10(objval - min(objval)+0.01))) + geom_tile()
+# ..  -----
+set.seed(15)
+par_idx <- sample(1:nrow(p),5)
+par_idx <- sort(c(which.min(p$objval),par_idx))
+px <- p[par_idx]
+cfggplot(p, aes(k_AB, k_BC)) + 
+  geom_tile(aes(fill = log10(objval - min(objval)+0.01))) + 
+  geom_point(aes(color = parameterSetId), data = px, shape = 4, stroke = 1, size = 1) + 
+  scale_color_cf()
 
+# ..  -----
+pd_predictAndPlot2(pd, parf = parf[par_idx], aeslist = petab_plotHelpers_aeslist(color = ~parameterSetId, linetype = ~"1"), 
+                   i = measurement > -3,
+                   ggCallback = list(facet_wrap(~observableId, scales= "free"), scale_color_cf()
+                                     ),
+                   NFLAGsubsetType = 0)
 
 # Exit ----
