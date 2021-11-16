@@ -10,6 +10,7 @@ each rds contains one or multiple parameterSets
         * profileParameterSetId_parameter_leftEndpoint
         * generic: parframeId_row
 
+
 * Need to agree on names
 * Proposal
     * One unambiguous way, immutable (does not change if fits are added)

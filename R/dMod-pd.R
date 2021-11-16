@@ -107,8 +107,11 @@ readPd <- function(filename) {
   # L1 - get unbiased models
   
   
-  # 4 Set Parameters to most relevant fit: mstrust || base_obsParsFitted || base
-  pars <- if (!is.null(pd$result$mstrust)) as.parvec(pd$result$mstrust) else if (!is.null(pd$result$base_obsParsFitted)) as.parvec(pd$result$base_obsParsFitted) else pd$pars
+  # 4 Set Parameters to most relevant fit: mstrust || singleFit || base_obsParsFitted || base
+  pars <- if (!is.null(pd$result$mstrust)) {as.parvec(pd$result$mstrust) 
+    } else if (!is.null(pd$result$singleFit)) {as.parvec(pd$result$singleFit) 
+    } else if (!is.null(pd$result$base_obsParsFitted)) {as.parvec(pd$result$base_obsParsFitted) 
+    } else pd$pars
   pd$pars <- unclass_parvec(pars)
   
   pd
@@ -668,7 +671,7 @@ pd_fitObsPars <- function(pd, FLAGoverwrite = FALSE, iterlim = 500) {
 #' @importFrom dMod trust
 #'
 #' @examples
-pd_fit <- function(pd, NFLAGsavePd = 1, iterlim = 1000, printIter = TRUE, traceFile = NULL) {
+pd_fit <- function(pd, iterlim = 1000, printIter = TRUE) {
   # [ ] dont save pd, save a parframe in Results instead
   
   fit_par <- pd$pars
@@ -680,11 +683,14 @@ pd_fit <- function(pd, NFLAGsavePd = 1, iterlim = 1000, printIter = TRUE, traceF
   cat("dig into bad fitting of S302 of TGFb...\n")
   
   fit <- dMod::trust(pd$obj, fit_par, 1,10, iterlim = iterlim, fixed = fit_fix,
-                     parlower = parlower, parupper = parupper, printIter = printIter, traceFile = traceFile)
+                     parlower = parlower, parupper = parupper, printIter = printIter)
   if (!fit$converged) warning("Fit not converged, please try increasing 'iterlim' (was ", iterlim,")")
   
-  pd <- pd_updateEstPars(pd, parsEst = fit$argument, FLAGupdatePE = TRUE, FLAGsavePd = NFLAGsavePd > 0)
-  pd
+  fit$argument <- c(fit$argument, fit_fix)
+  parf_base_fitted <- as.parframe(structure(list(fit), class = c("parlist", "list")))
+  conveniencefunctions::dMod_saveMstrust(fit = parf_base_fitted, path = file.path(.outputFolder), identifier = "singleFit", FLAGoverwrite = FLAGoverwrite)
+  
+  readPd(pd_files(pd$filenameParts)$rdsfile)
 }
 
 
