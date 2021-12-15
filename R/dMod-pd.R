@@ -671,7 +671,7 @@ pd_fitObsPars <- function(pd, FLAGoverwrite = FALSE, iterlim = 500) {
 #' @importFrom dMod trust
 #'
 #' @examples
-pd_fit <- function(pd, iterlim = 1000, printIter = TRUE) {
+pd_fit <- function(pd, iterlim = 1000, printIter = TRUE, FLAGoverwrite = TRUE, .outputFolder = ".") {
   # [ ] dont save pd, save a parframe in Results instead
   
   fit_par <- pd$pars
