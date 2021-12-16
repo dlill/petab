@@ -211,6 +211,29 @@ getUnitInfo <- function(unitName = NULL, unitKind = NULL, exponent = NULL) {
   unitInfo
 }
 
+#' Title
+#'
+#' @param eventList [dMod::eventList()]
+#'
+#' @return data.table()
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family 
+#' @importFrom data.table data.table
+#'
+#' @examples
+getEventInfo <- function(eventList) {
+  if (any(!is.na(eventList$root))) stop("root in events not yet supported")
+  if (any(eventList$method != "replace")) stop("only replace events are supported")
+  eventInfo <- data.table::data.table(eventList)
+  eventInfo <- eventInfo[, list(eventSpecies = var, eventTrigger = paste0("time >= ", time), eventFormula = value)]
+  eventInfo
+}
+
+
+
+
 # -------------------------------------------------------------------------#
 # libSBML helper functions ----
 # -------------------------------------------------------------------------#
@@ -466,6 +489,50 @@ sbml_addOneReaction <- function(model, reactionName,
 }
 
 
+#' Title
+#' 
+#' Rather generic already with eventTrigger and eventFormula,
+#' but I don't know if import can handle anything else but "replace"-events at the moment
+#'
+#' @param model 
+#' @param eventSpecies 
+#' @param eventTrigger 
+#' @param eventFormula 
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family SBML export
+#'
+#' @examples
+sbml_addOneEvent <- function(model, eventSpecies, eventTrigger, eventFormula) {
+  # Create event
+  ev <- Event(3,2) # sbml level,version, I guess ??
+  
+  # Trigger
+  Event_createTrigger(ev)
+  tr <- Trigger(3,2)
+  Trigger_setInitialValue(tr, FALSE)
+  astMath <- parseL3Formula(eventTrigger)
+  Trigger_setMath(tr, astMath)
+  Event_setTrigger(ev, tr)
+  
+  # Delay # Possibility to add in future
+  # delay <- Delay(3,2)
+  # Delay_setMath(delay, parseL3Formula("0"))
+  # Event_setDelay(ev,delay)
+  
+  # Assignment
+  ea <- EventAssignment(3,2)
+  EventAssignment_setVariable(ea,eventSpecies)
+  EventAssignment_setMath(ea, parseL3Formula(eventFormula))
+  Event_addEventAssignment(ev,ea)
+  
+  Model_addEvent(model, ev)
+}
+
+
 #' From libSBML example
 #' 
 #' @author Frank Bergmann
@@ -575,45 +642,53 @@ sbml_validateSBML <- function(sbmlDoc)
 #' @importFrom purrr transpose
 #'
 #' @examples
-#' library(conveniencefunctions)
-#' .. Eqnlist and objects -----
-#' el <- NULL
-#' el <- addReaction(el, from = "E + S", to = "ES", rate = "(kon)*E*S",
-#'                   description = "production of complex")
-#' el <- addReaction(el, from = "ES", to = "E + S", rate = "koff*ES",
-#'                   description = "decay of complex")
-#' el <- addReaction(el, from = "ES", to = "E + P", rate = "kcat*ES",
-#'                   description = "production of product")
-#' el <- eqnlist_addDefaultCompartment(el, "cytoplasm")
+#' equationList <- NULL
+#' equationList <- addReaction(equationList, from = "E + S", to = "ES", rate = "(kon)*E*S",
+#'                             description = "production of complex")
+#' equationList <- addReaction(equationList, from = "ES", to = "E + S", rate = "koff*ES",
+#'                             description = "decay of complex")
+#' equationList <- addReaction(equationList, from = "ES", to = "E + P", rate = "kcat*ES",
+#'                             description = "production of product")
+#' equationList <- eqnlist_addDefaultCompartment(equationList, "cytoplasm")
 #' 
-#' filename <- file.path(tempdir(), "model.xml")
+#' filename <- modelname <- file.path(tempdir(), "model.xml")
 #' 
 #' parInfo <- data.table(tibble::tribble(
 #'   ~parName, ~parValue, ~parUnit,
 #'   "kon"   ,     0.10,"litre_per_mole_per_second" ,
 #'   "koff"  ,     0.55,"per_second" ,
 #'   "kcat"  ,     1.00,"per_second" ))
+#' unitInfo <- getUnitInfo()
+#' compartmentInfo <- getCompartmentInfo(equationList)
+#' speciesInfo <- getSpeciesInfo(equationList)
 #' 
-#' sbml_exportEquationList(el, filename, parInfo = parInfo)
+#' eventList <- eventlist(var = "E", time = 0, value = 1, root = NA, method = "replace")
+#' eventList <- addEvent(eventList, var = "E", time = 1, value = 0, root = NA, method = "replace")
+#' eventInfo <- getEventInfo(eventList)
+#' 
+#' sbml_exportEquationList(equationList, filename, parInfo = parInfo)
+#' sbml_exportEquationList(equationList, filename, parInfo = parInfo, eventList = eventList)
 sbml_exportEquationList <- function(equationList,
                                     filename,
                                     modelname = "Model",
                                     unitInfo        = getUnitInfo(),
                                     speciesInfo     = getSpeciesInfo(equationList),
                                     parInfo         = getParInfo(equationList),
-                                    compartmentInfo = getCompartmentInfo(equationList)) {
-  
-  cat("Implement with https://simplesbml.readthedocs.io/en/latest/")
+                                    compartmentInfo = getCompartmentInfo(equationList),
+                                    eventList = NULL) {
   
   # Load libSBML
   library(libSBML)
   
   # Collect arguments
+  reactionInfo <- getReactionInfo(equationList,parInfo = parInfo)
+  if (!is.null(eventList)) eventInfo <- getEventInfo(eventList)
   unitInfoList        <- purrr::transpose(unitInfo)
   speciesInfoList     <- purrr::transpose(speciesInfo)
   parInfoList         <- purrr::transpose(parInfo)
   compartmentInfoList <- purrr::transpose(compartmentInfo)
-  reactionInfoList    <- purrr::transpose(getReactionInfo(equationList,parInfo = parInfo))
+  reactionInfoList    <- purrr::transpose(reactionInfo)
+  if (!is.null(eventList)) eventInfoList    <- purrr::transpose(eventInfo)
   
   # Start SBML document
   sbmlDoc = SBMLDocument(level = 2, version = 4) 
@@ -625,6 +700,7 @@ sbml_exportEquationList <- function(equationList,
   for (x in speciesInfoList)     do.call(sbml_addOneSpecies,     c(list(model = model),x))
   for (x in parInfoList)         do.call(sbml_addOneParameter,   c(list(model = model),x))
   for (x in reactionInfoList)    do.call(sbml_addOneReaction,    c(list(model = model),x))
+  if (!is.null(eventList)) for (x in eventInfoList)       do.call(sbml_addOneEvent,       c(list(model = model),x))
   
   # Promote parameters to global parameters - this is an sbml thingy
   props = ConversionProperties();
