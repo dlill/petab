@@ -1258,7 +1258,9 @@ pepy_sample_parameter_startpoints <- function(pe, n_starts = 100L, seed = 1L, FL
 #' @family pepy
 #' @importFrom reticulate virtualenv_create use_virtualenv virtualenv_install install_python use_python
 #' 
-petab_python_installPackages <- function(FLAGcleanInstall = FALSE, FLAGforcePip = FALSE) {
+petab_python_installPackages <- function(FLAGcleanInstall = FALSE, FLAGforcePip = FALSE, FLAGforcePythonVersion = FALSE) {
+  message("If initialization fails, try running with FLAGcleanInstall or FLAGforcePythonVersion. Might help")
+  
   if (FLAGcleanInstall){
     # Hacky version for Linux only
     message("Please restart RStudio. If that doesn't help call this function again")
@@ -1267,13 +1269,16 @@ petab_python_installPackages <- function(FLAGcleanInstall = FALSE, FLAGforcePip 
     unlink("~/.local/share/r-reticulate/", T)
   }
   
+  if (FLAGforcePythonVersion){
   pyversion <- "3.9.7"
   pyver <- reticulate::install_python(pyversion)
   reticulate::use_python(pyver, TRUE)
+  }
   
   reticulate::use_virtualenv("petab")
   reticulate::virtualenv_install("petab", "petab", ignore_installed = TRUE)
   reticulate::virtualenv_install("petab", "petab-select", ignore_installed = TRUE)
+  reticulate::virtualenv_install("petab", "simplesbml", ignore_installed = TRUE)
   "installed petab in virtual environment"
 }
 
@@ -1307,7 +1312,7 @@ petab_python_installPackages <- function(FLAGcleanInstall = FALSE, FLAGforcePip 
 #' # pepy$lint(pe)
 #' 
 #' peps <- petab_python_setup(FLAGreturnpetabSelect = TRUE)
-petab_python_setup <- function(FLAGreturnpetabSelect = FALSE) {
+petab_python_setup <- function(FLAGreturnpetabSelect = FALSE, FLAGreturnSimpleSBML = FALSE) {
   
   # Necessary due to reticulate/rstudio interaction 
   mywd <- getwd()
@@ -1321,6 +1326,7 @@ petab_python_setup <- function(FLAGreturnpetabSelect = FALSE) {
   message("Using petab virtualenv\n")
   reticulate::use_virtualenv("petab")
   if (FLAGreturnpetabSelect) return(reticulate::import("petab_select"))
+  if (FLAGreturnSimpleSBML) return(reticulate::import("simplesbml"))
   reticulate::import("petab")
 }
 
