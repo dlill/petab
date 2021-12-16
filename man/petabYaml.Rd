@@ -27,6 +27,16 @@ list of these objects, with sublist "problems"
 \description{
 Gather all filenames in the list structure of a petab.yaml
 }
+\examples{
+petabYaml(parameter_file = "wup", 
+condition_files = NULL, 
+measurement_files = "bla", 
+observable_files = NULL, 
+sbml_files = NULL, 
+visualization_files = NULL,
+meta_file = NULL, 
+metaInformation_file = "bam", filename = "bla.yaml")
+}
 \seealso{
 Other petab_files: 
 \code{\link{petab_files_default}()}

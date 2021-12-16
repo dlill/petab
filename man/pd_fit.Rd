@@ -4,7 +4,13 @@
 \alias{pd_fit}
 \title{Run a fit only for observation parameters}
 \usage{
-pd_fit(pd, NFLAGsavePd = 1, iterlim = 1000, printIter = TRUE, traceFile = NULL)
+pd_fit(
+  pd,
+  iterlim = 1000,
+  printIter = TRUE,
+  FLAGoverwrite = TRUE,
+  .outputFolder = "."
+)
 }
 \arguments{
 \item{NFLAGsavePd}{3 as an option doesn't make sense hre}
@@ -17,7 +23,8 @@ Run a fit only for observation parameters
 }
 \seealso{
 Other pd: 
-\code{\link{pd_mstrust}()}
+\code{\link{pd_mstrust}()},
+\code{\link{pd_rdsfile}()}
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)

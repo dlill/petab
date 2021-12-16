@@ -4,7 +4,7 @@
 \alias{getParInfo}
 \title{Extract parInfo data.table from equationlist}
 \usage{
-getParInfo(equationList)
+getParInfo(equationList, eventList = NULL)
 }
 \arguments{
 \item{el}{equationList}
@@ -28,6 +28,7 @@ Other SBML export:
 \code{\link{getSpeciesInfo}()},
 \code{\link{getUnitInfo}()},
 \code{\link{sbml_addOneCompartment}()},
+\code{\link{sbml_addOneEvent}()},
 \code{\link{sbml_addOneParameter}()},
 \code{\link{sbml_addOneReaction}()},
 \code{\link{sbml_addOneSpecies}()},

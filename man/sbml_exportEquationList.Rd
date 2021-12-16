@@ -11,7 +11,8 @@ sbml_exportEquationList(
   unitInfo = getUnitInfo(),
   speciesInfo = getSpeciesInfo(equationList),
   parInfo = getParInfo(equationList),
-  compartmentInfo = getCompartmentInfo(equationList)
+  compartmentInfo = getCompartmentInfo(equationList),
+  events = NULL
 )
 }
 \arguments{
@@ -36,26 +37,41 @@ NULL, called for side effect
 Write sbml model to filename
 }
 \examples{
-library(conveniencefunctions)
-.. Eqnlist and objects -----
-el <- NULL
-el <- addReaction(el, from = "E + S", to = "ES", rate = "(kon)*E*S",
-                  description = "production of complex")
-el <- addReaction(el, from = "ES", to = "E + S", rate = "koff*ES",
-                  description = "decay of complex")
-el <- addReaction(el, from = "ES", to = "E + P", rate = "kcat*ES",
-                  description = "production of product")
-el <- eqnlist_addDefaultCompartment(el, "cytoplasm")
+equationList <- NULL
+equationList <- addReaction(equationList, from = "E + S", to = "ES", rate = "(kon)*E*S",
+                            description = "production of complex")
+equationList <- addReaction(equationList, from = "ES", to = "E + S", rate = "koff*ES",
+                            description = "decay of complex")
+equationList <- addReaction(equationList, from = "ES", to = "E + P", rate = "kcat*ES",
+                            description = "production of product")
+equationList <- eqnlist_addDefaultCompartment(equationList, "cytoplasm")
 
-filename <- file.path(tempdir(), "model.xml")
+filename <- modelname <- file.path(tempdir(), "model.xml")
 
 parInfo <- data.table(tibble::tribble(
   ~parName, ~parValue, ~parUnit,
   "kon"   ,     0.10,"litre_per_mole_per_second" ,
   "koff"  ,     0.55,"per_second" ,
   "kcat"  ,     1.00,"per_second" ))
+unitInfo <- getUnitInfo()
+compartmentInfo <- getCompartmentInfo(equationList)
+speciesInfo <- getSpeciesInfo(equationList)
 
-sbml_exportEquationList(el, filename, parInfo = parInfo)
+# Eventlist 1 with values only
+eventList <- eventlist(var = "E", time = 0, value = 1, root = NA, method = "replace")
+eventList <- addEvent(eventList, var = "E", time = 1, value = 0, root = NA, method = "replace")
+eventInfo <- getEventInfo(eventList)
+
+# Eventlist 2 with parameters as well
+eventList2 <- eventlist(var = "E", time = 0, value = "E_event1", root = NA, method = "replace")
+eventList2 <- addEvent(eventList2, var = "E", time = 1, value = "E_event2", root = NA, method = "replace")
+eventInfo2 <- getEventInfo(eventList2)
+parInfo2 <- getParInfo(equationList, eventList2)
+
+
+sbml_exportEquationList(equationList, filename, parInfo = parInfo)
+sbml_exportEquationList(equationList, filename, parInfo = parInfo, eventList = eventList)
+sbml_exportEquationList(equationList, filename, parInfo = parInfo2, eventList = eventList2) # don't know why this throws an error..
 }
 \seealso{
 Other SBML export: 
@@ -66,6 +82,7 @@ Other SBML export:
 \code{\link{getSpeciesInfo}()},
 \code{\link{getUnitInfo}()},
 \code{\link{sbml_addOneCompartment}()},
+\code{\link{sbml_addOneEvent}()},
 \code{\link{sbml_addOneParameter}()},
 \code{\link{sbml_addOneReaction}()},
 \code{\link{sbml_addOneSpecies}()},

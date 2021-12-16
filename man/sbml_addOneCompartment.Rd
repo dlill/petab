@@ -27,6 +27,7 @@ Other SBML export:
 \code{\link{getReactionInfo}()},
 \code{\link{getSpeciesInfo}()},
 \code{\link{getUnitInfo}()},
+\code{\link{sbml_addOneEvent}()},
 \code{\link{sbml_addOneParameter}()},
 \code{\link{sbml_addOneReaction}()},
 \code{\link{sbml_addOneSpecies}()},

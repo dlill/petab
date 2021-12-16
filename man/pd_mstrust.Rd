@@ -17,7 +17,8 @@ Run mstrust
 }
 \seealso{
 Other pd: 
-\code{\link{pd_fit}()}
+\code{\link{pd_fit}()},
+\code{\link{pd_rdsfile}()}
 
 Other pd fitting: 
 \code{\link{pd_fitObsPars}()}
