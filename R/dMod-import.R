@@ -1356,27 +1356,27 @@ sbmlImport_getReactionDetails <- function(m, reaction, compartments) {
 #' @family SBML import
 #' @importFrom cOde replaceSymbols
 smblImport_replaceFunctions <- function(m, fun, rates) {
-    mymath <- m$getFunctionDefinition(fun)$getMath()
-    fun <- m$getFunctionDefinition(fun)
-    funInfo <- sbmlImport_getFunctionInfo(fun)
+  mymath <- m$getFunctionDefinition(fun)$getMath()
+  fun <- m$getFunctionDefinition(fun)
+  funInfo <- sbmlImport_getFunctionInfo(fun)
+  
+  idx <- grep(funInfo$funName, rates)
+  for (i in idx) {
+    # 1. Replace function arguments by supplied arguments in rate, see petab_select/testcase0001 SBML for nontrivial examples
+    # https://stackoverflow.com/questions/546433/regular-expression-to-match-balanced-parentheses
+    regexExtractArguments <- paste0(".*", funInfo$funName, "(", "\\((?:[^)(]*(?R)?)*+\\)", ").*")
+    argsInRateEqn <- gsub(regexExtractArguments, "\\1", rates[i], perl = TRUE)
+    argsInRateEqn <- gsub("^\\(|\\)$", "", argsInRateEqn)
+    argsInRateEqn <- strsplit(argsInRateEqn, ",", T)[[1]]
+    funBody <- cOde::replaceSymbols(funInfo$funArgs, argsInRateEqn,funInfo$funBody)
     
-    idx <- grep(funInfo$funName, rates)
-    for (i in idx) {
-      # 1. Replace function arguments by supplied arguments in rate, see petab_select/testcase0001 SBML for nontrivial examples
-      # https://stackoverflow.com/questions/546433/regular-expression-to-match-balanced-parentheses
-      regexExtractArguments <- paste0(".*", funInfo$funName, "(", "\\((?:[^)(]*(?R)?)*+\\)", ").*")
-      argsInRateEqn <- gsub(regexExtractArguments, "\\1", rates[i], perl = TRUE)
-      argsInRateEqn <- gsub("^\\(|\\)$", "", argsInRateEqn)
-      argsInRateEqn <- strsplit(argsInRateEqn, ",", T)[[1]]
-      funBody <- cOde::replaceSymbols(funInfo$funArgs, argsInRateEqn,funInfo$funBody)
-      
-      # 2. Replace function call in rate by funBody
-      regexMatchFunCall <- paste0( "(", funInfo$funName, "\\((?:[^)(]*(?R)?)*+\\)", ")")
-      cat("Replacing ", unique(gsub(paste0(".*",regexMatchFunCall, ".*"), "\\1", rates[i], perl = TRUE)), " by ", funBody, "\n")
-      rates[i] <- gsub(regexMatchFunCall, funBody, rates[i], perl = TRUE)
-    }
-    
-    rates
+    # 2. Replace function call in rate by funBody
+    regexMatchFunCall <- paste0( "(", funInfo$funName, "\\((?:[^)(]*(?R)?)*+\\)", ")")
+    cat("Replacing ", unique(gsub(paste0(".*",regexMatchFunCall, ".*"), "\\1", rates[i], perl = TRUE)), " by ", funBody, "\n")
+    rates[i] <- gsub(regexMatchFunCall, funBody, rates[i], perl = TRUE)
+  }
+  
+  rates
 }
 
 
@@ -1453,7 +1453,44 @@ TransformEvents <- function(events){
   } else return(NULL)
 }
 
-
+#' Get Events from "events" entries in SBML
+#' 
+#' The difficulty is that triggers can take arbitrary expressions which doesn't play 
+#' well with dMod, which has a rather stiff input format for events.
+#' Therefore, this function is tailored to my own export ONLY
+#'
+#' @param modelfile 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+sbmlImport_getEventsFromTrueEvents <- function(modelfile) {
+  modelfile <- "petab/model_petab.xml"
+  model = readSBML(modelfile)$getModel()
+  nx <- Model_getNumEvents(model)
+  
+  eventList <- eventlist()
+  for (i in seq_len(nx)-1) {
+    ev <- model$getEvent(i)
+    eventTime <- ev$getTrigger()
+    eventTime <- eventTime$getMath()
+    eventTime <- formulaToL3String(eventTime)
+    if (!grepl("time >= ", eventTime)) stop("Event Trigger not of form 'time >= eventtime'. \nEvent will not be imported properly. \n Event trigger has value:\n", eventTime, "\nPlease add a parser for such events to petab::sbmlImport_getEventsFromTrueEvents")
+    eventTime <- gsub("time >= ", "", eventTime) # hard coded for my own export which has always the same string. error prone for other models, but I can't capture all possible cases anyway
+    eventTime <- as.numeric(eventTime)
+    
+    ea <- ev$getEventAssignment(0)              # hard coded for my own export which assumes only one eventAssignment per trigger
+    eventSpecies <- ea$getVariable()
+    eventValue <- ea$getMath()
+    eventValue <- formulaToL3String(eventValue)
+    # eventValue <- as.numeric(eventValue)  
+    
+    eventList <- addEvent(event = eventList, var = eventSpecies, time = eventTime, value = eventValue,
+                          root = NA, method = "replace") # Again hard coded
+  }
+  eventList
+}
 
 #' Extract parameters from SBML
 #' 
@@ -1631,10 +1668,10 @@ sbmlImport_getInitialsFromSBML <- function(modelfile){
   
   inits_num <- suppressWarnings(initials[!is.na(as.numeric(initials))])
   inits_num <- suppressWarnings(petab_parameters(parameterId = names(inits_num), 
-                                  parameterScale = "lin",
-                                  lowerBound = 1e-10, upperBound = 1e10,
-                                  nominalValue = inits_num,
-                                  estimate = 0))
+                                                 parameterScale = "lin",
+                                                 lowerBound = 1e-10, upperBound = 1e10,
+                                                 nominalValue = inits_num,
+                                                 estimate = 0))
   inits_num <- inits_num[!is.na(parameterId)] # To catch the case that no numeric inits are given
   
   list(inits_sym = inits_sym, inits_num = inits_num)
@@ -1922,7 +1959,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
       peOld <- readRDS(rdsfile)$pe
       NFLAGcompile <- as.numeric(petab_hash(pe) == petab_hash(peOld)) * 2 # Um die Ecke wegen suboptimaler NFLAGcompile Definition
     } else {
-    NFLAGcompile <- 0 
+      NFLAGcompile <- 0 
     }
   }
   
@@ -1947,7 +1984,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
   dummy            <- getReactionsSBML(files$modelXML, files$experimentalCondition)
   myreactions      <- dummy$reactions
   myreactions_orig <- dummy$reactions_orig
-  myevents         <- dummy$events
+  myevents         <- rbind(dummy$events, sbmlImport_getEventsFromTrueEvents(files$modelXML))
   mypreeqEvents    <- dummy$preeqEvents
   myobservables    <- getObservablesSBML(files$observables)
   
@@ -1962,14 +1999,10 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
   # [ ] Need example for preeqEvents
   
   if (!is.null(myevents)){
-    stop("events not yet implemented")
-    # set remaining event initials to 0
+    # set remaining event initials to 0. <= From Original import. Don't know what this means
     inits_events <- setdiff(unique(myevents$var), unique(mypreeqEvents$var))
     inits_events <- setNames(rep(0, length(inits_events)), inits_events)
   }
-  # HACK
-  myevents <- pe$meta$events
-  
   
   # .. Initialize gridlist and trafo -----
   if (grepl(SFLAGbrowser, "2BuildGrids")) browser()

@@ -5,6 +5,7 @@
 static double parms[7];
 static double forc[0];
 static double cons[0];
+static double eventcounter[2];
 static double range[2];
 
 #define nGridpoints 2 
@@ -25,6 +26,7 @@ static double range[2];
 void odemodel_petab_initmod(void (* odeparms)(int *, double *)) {
 	 int N=7;
 	 odeparms(&N, parms);
+	 for(int i=0; i<2; ++i) eventcounter[i] = 0;
 }
 
 void odemodel_petab_initforc(void (* odeforcs)(int *, double *)) {
@@ -44,3 +46,20 @@ void odemodel_petab_derivs (int *n, double *t, double *y, double *ydot, double *
 
 }
 
+/** Event function **/
+void odemodel_petab_myevent(int *n, double *t, double *y) {
+
+	 double time = *t;
+
+	 if(*t == 20.0 & eventcounter[0] == 0) {
+		y[2] = 0;
+		eventcounter[0] = eventcounter[0] + 1.;
+	 }
+
+	 if(*t == 50.0 & eventcounter[1] == 0) {
+		y[2] = 30.0;
+		eventcounter[1] = eventcounter[1] + 1.;
+	 }
+
+
+}

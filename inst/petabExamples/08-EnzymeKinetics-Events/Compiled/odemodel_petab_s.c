@@ -2,9 +2,10 @@
 #include <R.h> 
  #include <math.h> 
 
-static double parms[32];
+static double parms[35];
 static double forc[0];
 static double cons[0];
+static double eventcounter[2];
 static double range[2];
 
 #define nGridpoints 2 
@@ -43,13 +44,17 @@ static double range[2];
  #define y26_0 parms[29] 
  #define y27_0 parms[30] 
  #define y28_0 parms[31] 
+ #define y29_0 parms[32] 
+ #define y30_0 parms[33] 
+ #define y31_0 parms[34] 
 #define tmin range[0]
 #define tmax range[1]
 
 
 void odemodel_petab_s_initmod(void (* odeparms)(int *, double *)) {
-	 int N=32;
+	 int N=35;
 	 odeparms(&N, parms);
+	 for(int i=0; i<2; ++i) eventcounter[i] = 0;
 }
 
 void odemodel_petab_s_initforc(void (* odeforcs)(int *, double *)) {
@@ -78,20 +83,53 @@ void odemodel_petab_s_derivs (int *n, double *t, double *y, double *ydot, double
  	 ydot[13] = (-(kon*y[1]))*(y[12])+(-(kon*y[0]))*(y[13])+(koff)*(y[14]);
  	 ydot[14] = (kon*y[1])*(y[12])+(kon*y[0])*(y[13])+(-(koff+kcat))*(y[14]);
  	 ydot[15] = (kcat)*(y[14]);
- 	 ydot[16] = (kcat)*(0.0);
- 	 ydot[17] = (-(kon*y[1]))*(y[17])+(-(kon*y[0]))*(y[18])+(koff+kcat)*(y[19])-(y[0]*y[1]);
- 	 ydot[18] = (-(kon*y[1]))*(y[17])+(-(kon*y[0]))*(y[18])+(koff)*(y[19])-(y[0]*y[1]);
- 	 ydot[19] = (kon*y[1])*(y[17])+(kon*y[0])*(y[18])+(-(koff+kcat))*(y[19])+y[0]*y[1];
- 	 ydot[20] = (kcat)*(y[19]);
- 	 ydot[21] = (-(kon*y[1]))*(y[21])+(-(kon*y[0]))*(y[22])+(koff+kcat)*(y[23])+y[2];
- 	 ydot[22] = (-(kon*y[1]))*(y[21])+(-(kon*y[0]))*(y[22])+(koff)*(y[23])+y[2];
- 	 ydot[23] = (kon*y[1])*(y[21])+(kon*y[0])*(y[22])+(-(koff+kcat))*(y[23])-y[2];
- 	 ydot[24] = (kcat)*(y[23]);
- 	 ydot[25] = (-(kon*y[1]))*(y[25])+(-(kon*y[0]))*(y[26])+(koff+kcat)*(y[27])+y[2];
- 	 ydot[26] = (-(kon*y[1]))*(y[25])+(-(kon*y[0]))*(y[26])+(koff)*(y[27]);
- 	 ydot[27] = (kon*y[1])*(y[25])+(kon*y[0])*(y[26])+(-(koff+kcat))*(y[27])-y[2];
- 	 ydot[28] = (kcat)*(y[27])+y[2];
+ 	 ydot[16] = (-(kon*y[1]))*(y[16])+(-(kon*y[0]))*(y[17])+(koff+kcat)*(y[18]);
+ 	 ydot[17] = (-(kon*y[1]))*(y[16])+(-(kon*y[0]))*(y[17])+(koff)*(y[18]);
+ 	 ydot[18] = (kon*y[1])*(y[16])+(kon*y[0])*(y[17])+(-(koff+kcat))*(y[18]);
+ 	 ydot[19] = (kcat)*(y[18]);
+ 	 ydot[20] = (-(kon*y[1]))*(y[20])+(-(kon*y[0]))*(y[21])+(koff+kcat)*(y[22])-(y[0]*y[1]);
+ 	 ydot[21] = (-(kon*y[1]))*(y[20])+(-(kon*y[0]))*(y[21])+(koff)*(y[22])-(y[0]*y[1]);
+ 	 ydot[22] = (kon*y[1])*(y[20])+(kon*y[0])*(y[21])+(-(koff+kcat))*(y[22])+y[0]*y[1];
+ 	 ydot[23] = (kcat)*(y[22]);
+ 	 ydot[24] = (-(kon*y[1]))*(y[24])+(-(kon*y[0]))*(y[25])+(koff+kcat)*(y[26])+y[2];
+ 	 ydot[25] = (-(kon*y[1]))*(y[24])+(-(kon*y[0]))*(y[25])+(koff)*(y[26])+y[2];
+ 	 ydot[26] = (kon*y[1])*(y[24])+(kon*y[0])*(y[25])+(-(koff+kcat))*(y[26])-y[2];
+ 	 ydot[27] = (kcat)*(y[26]);
+ 	 ydot[28] = (-(kon*y[1]))*(y[28])+(-(kon*y[0]))*(y[29])+(koff+kcat)*(y[30])+y[2];
+ 	 ydot[29] = (-(kon*y[1]))*(y[28])+(-(kon*y[0]))*(y[29])+(koff)*(y[30]);
+ 	 ydot[30] = (kon*y[1])*(y[28])+(kon*y[0])*(y[29])+(-(koff+kcat))*(y[30])-y[2];
+ 	 ydot[31] = (kcat)*(y[30])+y[2];
 
-	 for(int i=  0 ; i <  3 ; ++i) RPAR[i] = 0;
 }
 
+/** Event function **/
+void odemodel_petab_s_myevent(int *n, double *t, double *y) {
+
+	 double time = *t;
+
+	 if(*t == 20.0 & eventcounter[0] == 0) {
+		y[6] = 0;
+		y[10] = 0;
+		y[14] = 0;
+		y[18] = 0;
+		y[22] = 0;
+		y[26] = 0;
+		y[30] = 0;
+		y[2] = 0;
+		eventcounter[0] = eventcounter[0] + 1.;
+	 }
+
+	 if(*t == 50.0 & eventcounter[1] == 0) {
+		y[6] = 0;
+		y[10] = 0;
+		y[14] = 0;
+		y[18] = 0;
+		y[22] = 0;
+		y[26] = 0;
+		y[30] = 0;
+		y[2] = 30.0;
+		eventcounter[1] = eventcounter[1] + 1.;
+	 }
+
+
+}

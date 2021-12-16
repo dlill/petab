@@ -157,6 +157,22 @@ pd_files <- function(filenameParts) {
   )
 }
 
+#' Get the rds file path in one simple command
+#'
+#' @param pd 
+#'
+#' @return path of the rds file
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family pd
+#'
+#' @examples
+pd_rdsfile <- function(pd) {
+  pd_files(pd$filenameParts)$rdsfile
+}
+
+
 #' Title
 #'
 #' @param pd 

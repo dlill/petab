@@ -4,26 +4,24 @@ try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 # -------------------------------------------------------------------------#
 # Create enzyme kinetics model and data ----
 # -------------------------------------------------------------------------#
-filename <- "petab"
-NFLAGcompile = 1
-.compiledFolder = "Compiled"
-SFLAGbrowser = "1"
+pd <- importPEtabSBML_indiv("petab/petab.yaml", NFLAGcompile = 0, .compiledFolder = "Compiled", SFLAGbrowser = "0")
 
-testCases = FALSE
-path2TestCases = "PEtabTests/"
+pd_predictAndPlot2(pd)
 
-# ..  -----
+pd_fit(pd)
+pd <- readPd(pd_files(pd$filenameParts)$rdsfile)
 
-pd <- importPEtabSBML_indiv(filename, NFLAGcompile = 1, .compiledFolder = "Compiled", SFLAGbrowser = "1")
 
-# Test model
-pred <- pd$prd(seq(0,100), pd$pars)
-pd$obj_data(pd$pars)
 
-# Test fitting
-myfit <- trust(pd$obj_data, pd$pars,1,10,iterlim = 1000)
-plotCombined(pd$prd(seq(0,100), pd$pars), pd$dModAtoms$data)
-plotCombined(pd$prd(seq(0,100), myfit$argument), pd$dModAtoms$data)
+
+# # Test model
+# pred <- pd$prd(seq(0,100), pd$pars)
+# pd$obj_data(pd$pars)
+# 
+# # Test fitting
+# myfit <- trust(pd$obj_data, pd$pars,1,10,iterlim = 1000)
+# plotCombined(pd$prd(seq(0,100), pd$pars), pd$dModAtoms$data)
+# plotCombined(pd$prd(seq(0,100), myfit$argument), pd$dModAtoms$data)
 
 # # Mstrust
 # center <- pepy_sample_parameter_startpoints(pd$pe, n_starts = 8)

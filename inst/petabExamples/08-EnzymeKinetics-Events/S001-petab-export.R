@@ -94,12 +94,4 @@ writePetab(pe, filename)
 unlink(list.files(".", "\\.o$|\\.so$|\\.c$"))
 
 
-pd <- importPEtabSBML_indiv("petab/petab.yaml", NFLAGcompile = 0)
-pd_predictAndPlot2(pd)
-
-pd_fit(pd)
-
-pd <- readPd("CompiledObjects/petab_indiv.rds")
-pd_predictAndPlot2(pd)
-
 # Exit ----
