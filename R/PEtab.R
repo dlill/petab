@@ -899,7 +899,7 @@ writePetab <- function(pe, filename = "petab/model") {
   if (length(files_xml)) {
     args <- c(pe$model, list(filename = files_xml,
                              modelname = modelname))
-    args <- args[setdiff(names(args), "events")] # [ ] Todo: Events
+    # args <- args[setdiff(names(args), "events")] # [ ] Todo: Events
     do.call(sbml_exportEquationList, args)
   }
   
