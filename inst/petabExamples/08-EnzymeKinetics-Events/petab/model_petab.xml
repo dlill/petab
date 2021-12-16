@@ -70,6 +70,7 @@
       <parameter id="kon" value="1" units="litre_per_mole_per_second"/>
       <parameter id="koff" value="0.1" units="per_second"/>
       <parameter id="kcat" value="0.1" units="per_second"/>
+      <parameter id="addES" value="30" units="mole_per_litre"/>
     </listOfParameters>
     <listOfReactions>
       <reaction id="productionofcomplex" reversible="false">
@@ -138,14 +139,14 @@
             <apply>
               <geq/>
               <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
-              <cn> 20 </cn>
+              <cn type="integer"> 20 </cn>
             </apply>
           </math>
         </trigger>
         <listOfEventAssignments>
           <eventAssignment variable="ES">
             <math xmlns="http://www.w3.org/1998/Math/MathML">
-              <cn> 0 </cn>
+              <cn type="integer"> 0 </cn>
             </math>
           </eventAssignment>
         </listOfEventAssignments>
@@ -156,14 +157,14 @@
             <apply>
               <geq/>
               <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
-              <cn> 50 </cn>
+              <cn type="integer"> 50 </cn>
             </apply>
           </math>
         </trigger>
         <listOfEventAssignments>
           <eventAssignment variable="ES">
             <math xmlns="http://www.w3.org/1998/Math/MathML">
-              <cn> 30 </cn>
+              <ci> addES </ci>
             </math>
           </eventAssignment>
         </listOfEventAssignments>

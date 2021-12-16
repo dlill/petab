@@ -18,12 +18,6 @@ el <- addReaction(el, from = "ES", to = "E + P", rate = "kcat*ES",
 el <- eqnlist_addDefaultCompartment(el, "cytoplasm") # Need compartment information for SBML
 
 
-parInfo <- data.table(tibble::tribble(
-  ~parName, ~parValue, ~parUnit,
-  "kon"   ,     1  ,"litre_per_mole_per_second" ,    # Because of compartment, all dMod-fluxes are multiplied with cytoplasm volume
-  "koff"  ,     0.1,"per_second" ,
-  "kcat"  ,     0.1,"per_second" ))
-
 speciesInfo <- data.table(tibble::tribble(
   ~speciesName, ~compName, ~initialAmount,
   "E"         ,"cytoplasm" ,             1,          # Amount, not concentration
@@ -35,7 +29,16 @@ speciesInfo <- data.table(tibble::tribble(
 # unitInfo is left as the default getUnitInfo(): If you need other units, you need to add them
 
 eventList <- eventlist(var = "ES", time = 20, value = 0, root = NA, method = "replace")
-eventList <- addEvent(eventList, var = "ES", time = 50, value = 30, root = NA, method = "replace")
+eventList <- addEvent(eventList, var = "ES", time = 50, value = "addES", root = NA, method = "replace")
+
+parInfo <- data.table(tibble::tribble(
+  ~parName, ~parValue, ~parUnit,
+  "kon"   ,     1  ,"litre_per_mole_per_second" ,    # Because of compartment, all dMod-fluxes are multiplied with cytoplasm volume
+  "koff"  ,     0.1,"per_second" ,
+  "kcat"  ,     0.1,"per_second" ,
+  "addES", 30, "mole_per_litre"))
+
+
 
 # .. Simulate Data -----
 compiled <- odemodel(f = el,modelname = modelname, events = eventList)

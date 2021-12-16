@@ -237,7 +237,7 @@ getEventInfo <- function(eventList) {
   if (any(!is.na(eventList$root))) stop("root in events not yet supported")
   if (any(eventList$method != "replace")) stop("only replace events are supported")
   eventInfo <- data.table::data.table(eventList)
-  eventInfo <- eventInfo[, list(eventSpecies = var, eventTrigger = sprintf("time >= %f", time), eventFormula = sprintf("%f", value))]
+  eventInfo <- eventInfo[, list(eventSpecies = var, eventTrigger = paste0("time >= ", time), eventFormula = paste0(value))]
   eventInfo
 }
 

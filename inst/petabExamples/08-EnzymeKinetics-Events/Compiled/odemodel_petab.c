@@ -2,7 +2,7 @@
 #include <R.h> 
  #include <math.h> 
 
-static double parms[7];
+static double parms[8];
 static double forc[0];
 static double cons[0];
 static double eventcounter[2];
@@ -15,16 +15,17 @@ static double range[2];
 #define kon parms[0] 
  #define koff parms[1] 
  #define kcat parms[2] 
- #define y0_0 parms[3] 
- #define y1_0 parms[4] 
- #define y2_0 parms[5] 
- #define y3_0 parms[6] 
+ #define addES parms[3] 
+ #define y0_0 parms[4] 
+ #define y1_0 parms[5] 
+ #define y2_0 parms[6] 
+ #define y3_0 parms[7] 
 #define tmin range[0]
 #define tmax range[1]
 
 
 void odemodel_petab_initmod(void (* odeparms)(int *, double *)) {
-	 int N=7;
+	 int N=8;
 	 odeparms(&N, parms);
 	 for(int i=0; i<2; ++i) eventcounter[i] = 0;
 }
@@ -57,7 +58,7 @@ void odemodel_petab_myevent(int *n, double *t, double *y) {
 	 }
 
 	 if(*t == 50.0 & eventcounter[1] == 0) {
-		y[2] = 30.0;
+		y[2] = addES;
 		eventcounter[1] = eventcounter[1] + 1.;
 	 }
 

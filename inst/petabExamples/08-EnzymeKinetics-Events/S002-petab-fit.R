@@ -10,8 +10,7 @@ pd_predictAndPlot2(pd)
 
 pd_fit(pd)
 pd <- readPd(pd_files(pd$filenameParts)$rdsfile)
-
-
+pd_predictAndPlot2(pd)
 
 
 # # Test model

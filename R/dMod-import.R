@@ -1977,6 +1977,11 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
     unlink(.resultsFolder,recursive = TRUE)
   }
   
+  # check this for some coming versions before deprecating
+  if (!is.null(pe$meta$events)) {
+    stop("pe$meta$events is deprecated as of version 0.4.1. Please specify your events in pe$model :)")
+  }
+  
   ## load required packages
   require(libSBML) # => Not very nice, better explicitly import the required functions
   
@@ -1984,7 +1989,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
   dummy            <- getReactionsSBML(files$modelXML, files$experimentalCondition)
   myreactions      <- dummy$reactions
   myreactions_orig <- dummy$reactions_orig
-  myevents         <- rbind(dummy$events, sbmlImport_getEventsFromTrueEvents(files$modelXML))
+  myevents         <- rbind(dummy$events, sbmlImport_getEventsFromTrueEvents(files$modelXML)) # hack because events can take many forms in sbml
   mypreeqEvents    <- dummy$preeqEvents
   myobservables    <- getObservablesSBML(files$observables)
   
