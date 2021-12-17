@@ -190,6 +190,20 @@ pd_guessPetabYaml <- function(pd) {
   }
 }
 
+#' Title
+#'
+#' @param pd 
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family 
+#'
+#' @examples
+pd_removeProfiles <- function(pd) {
+  unlink(file.path(pd$filenameParts$.resultsFolder, "Profiles"), recursive = TRUE)
+}
 
 
 # -------------------------------------------------------------------------#
@@ -706,8 +720,8 @@ pd_fit <- function(pd, iterlim = 1000, printIter = TRUE, FLAGoverwrite = TRUE, .
   parf_base_fitted <- as.parframe(structure(list(fit), class = c("parlist", "list")))
   conveniencefunctions::dMod_saveMstrust(fit = parf_base_fitted, path = file.path(.outputFolder), identifier = "singleFit", FLAGoverwrite = FLAGoverwrite)
   
-  readPd(pd_files(pd$filenameParts)$rdsfile)
-}
+  pd <- readPd(pd_rdsfile(pd)) #don't print
+  }
 
 
 #' Run mstrust
@@ -727,6 +741,8 @@ pd_fit <- function(pd, iterlim = 1000, printIter = TRUE, FLAGoverwrite = TRUE, .
 #'
 #' @examples
 pd_mstrust <- function(pd, NFLAGsavePd = T, iterlim = 1000, nfits = 5, id) {
+
+  cat("not yet stable: results must be written into pd$filenameParts$.resultFolder")
   
   .outputFolder <- paste0("SelectionProblem/", id)
   
@@ -794,7 +810,7 @@ pd_profile <- function(pd, .outputFolder, FLAGfixParsOnBoundary = TRUE,
              cautiousMode = TRUE,
              path = .outputFolder,
              ...)
-  
+  pd <- readPd(pd_rdsfile(pd)) #don't print
 }
 
 # fit_hierarchical -----
