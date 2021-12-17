@@ -795,20 +795,17 @@ pd_mstrust <- function(pd, NFLAGsavePd = T, iterlim = 1000, nfits = 5, id) {
 pd_profile <- function(pd, .outputFolder, FLAGfixParsOnBoundary = FALSE, 
                        whichPar = pd_profile_getParsNotYetProfiled(pd = pd, .outputFolder = .outputFolder, FLAGreturnVector = TRUE),
                        ...) {
+  if (!length(whichPar)) return(readPd(pd_rdsfile(pd)))
+    
   # Fix pars which went to boundary
   if (FLAGfixParsOnBoundary){
     fixed_boundary <- pd_pars_getFixedOnBoundary(pd, tol = 1e-2)
     pd$fixed       <- c(pd$fixed, fixed_boundary)
     pd$pars        <- pd$pars[setdiff(names(pd$pars), names(pd$fixed))]
   }
-  
   # Run profiles
-  cf_profile(pd$obj, pd$pars, 
-             fixed = pd$fixed,
-             whichPar = whichPar, 
-             cautiousMode = TRUE,
-             path = .outputFolder,
-             ...)
+    cf_profile(pd$obj, pd$pars, fixed = pd$fixed, whichPar = whichPar, cautiousMode = TRUE, path = .outputFolder, ...)
+  
   pd <- readPd(pd_rdsfile(pd)) #don't print
 }
 
@@ -2253,7 +2250,7 @@ pd_plotProfile <- function(pd, ggCallback = NULL, nrow = 3, ncol = 4, ...) {
   dplot3 <- dplot[is.zero == TRUE & mode == "data"]
   
   pl <- conveniencefunctions::cfggplot(dplot, aes(par, delta)) + 
-    facet_wrap_paginate(~name, nrow = nrow, ncol = nrow, scales = "free_x") + 
+    facet_wrap_paginate(~name, nrow = nrow, ncol = ncol, scales = "free_x") + 
     geom_hline(aes(yintercept = yinter), data = data.frame(yinter = c(0, 3.84)), lty = 2, size = 0.2, color = "grey80") +
     geom_point(data = dplot2, size = 3, color = cfcolors[2], alpha = 0.7) + 
     geom_line(aes(color = mode, size = mode, linetype = mode)) + 
@@ -2266,6 +2263,53 @@ pd_plotProfile <- function(pd, ggCallback = NULL, nrow = 3, ncol = 4, ...) {
   for (plx in ggCallback) pl <- pl + plx
   
   cf_outputFigure(pl, ...)
+}
+
+
+#' Plot affected paths of profiles
+#'
+#' @param profiles profiles to plotPaths
+#' @param page pagination page
+#' @param tol 
+#'
+#' @return paginated ggplot
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family plotting
+#' @importFrom conveniencefunctions cf_profile_prepareAffectedPaths
+#' 
+pd_plotProfilePaths <- function(profiles, tol = 1e-1, 
+                                         FLAGnormalizeYParameters = TRUE,
+                                         nrow = 3,ncol = 4,
+                                         ggCallback = list(),
+                                         ...
+) {
+  
+  dp <- conveniencefunctions::cf_profile_prepareAffectedPaths(profiles, tol = tol, FLAGnormalizeYParameters = FLAGnormalizeYParameters)
+  dfit <- dp[cf_profile_getStartPar(profiles), on = c("PARAMETER1" = "PARAMETEROPT", PARVALUE1 = "PARVALUEOPT")]
+  dfit <- dfit[!is.na(PARVALUE2)]
+  dopt <- dp[cf_profile_getOptimum(profiles), on = c("PARAMETER1" = "PARAMETEROPT", PARVALUE1 = "PARVALUEOPT")]
+  dopt <- dopt[!is.na(PARVALUE2)]
+  
+  nameOrder = petab_plotHelpers_parameterOrder(pd)
+  nameOrder <- nameOrder[nameOrder %in% dp$PARAMETER1]
+  dp[,`:=`(PARAMETER1 = factor(PARAMETER1, levels = nameOrder))]
+  dfit[,`:=`(PARAMETER1 = factor(PARAMETER1, levels = nameOrder))]
+  dopt[,`:=`(PARAMETER1 = factor(PARAMETER1, levels = nameOrder))]
+  
+  pl <- cfggplot(dp, aes(PARVALUE1, PARVALUE2, group = PARAMETER2, color = PARAMETER2)) + 
+    facet_wrap_paginate(~PARAMETER1, nrow = nrow, ncol = ncol, scales = "free")+
+    geom_line() + 
+    geom_point(data = dfit, size = 2) + 
+    geom_point(data = dopt, shape = 4, size = 2) +
+    scale_color_cf() + 
+    guides(color = guide_legend())
+  for (plx in ggCallback) pl <- pl + plx
+  
+  message("Plot has ", n_pages(pl), " pages.\n")
+  
+  cf_outputFigure(pl = pl, ...)
 }
 
 

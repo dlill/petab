@@ -19,6 +19,7 @@ Title
 Other plotting: 
 \code{\link{pd_plotParsParallelLines2}()},
 \code{\link{pd_plotParsParallelLines}()},
+\code{\link{pd_plotProfilePaths}()},
 \code{\link{pd_plotProfile}()},
 \code{\link{petab_markDataPointsShiny_step1}()},
 \code{\link{petab_plotData}()},
