@@ -202,7 +202,7 @@ pd_guessPetabYaml <- function(pd) {
 #'
 #' @examples
 pd_removeProfiles <- function(pd) {
-  unlink(file.path(pd$filenameParts$.resultsFolder, "Profiles"), recursive = TRUE)
+  unlink(file.path(pd$filenameParts$.resultsFolder, "profile"), recursive = TRUE)
 }
 
 
@@ -710,8 +710,6 @@ pd_fit <- function(pd, iterlim = 1000, printIter = TRUE, FLAGoverwrite = TRUE, .
   parlower <- petab_getParameterBoundaries(pd$pe, "lower")
   parupper <- petab_getParameterBoundaries(pd$pe, "upper")
   
-  cat("dig into bad fitting of S302 of TGFb...\n")
-  
   fit <- dMod::trust(pd$obj, fit_par, 1,10, iterlim = iterlim, fixed = fit_fix,
                      parlower = parlower, parupper = parupper, printIter = printIter)
   if (!fit$converged) warning("Fit not converged, please try increasing 'iterlim' (was ", iterlim,")")
@@ -794,8 +792,8 @@ pd_mstrust <- function(pd, NFLAGsavePd = T, iterlim = 1000, nfits = 5, id) {
 #' @export
 #'
 #' @examples
-pd_profile <- function(pd, .outputFolder, FLAGfixParsOnBoundary = TRUE, 
-                       profpars = pd_profile_getParsNotYetProfiled(pd = pd, .outputFolder = .outputFolder, FLAGreturnVector = TRUE),
+pd_profile <- function(pd, .outputFolder, FLAGfixParsOnBoundary = FALSE, 
+                       whichPar = pd_profile_getParsNotYetProfiled(pd = pd, .outputFolder = .outputFolder, FLAGreturnVector = TRUE),
                        ...) {
   # Fix pars which went to boundary
   if (FLAGfixParsOnBoundary){
@@ -805,8 +803,9 @@ pd_profile <- function(pd, .outputFolder, FLAGfixParsOnBoundary = TRUE,
   }
   
   # Run profiles
-  cf_profile(pd$obj, pd$pars, whichPar = profpars, verbose = TRUE,
+  cf_profile(pd$obj, pd$pars, 
              fixed = pd$fixed,
+             whichPar = whichPar, 
              cautiousMode = TRUE,
              path = .outputFolder,
              ...)
@@ -1859,9 +1858,7 @@ pd_predictAndPlot <- function(pd, i,
 #'
 #' @param pd 
 #' @param pe to draw other data
-#' @param i,j data.table arguments working on dco, but note that j will be evaulated in a separate step *after* i
 #' @param parf parframe to simulate with. if supplied, opt.base,opt.mstrust,opt.profile are meaningless
-#' @param opt.base,opt.mstrust,opt.profile Options to get parameters from parframes for prediction purposes
 #' @param NFLAGsubsetType subset *species*, *observableId*, *conditionId* and "time".
 #'   * 0 none                 : no subsetting
 #'   * 1 strict               : Only show predictions for conditions where there is data
@@ -1872,8 +1869,18 @@ pd_predictAndPlot <- function(pd, i,
 #' @param FLAGmeanLine draw line for mean(data)
 #' @param aeslist list of aestheticss
 #' @param ggCallback list(ggplot2 calls), e.g. list(labs(title = "bla"), scale_y_log10())
-#' @param filename,FLAGfuture,width,height,scale,units Agurments going to [conveniencefunctions::cf_outputFigure()]
 #' @param FLAGreturnPlotData return list(data.tables) which go into plotting instead of ggplot
+#' @param i 
+#' @param j 
+#' @param opt.base 
+#' @param opt.mstrust 
+#' @param opt.profile 
+#' @param opt.L1 
+#' @param nrow 
+#' @param ncol 
+#' @param opt.sim 
+#' @param opt.gg 
+#' @param ... 
 #'
 #' @return ggplot
 #' @export
@@ -1912,14 +1919,13 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
                                NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2, strict_cutTimes = 3,keepInternal_cutTimes = 3)["strict_cutTimes"],
                                FLAGsummarizeProfilePredictions = TRUE,
                                FLAGmeanLine = FALSE,
+                               nrow = 4, ncol = 5,
                                aeslist = petab_plotHelpers_aeslist(),
-                               ggCallback = list(facet_wrap_paginate(~observableId, nrow = 4, ncol = 4, scales = "free"),
-                                                 scale_y_continuous(n.breaks = 5)),
+                               ggCallback = list(),
                                opt.sim = list(Ntimes_gt5ParSetIds = 100, predtimes = NULL),
                                opt.gg = list(ribbonAlpha = 0.2), # would be nice to put this into opt.profile or maybe opt.gg?
-                               filename = NULL, FLAGfuture = TRUE,
-                               width = 29.7, height = 21, scale = 1, units = "cm",
-                               FLAGreturnPlotData = FALSE
+                               FLAGreturnPlotData = FALSE,
+                               ...
 ) {
   
   
@@ -2007,14 +2013,16 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
     aesl <- aeslist[intersect(names(aeslist), conveniencefunctions::cfgg_getAllAesthetics()[["geom_ribbon"]])]
     aesl <- aesl[setdiff(names(aesl), c("linetype", "lty", "y", "color", "colour"))]
     pl <- pl + geom_ribbon(do.call(aes_q, aesl), data = pplotRibbon, alpha = opt.gg$ribbonAlpha)}
-  pl <- pl + conveniencefunctions::scale_color_cf(aesthetics = c("color", "fill"))
+  pl <- pl + conveniencefunctions::scale_color_cf(aesthetics = c("color", "fill")) + 
+    facet_wrap_paginate(~observableId, nrow = nrow, ncol = ncol, scales = "free") + 
+    scale_y_continuous(n.breaks = 5)
   for (plx in ggCallback) pl <- pl + plx
   
   # .. Print paginate message so user doesnt forget about additional pages -----
   message("Plot has ", ggforce::n_pages(pl), " pages\n")
   
   # Output
-  conveniencefunctions::cf_outputFigure(pl = pl, filename = filename, width = width, height = height, scale = scale, units = units, FLAGFuture = FLAGfuture)
+  conveniencefunctions::cf_outputFigure(pl = pl, ...)
 }
 
 
@@ -2336,7 +2344,7 @@ petab_plotHelpers_parameterOrder <- function(pd) {
 #' @importFrom conveniencefunctions cfggplot scale_color_cf theme_cf
 #'
 #' @examples
-pd_plotProfile <- function(pd, filename = NULL, ggCallback = NULL) {
+pd_plotProfile <- function(pd, ggCallback = NULL, nrow = 3, ncol = 4, ...) {
   dplot <- attr(dMod::plotProfile(pd$result$profiles), "data")
   dplot <- as.data.table(dplot)
   
@@ -2356,7 +2364,7 @@ pd_plotProfile <- function(pd, filename = NULL, ggCallback = NULL) {
   dplot3 <- dplot[is.zero == TRUE & mode == "data"]
   
   pl <- conveniencefunctions::cfggplot(dplot, aes(par, delta)) + 
-    facet_wrap_paginate(~name, nrow = 3, ncol = 4, scales = "free_x") + 
+    facet_wrap_paginate(~name, nrow = nrow, ncol = nrow, scales = "free_x") + 
     geom_hline(aes(yintercept = yinter), data = data.frame(yinter = c(0, 3.84)), lty = 2, size = 0.2, color = "grey80") +
     geom_point(data = dplot2, size = 3, color = cfcolors[2], alpha = 0.7) + 
     geom_line(aes(color = mode, size = mode, linetype = mode)) + 
@@ -2368,7 +2376,7 @@ pd_plotProfile <- function(pd, filename = NULL, ggCallback = NULL) {
     geom_blank()
   for (plx in ggCallback) pl <- pl + plx
   
-  cf_outputFigure(pl, filename = filename, width = 29.7, height = 21, scale = 1, units = "cm")
+  cf_outputFigure(pl, ...)
 }
 
 

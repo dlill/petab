@@ -7,8 +7,8 @@
 pd_profile(
   pd,
   .outputFolder,
-  FLAGfixParsOnBoundary = TRUE,
-  profpars = pd_profile_getParsNotYetProfiled(pd = pd, .outputFolder = .outputFolder,
+  FLAGfixParsOnBoundary = FALSE,
+  whichPar = pd_profile_getParsNotYetProfiled(pd = pd, .outputFolder = .outputFolder,
     FLAGreturnVector = TRUE),
   ...
 )

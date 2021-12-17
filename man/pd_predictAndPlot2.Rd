@@ -18,18 +18,14 @@ pd_predictAndPlot2(
     keepInternal_cutTimes = 3)["strict_cutTimes"],
   FLAGsummarizeProfilePredictions = TRUE,
   FLAGmeanLine = FALSE,
+  nrow = 4,
+  ncol = 5,
   aeslist = petab_plotHelpers_aeslist(),
-  ggCallback = list(facet_wrap_paginate(~observableId, nrow = 4, ncol = 4, scales =
-    "free"), scale_y_continuous(n.breaks = 5)),
+  ggCallback = list(),
   opt.sim = list(Ntimes_gt5ParSetIds = 100, predtimes = NULL),
   opt.gg = list(ribbonAlpha = 0.2),
-  filename = NULL,
-  FLAGfuture = TRUE,
-  width = 29.7,
-  height = 21,
-  scale = 1,
-  units = "cm",
-  FLAGreturnPlotData = FALSE
+  FLAGreturnPlotData = FALSE,
+  ...
 )
 }
 \arguments{
@@ -37,9 +33,17 @@ pd_predictAndPlot2(
 
 \item{pe}{to draw other data}
 
-\item{i, j}{data.table arguments working on dco, but note that j will be evaulated in a separate step \emph{after} i}
+\item{i}{}
 
-\item{opt.base, opt.mstrust, opt.profile}{Options to get parameters from parframes for prediction purposes}
+\item{j}{}
+
+\item{opt.base}{}
+
+\item{opt.mstrust}{}
+
+\item{opt.profile}{}
+
+\item{opt.L1}{}
 
 \item{parf}{parframe to simulate with. if supplied, opt.base,opt.mstrust,opt.profile are meaningless}
 
@@ -56,13 +60,21 @@ pd_predictAndPlot2(
 
 \item{FLAGmeanLine}{draw line for mean(data)}
 
+\item{nrow}{}
+
+\item{ncol}{}
+
 \item{aeslist}{list of aestheticss}
 
 \item{ggCallback}{list(ggplot2 calls), e.g. list(labs(title = "bla"), scale_y_log10())}
 
-\item{filename, FLAGfuture, width, height, scale, units}{Agurments going to \code{\link[conveniencefunctions:cf_outputFigure]{conveniencefunctions::cf_outputFigure()}}}
+\item{opt.sim}{}
+
+\item{opt.gg}{}
 
 \item{FLAGreturnPlotData}{return list(data.tables) which go into plotting instead of ggplot}
+
+\item{...}{}
 }
 \value{
 ggplot
