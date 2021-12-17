@@ -699,7 +699,7 @@ sbml_exportEquationList <- function(equationList,
                                     modelname = "Model",
                                     unitInfo        = getUnitInfo(),
                                     speciesInfo     = getSpeciesInfo(equationList),
-                                    parInfo         = getParInfo(equationList),
+                                    parInfo         = getParInfo(equationList, eventList = events),
                                     compartmentInfo = getCompartmentInfo(equationList),
                                     events = NULL) {
   

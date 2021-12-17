@@ -566,9 +566,10 @@ petab_parameters <- function(
 #' @md
 #' @export
 petab_model <- function(equationList, events = NA,
-                        parInfo = getParInfo(equationList),
+                        parInfo = getParInfo(equationList, events),
                         speciesInfo = getSpeciesInfo(equationList),
                         ...) {
+  if (anyDuplicated(equationList$description)) stop("equationList description entries cannot contain duplicates")
   list(equationList = equationList, events = events,
        parInfo = parInfo, speciesInfo = speciesInfo,
        ...)

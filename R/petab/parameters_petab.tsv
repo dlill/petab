@@ -1,0 +1,16 @@
+parameterId	parameterName	parameterScale	lowerBound	upperBound	estimate	initializationPriorType	initializationPriorParameters	objectivePriorType	objectivePriorParameters	nominalValue
+Ad	Ad	lin	1e-05	1000	0	parameterScaleUniform	-1;1	parameterScaleNormal	0;2	0
+Ac	Ac	lin	1e-05	1000	0	parameterScaleUniform	-1;1	parameterScaleNormal	0;2	0
+Ap1	Ap1	lin	1e-05	1000	0	parameterScaleUniform	-1;1	parameterScaleNormal	0;2	0
+INPUT1	INPUT1	lin	1e-05	1000	0	parameterScaleUniform	-1;1	parameterScaleNormal	0;2	0
+PL	PL	lin	1e-05	1000	0	parameterScaleUniform	-1;1	parameterScaleNormal	0;2	10
+ka	ka	log10	1e-05	1000	1	parameterScaleUniform	-1;1	parameterScaleNormal	0;2	0.2
+CL	CL	log10	1e-05	1000	1	parameterScaleUniform	-1;1	parameterScaleNormal	0;2	60
+Vc	Vc	log10	1e-05	1000	1	parameterScaleUniform	-1;1	parameterScaleNormal	0;2	150
+Q1	Q1	log10	1e-05	1000	1	parameterScaleUniform	-1;1	parameterScaleNormal	0;2	10
+Vp1	Vp1	log10	1e-05	1000	1	parameterScaleUniform	-1;1	parameterScaleNormal	0;2	790
+EC50	EC50	log10	1e-05	1000	1	parameterScaleUniform	-1;1	parameterScaleNormal	0;2	0.005
+EMAX	EMAX	log10	1e-05	1000	1	parameterScaleUniform	-1;1	parameterScaleNormal	0;2	0.2
+GR	GR	log10	1e-05	1000	1	parameterScaleUniform	-1;1	parameterScaleNormal	0;2	0.08
+hill	hill	log10	1e-05	1000	1	parameterScaleUniform	-1;1	parameterScaleNormal	0;2	2.5
+eps	eps	log10	1e-05	1000	1	parameterScaleUniform	-1;1	parameterScaleNormal	0;2	1e-10
