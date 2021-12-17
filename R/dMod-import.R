@@ -1352,9 +1352,9 @@ sbmlImport_getReactionDetails <- function(m, reaction, compartments) {
                             paste0(eq$getProduct(s)$getStoichiometry(), "*", eq$getProduct(s)$getSpecies()))
   }
   rate <- eq$getKineticLaw()$getFormula()
-    if (stringr::str_detect(rate, "pow")) {
-      rate <- sanitizePowers(rate)
-    }
+  if (stringr::str_detect(rate, "pow")) {
+    rate <- sanitizePowers(rate)
+  }
   if(!is.null(compartments)){
     if(Reduce("|", stringr::str_detect(rate, unique(compartments)))){
       rate <- cOde::replaceSymbols(unique(compartments), rep("1", length(unique(compartments))), rate)
@@ -1967,7 +1967,11 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
   filename      <- path.expand(filename)
   modelname     <- petab_modelname_path(filename)$modelname
   files         <- petab_files(filename)
-  filenameParts <- list(modelname = modelname, .currentFolder = mywd, .compiledFolder = .compiledFolder, type = "indiv", petabYaml = if(grepl("yaml", filename)) filename else NULL)
+  filenameParts <- list(modelname = modelname, .currentFolder = mywd, .compiledFolder = .compiledFolder, 
+                        type = "indiv", petabYaml = if(grepl("yaml", filename)) filename else NULL,
+                        .resultsFolder = file.path(dirname(.compiledFolder), "Results"),
+                        .projectFolder = dirname(.compiledFolder)
+  )
   rdsfile       <- pd_files(filenameParts)$rdsfile
   
   # .. Read PEtab tables -----
@@ -1990,11 +1994,12 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
   }
   
   if(NFLAGcompile == 0) {
-    .resultsFolder <- file.path(dirname(.compiledFolder), "Results")
+    .resultsFolder <- filenameParts$.resultsFolder
     results <- list.files(.resultsFolder, recursive = TRUE)
-    prompt <- paste0("Deleting the following results: ", paste0(grep("mstrust.rds|profile|L1", results, value = TRUE), collapse = ", ") ," Are you sure? (type yes)")
-    if (any(grepl("mstrust.rds|profile|L1", results))) 
-      if (readline(prompt) != "yes") stop("import stopped")
+    if (any(grepl("mstrust.rds|profile|L1", results))) {
+      cat(paste0("Deleting the following results: ", 
+                 paste0(grep("mstrust.rds|profile|L1", results, value = TRUE), collapse = ",\n")))
+      if (readline(" Are you sure? (type yes)") != "yes") stop("import stopped")}
     unlink(.resultsFolder,recursive = TRUE)
   }
   
