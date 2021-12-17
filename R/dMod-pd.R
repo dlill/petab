@@ -22,16 +22,16 @@
 #' @examples
 initPd <- function(pe, dModAtoms, obj, prd, times, pars, parameterTables, L1, pdInfo, ...) {
   pd <- list(
-  pe,
-  dModAtoms,
-  obj,
-  prd,
-  times,
-  pars,
-  parameterTables,
-  L1,
-  pdInfo, 
-  ...
+    pe,
+    dModAtoms,
+    obj,
+    prd,
+    times,
+    pars,
+    parameterTables,
+    L1,
+    pdInfo, 
+    ...
   )
 }
 
@@ -109,9 +109,9 @@ readPd <- function(filename) {
   
   # 4 Set Parameters to most relevant fit: mstrust || singleFit || base_obsParsFitted || base
   pars <- if (!is.null(pd$result$mstrust)) {as.parvec(pd$result$mstrust) 
-    } else if (!is.null(pd$result$singleFit)) {as.parvec(pd$result$singleFit) 
-    } else if (!is.null(pd$result$base_obsParsFitted)) {as.parvec(pd$result$base_obsParsFitted) 
-    } else pd$pars
+  } else if (!is.null(pd$result$singleFit)) {as.parvec(pd$result$singleFit) 
+  } else if (!is.null(pd$result$base_obsParsFitted)) {as.parvec(pd$result$base_obsParsFitted) 
+  } else pd$pars
   pd$pars <- unclass_parvec(pars)
   
   pd
@@ -393,8 +393,8 @@ pd_updateEstPars <- function(pd, parsEst, FLAGupdatePE = TRUE, FLAGsavePd = FALS
   } else {
     pd$pars[names(parsEst)] <- parsEst
     pd$result$base <- conveniencefunctions::pars2parframe(pd$pars, parameterSetId = "Base", obj = pd$obj)
-    }
-
+  }
+  
   if (FLAGupdatePE) {
     cat("pd$pe pars have been *set*")
     petab_setPars_estScale(pd$pe, parsEst)}
@@ -741,7 +741,7 @@ pd_mstrust <- function(pd, NFLAGsavePd = T, iterlim = 1000, nfits = 5, id) {
   # 
   # center <- pepy_sample_parameter_startpoints(pe = pd$pe, n_starts = nfits, seed = 1, FLAGincludeCurrent = 1)
   center <- fit_par                                             
-
+  
   out <- dMod::mstrust(objfun = pd$obj,
                        center = center, 
                        studyname = paste0("SelectionProblem/", id, "/Results/trial"),
@@ -752,18 +752,50 @@ pd_mstrust <- function(pd, NFLAGsavePd = T, iterlim = 1000, nfits = 5, id) {
                        fixed = fit_fix,
                        parlower = parlower, 
                        parupper = parupper)
-                           
+  
   myframe <- as.parframe(out)
   conveniencefunctions::dMod_saveMstrust(fit = myframe, path = .outputFolder, 
                                          identifier = paste0(nfits, "fits"), FLAGoverwrite = TRUE)
   bestfit <- as.parvec(myframe, 1)
-                       
+  
   if (!myframe$converged[1]) warning("Fit not converged, please try increasing 'iterlim' (was ", iterlim,")")
   
   pd <- pd_updateEstPars(pd, parsEst = myframe, FLAGupdatePE = TRUE, FLAGsavePd = NFLAGsavePd)
   pd
 }
 
+
+
+
+#' Title
+#'
+#' @param pd 
+#' @param .outputFolder 
+#' @param FLAGfixParsOnBoundary 
+#' @param profpars 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+pd_profile <- function(pd, .outputFolder, FLAGfixParsOnBoundary = TRUE, 
+                       profpars = pd_profile_getParsNotYetProfiled(pd = pd, .outputFolder = .outputFolder, FLAGreturnVector = TRUE),
+                       ...) {
+  # Fix pars which went to boundary
+  if (FLAGfixParsOnBoundary){
+    fixed_boundary <- pd_pars_getFixedOnBoundary(pd, tol = 1e-2)
+    pd$fixed       <- c(pd$fixed, fixed_boundary)
+    pd$pars        <- pd$pars[setdiff(names(pd$pars), names(pd$fixed))]
+  }
+  
+  # Run profiles
+  cf_profile(pd$obj, pd$pars, whichPar = profpars, verbose = TRUE,
+             fixed = pd$fixed,
+             cautiousMode = TRUE,
+             path = .outputFolder,
+             ...)
+  
+}
 
 # fit_hierarchical -----
 # could be implemented as objective function which automatically fits observable parameters
@@ -2157,7 +2189,7 @@ pd_plotParsParallelLines2 <- function(pd, stepMax = 3, filename = NULL, i, ggCal
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
           panel.grid.major.y = element_line(color="grey95"),
           panel.grid.major.x = element_line(color="grey95")
-          ) + 
+    ) + 
     geom_blank()
   # Hack to draw lines in order: best step on top
   for (sx in sort(unique(p$step),decreasing = TRUE)) pl <- pl + geom_line(aes(alpha = step), data = p[step == sx])

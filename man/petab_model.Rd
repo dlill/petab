@@ -7,7 +7,7 @@
 petab_model(
   equationList,
   events = NA,
-  parInfo = getParInfo(equationList),
+  parInfo = getParInfo(equationList, events),
   speciesInfo = getSpeciesInfo(equationList),
   ...
 )
