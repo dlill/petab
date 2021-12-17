@@ -4,7 +4,7 @@
 \alias{pd_plotProfile}
 \title{Title}
 \usage{
-pd_plotProfile(pd, filename = NULL, ggCallback = NULL)
+pd_plotProfile(pd, ggCallback = NULL, nrow = 3, ncol = 4, ...)
 }
 \arguments{
 \item{pd}{}
