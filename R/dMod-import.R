@@ -1466,7 +1466,6 @@ TransformEvents <- function(events){
 #'
 #' @examples
 sbmlImport_getEventsFromTrueEvents <- function(modelfile) {
-  modelfile <- "petab/model_petab.xml"
   model = readSBML(modelfile)$getModel()
   nx <- Model_getNumEvents(model)
   
