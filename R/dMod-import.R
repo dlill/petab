@@ -1298,6 +1298,31 @@ plotPEtabSBML <- function(..., g1 = g,
 # Refactoring sbml import ----
 # -------------------------------------------------------------------------#
 
+#' Sanitize pow(x,y) equations
+#'
+#' @param rate 
+#'
+#' @return
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family sbmlImport
+#'
+#' @examples
+#' sanitizePowers("EMAX * pow(Ac / Vc + eps, hill) / (pow(Ac / Vc + eps, hill) + pow(EC50, hill)) * cytoplasm")
+#' rate <- "EMAX * pow(Ac /   Vc, hill+2)"
+#' sanitizePowers(rate)
+sanitizePowers <- function(rate) {
+  parseD <- getParseData(parse(text = rate))
+  pow_ids <- parseD[which(parseD$text == "pow")-1,"id"]
+  for (pow_id in pow_ids){
+    child_ids <- parseD[parseD$parent == pow_id & !parseD$text %in% c("(",")",","), "id"][-1]
+    texts <- getParseText(parseD, child_ids)
+    rate <- gsub(paste0("pow(",texts[1], ", ", texts[2], ")"), paste0("(",texts[1],")**(", texts[2], ")"),rate, fixed = TRUE)
+  }
+  rate
+}
+
+
 #' Title
 #'
 #' import reactions and adjust by means of compartments
@@ -1327,15 +1352,12 @@ sbmlImport_getReactionDetails <- function(m, reaction, compartments) {
                             paste0(eq$getProduct(s)$getStoichiometry(), "*", eq$getProduct(s)$getSpecies()))
   }
   rate <- eq$getKineticLaw()$getFormula()
-  if (stringr::str_detect(rate, "pow")) {
-    rate <- gsub("pow", "", gsub(", ", "**", rate))
-  }
-  #rate <- replaceOperation("pow", "**", eq$getKineticLaw()$getFormula())
+    if (stringr::str_detect(rate, "pow")) {
+      rate <- sanitizePowers(rate)
+    }
   if(!is.null(compartments)){
     if(Reduce("|", stringr::str_detect(rate, unique(compartments)))){
       rate <- cOde::replaceSymbols(unique(compartments), rep("1", length(unique(compartments))), rate)
-      # pos <- which(strsplit(rate, "")[[1]]=="*")[1]                   # Fixed by DanielL: compartment is not always at beginning
-      # rate <- substr(rate,pos+1,length(strsplit(rate, "")[[1]]=="*")) # Fixed by DanielL: compartment is not always at beginning
     }
   }
   
