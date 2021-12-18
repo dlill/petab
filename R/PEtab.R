@@ -174,7 +174,7 @@ petab_columns <- function(pe = NULL) {
   }
   
   # Default information
-  m <- c("observableId","simulationConditionId","measurement","time","observableParameters","noiseParameters","datasetId","replicateId","preequilibrationConditionId", "datapointId")
+  m <- c("observableId","simulationConditionId","measurement","time","observableParameters","noiseParameters","datasetId","replicateId","preequilibrationConditionId", "datapointId", "lloq")
   o <- c("observableId","observableName","observableFormula","observableTransformation","noiseFormula","noiseDistribution")
   e <- c("conditionId","conditionName")
   p <- c("parameterId","parameterName","parameterScale","lowerBound","upperBound","nominalValue","estimate","initializationPriorType","initializationPriorParameters","objectivePriorType","objectivePriorParameters")
@@ -450,8 +450,18 @@ petab_measurementData <- function(
   datasetId                   = NA,
   replicateId                 = NA,
   preequilibrationConditionId = NA,
-  datapointId                 = NA
+  datapointId                 = NA,
+  lloq                        = -Inf
 ) {
+  
+  # Handle BLOQ
+  if (length(lloq) == 1) lloq <- rep(lloq, length(measurement))
+  bloq <- measurement < lloq
+  if (any(bloq)) {
+    cat("Replacing BLOQ measuremnts by LLOQ")
+    measurement[bloq] <- lloq[bloq]
+  }
+  
   d <- data.table(
     observableId                = as.character(observableId),
     preequilibrationConditionId = as.character(preequilibrationConditionId),
@@ -462,7 +472,8 @@ petab_measurementData <- function(
     noiseParameters             = as.character(noiseParameters),
     datasetId                   = as.character(datasetId),
     replicateId                 = as.character(replicateId),
-    datapointId                 = as.character(datapointId)
+    datapointId                 = as.character(datapointId),
+    lloq                        = as.double(lloq)
   )
   
   if (any(is.na(d$measurement))) {
