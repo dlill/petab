@@ -1149,7 +1149,7 @@ petab_combine <- function(pe1,pe2, NFLAGconflict = c("stop" = 0, "use_pe1" = 1, 
 #' @export
 #'
 #' @examples
-#' petab_lint(petab_exampleRead("01", "pe))
+#' petab_lint(petab_exampleRead("01", "pe"))
 #' # Todo: Implement an example where the petab 
 petab_lint <- function(pe) {
   
@@ -1184,6 +1184,25 @@ petab_lint <- function(pe) {
     stop("Petab contains missing times")
   }
   
+  # check for existing observable parameters
+  dco <- petab_joinDCO(pe)
+  unique(dco[,list(observableId, observableFormula, observableParameters)])
+  dco <- unique(dco[,list(observableId, observableFormula, observableParameters)])
+  dco[,`:=`(nobspars = stringr::str_count(observableFormula,   "observableParameter"))]
+  dco[,`:=`(nobsparsAvalailable = if(is.na(observableParameters)|observableParameters == "") 0 else 1+stringr::str_count(observableParameters, ";")), by = 1:nrow(dco)]
+  hasMissingObsPar <- dco[,which(nobsparsAvalailable < nobspars)]
+  if(length(hasMissingObsPar)) stop("The following observableIds have no observableParameters specified: ", paste0(dco[hasMissingObsPar, observableId], collapse = ", "))
+
+  # check for existing noise parameters
+  dco <- petab_joinDCO(pe)
+  unique(dco[,list(observableId, noiseFormula, noiseParameters)])
+  dco <- unique(dco[,list(observableId, noiseFormula, noiseParameters)])
+  dco[,`:=`(nobspars = stringr::str_count(noiseFormula,   "noiseParameter"))]
+  dco[,`:=`(nobsparsAvalailable = if(is.na(noiseParameters)|noiseParameters == "") 0 else 1+stringr::str_count(noiseParameters, ";")), by = 1:nrow(dco)]
+  hasMissingNoisePar <- dco[,which(nobsparsAvalailable < nobspars)]
+  if(length(hasMissingNoisePar)) stop("The following observableIds have no noiseParameters specified: ", paste0(dco[hasMissingNoisePar, observableId], collapse = ", "))
+  
+    
   # observables
   dupes <- which(duplicated(pe$observables$observableID))
   if(length(dupes)) {
