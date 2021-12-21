@@ -971,7 +971,7 @@ clusterStatusMessage <- function(FLAGjobDone, FLAGjobPurged, FLAGjobRecover) {
 #'
 #' @examples
 pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_nodes = 10, 
-                               identifier = "mstrust", FLAGforcePurge = FALSE, opt.parameter_startpoints = "sample") {
+                               identifier = "mstrust", FLAGforcePurge = FALSE, opt.parameter_startpoints = "sample", passwdEnv = NULL) {
   # .. General job handling -----
   jobnm <- paste0("mstrust_", identifier, "_", gsub("-","_",gsub("(S\\d+(-\\d+)?).*", "\\1", basename(.outputFolder))))
   
@@ -1023,7 +1023,7 @@ pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_node
     },
     jobname = jobnm, 
     partition = "single", cores = 16, nodes = 1, walltime = "12:00:00",
-    ssh_passwd = Sys.getenv("hurensohn"), machine = "cluster", 
+    ssh_passwd = passwdEnv, machine = "cluster", 
     var_values = NULL, no_rep = n_nodes, 
     recover = FLAGjobRecover,
     compile = F
