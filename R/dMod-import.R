@@ -1492,7 +1492,7 @@ sbmlImport_getEventsFromTrueEvents <- function(modelfile) {
   model = readSBML(modelfile)$getModel()
   nx <- Model_getNumEvents(model)
   
-  eventList <- eventlist()
+  eventList <- NULL
   for (i in seq_len(nx)-1) {
     ev <- model$getEvent(i)
     eventTime <- ev$getTrigger()
@@ -2251,6 +2251,9 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
   cat("Evaluating obj ... ")
   value_base <- tryCatch(pd$obj(pd$pars)$value, error = function(x) NA)
   cat("objective value: ", value_base, "\n")
+  # suggestion for the future: Include parameterSetId from the beginning
+  # parf_base <- dMod::parframe(data.frame(parameterSetId = "Base", value = value_base, index = 1, converged = FALSE, iterations = 1, pd$pars),parameters = names(pd$pars)) 
+  # old solution
   parf_base <- dMod::as.parframe(structure(list(list(value = value_base, index = 1, converged = FALSE, iterations = 1, argument = pd$pars)), class = c("parlist", "list")))
   conveniencefunctions::dMod_saveMstrust(parf_base, dirname(dirname(rdsfile)), identifier = "base", FLAGoverwrite = TRUE)
   
