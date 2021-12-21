@@ -21,8 +21,10 @@ pdIndiv_updateControls(
 Quickly set "controls" amd update all high-level functions
 }
 \examples{
-optionsOde <- list(method = "lsoda", rtol = rtol, atol = atol, maxsteps = maxsteps)
-optionsSens <- list(method = "lsodes", rtol = rtol, atol = atol, maxsteps = maxsteps)
+pd <- pdIndiv_updateControls(pd, 
+                             optionsOde  = list(method = "lsoda", rtol = 1e-12, atol = 1e-12, maxsteps = 10000),
+                             optionsSens = list(method = "lsodes", rtol = 1e-12, atol = 1e-12, maxsteps = 10000))
+saveRDS(pd,pd_rdsfile(pd))
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)

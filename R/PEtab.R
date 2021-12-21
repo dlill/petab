@@ -1141,12 +1141,13 @@ petab_combine <- function(pe1,pe2, NFLAGconflict = c("stop" = 0, "use_pe1" = 1, 
 
 #' Own little linter until petab.py lint is stable
 #'
-#' @param petab
+#' @param pe petab
 #'
 #' @return list of errors
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @export
+#' @importFrom stringr str_count
 #'
 #' @examples
 #' petab_lint(petab_exampleRead("01", "pe"))

@@ -11,7 +11,8 @@ pd_cluster_mstrust(
   n_nodes = 10,
   identifier = "mstrust",
   FLAGforcePurge = FALSE,
-  opt.parameter_startpoints = "sample"
+  opt.parameter_startpoints = "sample",
+  passwdEnv = NULL
 )
 }
 \arguments{

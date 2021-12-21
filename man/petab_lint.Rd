@@ -7,13 +7,17 @@
 petab_lint(pe)
 }
 \arguments{
-\item{petab}{}
+\item{pe}{petab}
 }
 \value{
 list of errors
 }
 \description{
 Own little linter until petab.py lint is stable
+}
+\examples{
+petab_lint(petab_exampleRead("01", "pe"))
+# Todo: Implement an example where the petab 
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
