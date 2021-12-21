@@ -1185,24 +1185,25 @@ petab_lint <- function(pe) {
   }
   
   # check for existing observable parameters
-  dco <- petab_joinDCO(pe)
-  unique(dco[,list(observableId, observableFormula, observableParameters)])
-  dco <- unique(dco[,list(observableId, observableFormula, observableParameters)])
-  dco[,`:=`(nobspars = stringr::str_count(observableFormula,   "observableParameter"))]
-  dco[,`:=`(nobsparsAvalailable = if(is.na(observableParameters)|observableParameters == "") 0 else 1+stringr::str_count(observableParameters, ";")), by = 1:nrow(dco)]
-  hasMissingObsPar <- dco[,which(nobsparsAvalailable < nobspars)]
-  if(length(hasMissingObsPar)) stop("The following observableIds have no observableParameters specified: ", paste0(dco[hasMissingObsPar, observableId], collapse = ", "))
-
-  # check for existing noise parameters
-  dco <- petab_joinDCO(pe)
-  unique(dco[,list(observableId, noiseFormula, noiseParameters)])
-  dco <- unique(dco[,list(observableId, noiseFormula, noiseParameters)])
-  dco[,`:=`(nobspars = stringr::str_count(noiseFormula,   "noiseParameter"))]
-  dco[,`:=`(nobsparsAvalailable = if(is.na(noiseParameters)|noiseParameters == "") 0 else 1+stringr::str_count(noiseParameters, ";")), by = 1:nrow(dco)]
-  hasMissingNoisePar <- dco[,which(nobsparsAvalailable < nobspars)]
-  if(length(hasMissingNoisePar)) stop("The following observableIds have no noiseParameters specified: ", paste0(dco[hasMissingNoisePar, observableId], collapse = ", "))
+  if (!is.null(pe$observables) & !is.null(pe$measurementData)) {
+    dco <- pe$measurementData[pe$observables, on = .NATURAL]
+    unique(dco[,list(observableId, observableFormula, observableParameters)])
+    dco <- unique(dco[,list(observableId, observableFormula, observableParameters)])
+    dco[,`:=`(nobspars = stringr::str_count(observableFormula,   "observableParameter"))]
+    dco[,`:=`(nobsparsAvalailable = if(is.na(observableParameters)|observableParameters == "") 0 else 1+stringr::str_count(observableParameters, ";")), by = 1:nrow(dco)]
+    hasMissingObsPar <- dco[,which(nobsparsAvalailable < nobspars)]
+    if(length(hasMissingObsPar)) stop("The following observableIds have no observableParameters specified: ", paste0(dco[hasMissingObsPar, observableId], collapse = ", "))
+    # check for existing noise parameters
+    dco <- pe$measurementData[pe$observables, on = .NATURAL]
+    unique(dco[,list(observableId, noiseFormula, noiseParameters)])
+    dco <- unique(dco[,list(observableId, noiseFormula, noiseParameters)])
+    dco[,`:=`(nobspars = stringr::str_count(noiseFormula,   "noiseParameter"))]
+    dco[,`:=`(nobsparsAvalailable = if(is.na(noiseParameters)|noiseParameters == "") 0 else 1+stringr::str_count(noiseParameters, ";")), by = 1:nrow(dco)]
+    hasMissingNoisePar <- dco[,which(nobsparsAvalailable < nobspars)]
+    if(length(hasMissingNoisePar)) stop("The following observableIds have no noiseParameters specified: ", paste0(dco[hasMissingNoisePar, observableId], collapse = ", "))
+  }
   
-    
+  
   # observables
   dupes <- which(duplicated(pe$observables$observableID))
   if(length(dupes)) {
@@ -1301,9 +1302,9 @@ petab_python_installPackages <- function(FLAGcleanInstall = FALSE, FLAGforcePip 
   }
   
   if (FLAGforcePythonVersion){
-  pyversion <- "3.9.7"
-  pyver <- reticulate::install_python(pyversion)
-  reticulate::use_python(pyver, TRUE)
+    pyversion <- "3.9.7"
+    pyver <- reticulate::install_python(pyversion)
+    reticulate::use_python(pyver, TRUE)
   }
   
   reticulate::use_virtualenv("petab")
@@ -1696,7 +1697,7 @@ petab_plotData <- function(petab,
 #' pe$measurementData[datapointId %in% outliers$datapointId, `:=`(outlier = TRUE)]
 #' petab_plotData(pe, aeslist = list(customdata=~datapointId, shape = ~outlier, size = ~outlier))
 petab_markDataPointsShiny_step1 <- function(plot, fileCSV) {
-
+  
   library(shiny)
   library(plotly)
   
@@ -1723,7 +1724,7 @@ petab_markDataPointsShiny_step1 <- function(plot, fileCSV) {
       if (is.null(d)) "Click events appear here (double-click to clear)" else d
     })
   }
-shinyApp(ui, server)
+  shinyApp(ui, server)
 }
 
 
