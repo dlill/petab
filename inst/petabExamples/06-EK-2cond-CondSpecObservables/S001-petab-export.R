@@ -113,6 +113,7 @@ pe_me[observableId == "obsS" & simulationConditionId == "C2",`:=`(noiseParameter
 
 pe_me <- pe_me[!(simulationConditionId == "C1" & observableId %in% c("obsES","obsS"))]
 pe_me <- pe_me[!(simulationConditionId == "C2" & observableId %in% c("obsES","obsE"))]
+pe_ob <- pe_ob[observableId %in% unique(pe_me$observableId)]
 
 pe_mo <- petab_model(el,events = NULL,parInfo = parInfo, speciesInfo = speciesInfo)
 

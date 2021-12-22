@@ -23,6 +23,9 @@ Imports:
   cOde,
   tools,
   stringr,
+  purrr,
+  lemon,
+  digest,
   yaml
 Suggests: 
     shiny,

@@ -7,7 +7,7 @@
 petab_lint(pe)
 }
 \arguments{
-\item{petab}{}
+\item{pe}{petab}
 }
 \value{
 list of errors
