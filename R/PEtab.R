@@ -1187,15 +1187,14 @@ petab_lint <- function(pe) {
   
   # check for existing observable parameters
   if (!is.null(pe$observables) & !is.null(pe$measurementData)) {
-    dco <- pe$measurementData[pe$observables, on = .NATURAL]
-    unique(dco[,list(observableId, observableFormula, observableParameters)])
+    dco <- pe$observables[pe$measurementData, on = .NATURAL]
     dco <- unique(dco[,list(observableId, observableFormula, observableParameters)])
     dco[,`:=`(nobspars = stringr::str_count(observableFormula,   "observableParameter"))]
     dco[,`:=`(nobsparsAvalailable = if(is.na(observableParameters)|observableParameters == "") 0 else 1+stringr::str_count(observableParameters, ";")), by = 1:nrow(dco)]
     hasMissingObsPar <- dco[,which(nobsparsAvalailable < nobspars)]
     if(length(hasMissingObsPar)) stop("The following observableIds have no observableParameters specified: ", paste0(dco[hasMissingObsPar, observableId], collapse = ", "))
     # check for existing noise parameters
-    dco <- pe$measurementData[pe$observables, on = .NATURAL]
+    dco <- pe$observables[pe$measurementData, on = .NATURAL]
     unique(dco[,list(observableId, noiseFormula, noiseParameters)])
     dco <- unique(dco[,list(observableId, noiseFormula, noiseParameters)])
     dco[,`:=`(nobspars = stringr::str_count(noiseFormula,   "noiseParameter"))]
@@ -1668,83 +1667,83 @@ petab_plotData <- function(petab,
 
 
 
-#' Mark data points in a plot
-#'
-#' * Opens shiny app 
-#' * Writes clicked points to a file
-#' 
-#' @param plot A plot from petab_plotData. Must have aeslist(customdata~datapointId) mapped
-#' @param fileCSV filename for csv file
-#'
-#' @return Called for side-effect
-#' @export
-#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
-#' @md
-#' @family plotting
-#'
-#' @examples
-#' # Plot data
-#' pe <- petab_exampleRead(exampleName = "01", "pe")
-#' pe$measurementData[,`:=`(datapointId = sprintf(paste0("%s_%0",nchar(as.character(.N)), "i"),  datasetId, 1:.N))]
-#' plot <- petab_plotData(pe, aeslist = list(customdata=~datapointId))
-#' 
-#' # Mark outliers
-#' fileCSV <- "~/wup.txt"
-#' petab_markDataPointsShiny_step1(plot, fileCSV)
-#' outliers <- petab_markDataPointsShiny_step2(fileCSV)
-#' 
-#' # Flag them in the original plot
-#' pe$measurementData[,`:=`(outlier = FALSE)]
-#' pe$measurementData[datapointId %in% outliers$datapointId, `:=`(outlier = TRUE)]
-#' petab_plotData(pe, aeslist = list(customdata=~datapointId, shape = ~outlier, size = ~outlier))
-petab_markDataPointsShiny_step1 <- function(plot, fileCSV) {
-  
-  library(shiny)
-  library(plotly)
-  
-  if (file.exists(fileCSV)) stop("file exists, please remove file")
-  
-  ui <- fluidPage(
-    plotlyOutput("plot", height = "960px"),
-    verbatimTextOutput("click")
-  )
-  
-  server <- function(input, output, session) {
-    
-    
-    output$plot <- renderPlotly({
-      p <- ggplotly(plot)
-      p %>% 
-        layout(dragmode = "select") %>%
-        event_register("plotly_selecting")
-    })
-    
-    output$click <- renderPrint({
-      d <- event_data("plotly_click")
-      write.table(d, file = fileCSV, append=TRUE, sep=",", row.names = FALSE)
-      if (is.null(d)) "Click events appear here (double-click to clear)" else d
-    })
-  }
-  shinyApp(ui, server)
-}
-
-
-#' Post process marked data points
-#' @rdname petab_markDataPointsShiny_step1
-#' @export
-#' @importFrom data.table fread fwrite
-petab_markDataPointsShiny_step2 <- function(fileCSV, filename = NULL, NFLAGtribble = 0) {
-  wup <- readLines(fileCSV)
-  wup <- wup[grepl("\\w",wup)]
-  wup <- wup[grep(",{4}", gsub("[^,]","",wup))] # only keep entries with 5 fields (i.e. entries which have customdata)
-  wup <- wup[!(duplicated(wup) & grepl("pointNumber|curveNumber|customdata", wup))]
-  selectedPoints <- data.table::fread(text = wup)
-  selectedPoints <- selectedPoints[,list(datapointId = customdata)]
-  selectedPoints <- unique(selectedPoints)
-  if (!is.null(filename)) data.table::fwrite(selectedPoints, file = filename)
-  if (NFLAGtribble) conveniencefunctions::cfoutput_MdTable(selectedPoints, NFLAGtribble = NFLAGtribble)
-  selectedPoints
-}
+# #' Mark data points in a plot
+# #'
+# #' * Opens shiny app 
+# #' * Writes clicked points to a file
+# #' 
+# #' @param plot A plot from petab_plotData. Must have aeslist(customdata~datapointId) mapped
+# #' @param fileCSV filename for csv file
+# #'
+# #' @return Called for side-effect
+# #' @export
+# #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+# #' @md
+# #' @family plotting
+# #'
+# #' @examples
+# #' # Plot data
+# #' pe <- petab_exampleRead(exampleName = "01", "pe")
+# #' pe$measurementData[,`:=`(datapointId = sprintf(paste0("%s_%0",nchar(as.character(.N)), "i"),  datasetId, 1:.N))]
+# #' plot <- petab_plotData(pe, aeslist = list(customdata=~datapointId))
+# #' 
+# #' # Mark outliers
+# #' fileCSV <- "~/wup.txt"
+# #' petab_markDataPointsShiny_step1(plot, fileCSV)
+# #' outliers <- petab_markDataPointsShiny_step2(fileCSV)
+# #' 
+# #' # Flag them in the original plot
+# #' pe$measurementData[,`:=`(outlier = FALSE)]
+# #' pe$measurementData[datapointId %in% outliers$datapointId, `:=`(outlier = TRUE)]
+# #' petab_plotData(pe, aeslist = list(customdata=~datapointId, shape = ~outlier, size = ~outlier))
+# petab_markDataPointsShiny_step1 <- function(plot, fileCSV) {
+#   
+#   library(shiny)
+#   library(plotly)
+#   
+#   if (file.exists(fileCSV)) stop("file exists, please remove file")
+#   
+#   ui <- fluidPage(
+#     plotlyOutput("plot", height = "960px"),
+#     verbatimTextOutput("click")
+#   )
+#   
+#   server <- function(input, output, session) {
+#     
+#     
+#     output$plot <- renderPlotly({
+#       p <- ggplotly(plot)
+#       p %>% 
+#         layout(dragmode = "select") %>%
+#         event_register("plotly_selecting")
+#     })
+#     
+#     output$click <- renderPrint({
+#       d <- event_data("plotly_click")
+#       write.table(d, file = fileCSV, append=TRUE, sep=",", row.names = FALSE)
+#       if (is.null(d)) "Click events appear here (double-click to clear)" else d
+#     })
+#   }
+#   shinyApp(ui, server)
+# }
+# 
+# 
+# #' Post process marked data points
+# #' @rdname petab_markDataPointsShiny_step1
+# #' @export
+# #' @importFrom data.table fread fwrite
+# petab_markDataPointsShiny_step2 <- function(fileCSV, filename = NULL, NFLAGtribble = 0) {
+#   wup <- readLines(fileCSV)
+#   wup <- wup[grepl("\\w",wup)]
+#   wup <- wup[grep(",{4}", gsub("[^,]","",wup))] # only keep entries with 5 fields (i.e. entries which have customdata)
+#   wup <- wup[!(duplicated(wup) & grepl("pointNumber|curveNumber|customdata", wup))]
+#   selectedPoints <- data.table::fread(text = wup)
+#   selectedPoints <- selectedPoints[,list(datapointId = customdata)]
+#   selectedPoints <- unique(selectedPoints)
+#   if (!is.null(filename)) data.table::fwrite(selectedPoints, file = filename)
+#   if (NFLAGtribble) conveniencefunctions::cfoutput_MdTable(selectedPoints, NFLAGtribble = NFLAGtribble)
+#   selectedPoints
+# }
 
 
 # -------------------------------------------------------------------------#
