@@ -1,0 +1,22 @@
+observableId	preequilibrationConditionId	simulationConditionId	measurement	time	observableParameters	noiseParameters	datasetId	replicateId	datapointId
+pERK_obs		C1	1.00782136300731	0		0.03	data1	1	1
+pERK_obs		C1	1.00074564983365	2		0.03	data1	1	2
+pERK_obs		C1	0.980106483041366	5		0.03	data1	1	3
+pERK_obs		C1	1.00619825747895	10		0.03	data1	1	4
+pERK_obs		C1	0.99943871260471	15		0.03	data1	1	5
+pERK_obs		C1	0.998442044932947	20		0.03	data1	1	6
+pERK_obs		C1	0.985292476161007	40		0.03	data1	1	7
+pERK_obs		C2	1.02239686789543	0		0.03	data1	1	8
+pERK_obs		C2	1.3257885183427	2		0.03	data1	1	9
+pERK_obs		C2	1.4170767500662	5		0.03	data1	1	10
+pERK_obs		C2	1.51872768300016	10		0.03	data1	1	11
+pERK_obs		C2	1.46563306029974	15		0.03	data1	1	12
+pERK_obs		C2	1.41887354516999	20		0.03	data1	1	13
+pERK_obs		C2	1.3479745189763	40		0.03	data1	1	14
+pERK_obs		C3	1.03432384931193	0		0.03	data1	1	15
+pERK_obs		C3	1.39948394515828	2		0.03	data1	1	16
+pERK_obs		C3	1.53029608475282	5		0.03	data1	1	17
+pERK_obs		C3	1.59138087007509	10		0.03	data1	1	18
+pERK_obs		C3	1.58602612024104	15		0.03	data1	1	19
+pERK_obs		C3	1.57526455321126	20		0.03	data1	1	20
+pERK_obs		C3	1.59070293207325	40		0.03	data1	1	21

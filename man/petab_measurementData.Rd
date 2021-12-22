@@ -14,7 +14,8 @@ petab_measurementData(
   datasetId = NA,
   replicateId = NA,
   preequilibrationConditionId = NA,
-  datapointId = NA
+  datapointId = NA,
+  lloq = -Inf
 )
 }
 \arguments{

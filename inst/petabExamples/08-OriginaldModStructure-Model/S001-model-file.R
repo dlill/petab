@@ -5,6 +5,8 @@ library(stringr)
 library(conveniencefunctions)
 
 try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
+.currentWD <- getwd()
+.combiledFolder <- "Compiled_Objects"
 
 source("cf_normIndiv.R")
 # -------------------------------------------------------------------------#
@@ -43,7 +45,9 @@ names(errors) <- names(observables[which_err])
 # .. 5 Parameters -----
 # create subset of reactions describing the SS
 reactions_SS <- subset(reactions, !grepl("(N)", Description))
+setwd(.combiledFolder)
 steadystates <- c(steadyStates(reactions_SS), R1R2 = 0)
+setwd(.currentWD)
 
 # steady state pars
 modelpars <-  getParameters(reactions)
@@ -76,8 +80,10 @@ speciesInfo <- data.table(tibble::tribble(
 # compartmentInfo is left as the default getCompartmentInfo(el)
 # unitInfo is left as the default getUnitInfo(): If you need other units, you need to add them
 
+setwd(.combiledFolder)
 compiled <- odemodel(f = reactions, modelname = modelname)
 x <- Xs(compiled, condition = "C1", optionsOde = list(atol = 1e-12,rtol = 1e-12))
+setwd(.currentWD)
 mypars <- c(setNames(parInfo$parValue, parInfo$parName),
           setNames(speciesInfo$initialAmount, speciesInfo$speciesName))
 
@@ -107,7 +113,7 @@ trafo <- define(NULL, "x~y", x = innerpars, y = innerpars) %>%
   insert("x~1", x = "cytoplasm") %>% 
   #SS
   insert("x~y", x = names(steadystates), y = steadystates) %>%
-  # sigma paper totals
+  # fixed sigma
   insert("x~0.1", x = "sigma_R1R2_obs") %>% 
   # model reduction
   insert("x~y", x = "k4", y = "k5 * k_ratio") %>% 
@@ -121,7 +127,7 @@ trafoL <- insert(trafoL, "x~-1000",
                  x = c("k1", "k2"), 
                  condition == "C1") %>% 
   insert("x~x_condi", 
-         x = c("k1", "k2"), 
+         x = c("k1", "k2", "scale_pERK"), 
          condi = condition)
 
 
@@ -138,7 +144,7 @@ outerpars <- outerpars[outerpars != "dummy"]
 pouter <- structure(rep(1, length(outerpars)), names = outerpars)
 
 # .. 13 compile model -----
-
+setwd(.combiledFolder)
 tolerances <- 1e-8
 x <- odemodel(reactions, 
               fixed = c("ligand"), 
@@ -156,7 +162,7 @@ e <- Y(errors, f = c(as.eqnvec(reactions), observables), states = names(observab
 p <- P(trafo, modelname = "p")
 
 compile(x, g, p, e, output = modelname, cores  = detectFreeCores())
-
+setwd(.currentWD)
 # -------------------------------------------------------------------------#
 # Fit model ----
 # -------------------------------------------------------------------------#
