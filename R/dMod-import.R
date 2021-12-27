@@ -2161,8 +2161,8 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
                                  jacobian = "inz.lsodes", compile = TRUE)
     
     myx <- dMod::Xs(myodemodel,
-                    optionsOde = list(method = "lsoda", rtol = 1e-7, atol = 1e-7, maxsteps = 5000),
-                    optionsSens = list(method = "lsodes", lrw=200000, rtol = 1e-7, atol = 1e-7))
+                    optionsOde = list(method = "lsoda", rtol = 1e-10, atol = 1e-10, maxsteps = 5000),
+                    optionsSens = list(method = "lsodes", lrw=200000, rtol = 1e-10, atol = 1e-10))
     
     cat("Compiling errormodel\n")
     myerr <- NULL
