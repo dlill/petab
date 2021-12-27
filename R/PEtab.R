@@ -454,14 +454,6 @@ petab_measurementData <- function(
   lloq                        = -Inf
 ) {
   
-  # Handle BLOQ
-  if (length(lloq) == 1) lloq <- rep(lloq, length(measurement))
-  bloq <- measurement < lloq
-  if (any(bloq)) {
-    cat("Replacing BLOQ measuremnts by LLOQ")
-    measurement[bloq] <- lloq[bloq]
-  }
-  
   d <- data.table(
     observableId                = as.character(observableId),
     preequilibrationConditionId = as.character(preequilibrationConditionId),
@@ -481,6 +473,15 @@ petab_measurementData <- function(
     print(d[is.na(measurement), c("observableId", "simulationConditionId", "datapointId")])
     d <- d[!is.na(measurement)]
   }
+  
+  # Handle BLOQ
+  bloq <- d$measurement < lloq
+  if (any(bloq)) {
+    cat("Replacing BLOQ measuremnts by LLOQ")
+    d$measurement[bloq] <- d$lloq[bloq]
+  }
+  
+  
   
   d[base::order(simulationConditionId, observableId, time)]
 }
