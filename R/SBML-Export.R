@@ -73,8 +73,9 @@ getParInfo <- function(equationList, eventList = NULL) {
 #' getSpeciesInfo(f)
 getSpeciesInfo <- function(equationList){
   data.table(speciesName = equationList$states,
-             compName    = equationList$volumes,
-             initialAmount = 0)
+             compName = ifelse(!is.null(equationList$volumes),
+                               equationList$volumes, "cytoplasm"),
+             initialAmount = 1)
 }
 
 #' get compartmentInfo
