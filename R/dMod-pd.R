@@ -690,7 +690,10 @@ pd_fitObsPars <- function(pd, FLAGoverwrite = FALSE, iterlim = 500) {
 #' Run a fit only for observation parameters
 #'
 #' @param pd
-#' @param NFLAGsavePd 3 as an option doesn't make sense hre
+#' @param iterlim 
+#' @param printIter 
+#' @param FLAGoverwrite 
+#' @param ... other arguments going to trust
 #'
 #' @return
 #' @export
@@ -703,8 +706,14 @@ pd_fitObsPars <- function(pd, FLAGoverwrite = FALSE, iterlim = 500) {
 #' @importFrom dMod trust
 #'
 #' @examples
-pd_fit <- function(pd, iterlim = 1000, printIter = TRUE, FLAGoverwrite = TRUE, .outputFolder = ".") {
-  # [ ] dont save pd, save a parframe in Results instead
+pd_fit <- function(pd, iterlim = 1000, printIter = TRUE, FLAGoverwrite = FALSE, ...) {
+  .outputFolder <- dirname(pd$filenameParts$.compiledFolder)
+  
+  fit_file <- conveniencefunctions::dMod_files(.outputFolder, "singleFit")$mstrust
+  if (!FLAGoverwrite && file.exists(fit_file)) {
+    cat("FitObsPars: Previous parameters were loaded")
+    return(readPd(pd_files(pd$filenameParts)$rdsfile))
+  }
   
   fit_par <- pd$pars
   fit_fix <- pd$fixed
@@ -713,7 +722,7 @@ pd_fit <- function(pd, iterlim = 1000, printIter = TRUE, FLAGoverwrite = TRUE, .
   parupper <- petab_getParameterBoundaries(pd$pe, "upper")
   
   fit <- dMod::trust(pd$obj, fit_par, 1,10, iterlim = iterlim, fixed = fit_fix,
-                     parlower = parlower, parupper = parupper, printIter = printIter)
+                     parlower = parlower, parupper = parupper, printIter = printIter, ...)
   if (!fit$converged) warning("Fit not converged, please try increasing 'iterlim' (was ", iterlim,")")
   
   fit$argument <- c(fit$argument, fit_fix)
