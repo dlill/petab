@@ -6,7 +6,8 @@ writePE <- function(modelname="test",
                     parameters=bestfit,
                     conditions=condition.grid,
                     est_grid = est.grid,
-                    fixed_grid = fixed.grid){
+                    fixed_grid = fixed.grid,
+                    parUnit = "per_minute"){
   # dir.create("Export/", showWarnings = FALSE)
   # exportwd <- paste0("Export/",modelname)
   # dir.create(exportwd, showWarnings = FALSE)
@@ -14,14 +15,67 @@ writePE <- function(modelname="test",
   
   
   cat("Writing model ...\n")
-  parInfo <- getParInfo(reactions) # modify as it writes random stuff in it
+  parInfo <- getParInfo(reactions, eventList = eventlist, unit = parUnit) # modify as it writes random stuff in it
   speciesInfo <- getSpeciesInfo(reactions) # modify as it writes random stuff in it
-  pe_mo <- petab_model(reactions,events = NULL,parInfo = parInfo, speciesInfo = speciesInfo)
+  pe_mo <- petab_model(reactions,
+                       events = eventlist, 
+                       parInfo = parInfo, 
+                       speciesInfo = speciesInfo)
   
   
   
   cat("Writing conditions ...\n")
   pe_ex <- getEXgrid(est_grid, fixed_grid)
+  
+  
+
+  cat("Writing observables ...\n")
+  obsDF <- as.data.frame(obs_fun)
+  obsDF$obs_fun <- as.character(obsDF$obs_fun)
+  formula <- NULL
+  trafo <- NULL
+  obsParMatch <- NULL
+  for(i in 1:length(obsDF$obs_fun)){
+    obs <- obsDF$obs_fun[i]
+    obs_name <- rownames(obsDF)[i]
+    if(str_detect(obs, "log10\\(")){
+      formula <- c(formula, gsub(" ", "", substr(obs,7,length(strsplit(obs, "")[[1]])-1)))
+      trafo <- c(trafo, "log10")
+    } else if (str_detect(obs, "log\\(")){
+      formula <- c(formula, gsub(" ", "", substr(obs,5,length(strsplit(obs, "")[[1]])-1)))
+      trafo <- c(trafo, "log")
+    } else {
+      formula <- c(formula, gsub(" ", "", obs))
+      trafo <- c(trafo, "lin")
+    }
+    
+    # replace scale and offset by standard nomenclature
+    obsPar1 <- grep("scale", getSymbols(obs), value = T)
+    obsPar2 <- grep("offset", getSymbols(obs), value = T)
+    if(str_detect(obs, "scale") & str_detect(obs, "offset")){
+      formula <- gsub(obsPar1, paste0("observableParameter1_", obs_name), formula)
+      formula <- gsub(obsPar2, paste0("observableParameter2_", obs_name), formula)
+      obsStr <- paste0(obsPar1,";", obsPar2)
+    } else if (str_detect(obs, "scale")){
+      formula <- gsub(obsPar1, paste0("observableParameter1_", obs_name), formula)
+      obsStr <- obsPar1
+    } else if (str_detect(obs, "offset")){
+      formula <- gsub(obsPar2, paste0("observableParameter1_", obs_name), formula)
+      obsStr <- obsPar2
+    }
+    
+    # create match table for observable parameters
+    obsParMatch <- rbind(obsParMatch, data.table(observableId = obs_name, observableParameters = obsStr))
+  }
+
+  pe_ob <- data.table(observableId = rownames(obsDF), 
+                      observableName = rownames(obsDF), 
+                      observableFormula = formula, 
+                      observableTransformation = trafo)
+  pe_ob[observableId == names(errormodel),`:=`(noiseFormula =  errormodel[names(errormodel)], 
+                                               noiseDistribution = "normal")]
+
+  # write_tsv(out, path = paste0(exportwd,"/observables_",modelname,".tsv"))
   
   
   
@@ -37,40 +91,8 @@ writePE <- function(modelname="test",
                       preequilibrationConditionId = NA_character_,
                       datapointId = 1:nrow(data)
   )
-  
-  
-  
-  cat("Writing observables ...\n")
-  obsDF <- as.data.frame(obs_fun)
-  obsDF$obs_fun <- as.character(obsDF$obs_fun)
-  formula <- NULL
-  trafo <- NULL
-  for(i in 1:length(obsDF$obs_fun)){
-    obs <- obsDF$obs_fun[i]
-    if(str_detect(obs, "log10\\(")){
-      formula <- c(formula, gsub(" ", "", substr(obs,7,length(strsplit(obs, "")[[1]])-1)))
-      trafo <- c(trafo, "log10")
-    } else if (str_detect(obs, "log\\(")){
-      formula <- c(formula, gsub(" ", "", substr(obs,5,length(strsplit(obs, "")[[1]])-1)))
-      trafo <- c(trafo, "log")
-    } else {
-      formula <- c(formula, gsub(" ", "", obs))
-      trafo <- c(trafo, "lin")
-    }
-  }
-
-  pe_ob <- data.table(observableId = rownames(obsDF), 
-                      observableName = rownames(obsDF), 
-                      observableFormula = formula, 
-                      observableTransformation = trafo)
-  pe_ob[observableId == names(errormodel),`:=`(noiseFormula =  errormodel[names(errormodel)], 
-                                               noiseDistribution = "normal")]
-
-  # write_tsv(out, path = paste0(exportwd,"/observables_",modelname,".tsv"))
-  
-  
-  
-  
+  # add observable parameters
+  # merge(pe_me, obsParMatch)
 
   
   # if(!is.null(attr(parameters, "parscales"))){

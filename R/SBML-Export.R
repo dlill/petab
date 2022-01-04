@@ -37,11 +37,11 @@ eqnlist_addDefaultCompartment <- function(equationList, compName) {
 #' library(dMod)
 #' example(eqnlist)
 #' getParInfo(f)
-getParInfo <- function(equationList, eventList = NULL) {
+getParInfo <- function(equationList, eventList = NULL, unit = "per_second") {
   parName <- setdiff(getParameters(equationList), c(equationList$states, equationList$volumes))
   parInfo <- data.table::data.table(parName = parName)
   parInfo[,`:=`(parValue = seq(0.1,1,length.out = .N))]
-  parInfo[,`:=`(parUnit = "per_second")]
+  parInfo[,`:=`(parUnit = unit)]
   
   if (length(cOde::getSymbols(eventList$value))) {
     parInfoEv <- data.table(parName = setdiff(cOde::getSymbols(eventList$value), parInfo$parName))
