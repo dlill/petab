@@ -34,7 +34,7 @@ observables <- as.eqnvec(paste("log10(", observables, ")"), names = names(observ
 # .. 3 Events -----
 reactions <- addReaction(reactions, "0", "ligand", rate = "0", description = "stimulation (N)")
 
-events <- NULL %>% 
+eventlist <- NULL %>% 
   addEvent(var = "ligand", time = 0, value = 1, method = "replace")
 
 # .. 4 Errors -----
@@ -149,7 +149,7 @@ tolerances <- 1e-8
 x <- odemodel(reactions, 
               fixed = c("ligand"), 
               modelname = "x", 
-              events = events,
+              events = eventlist,
               compile = FALSE) %>% Xs(optionsOde = list(method = "lsoda", rtol = tolerances, atol = tolerances), 
                                       optionsSens = list(method = "lsodes", rtol = tolerances, atol = tolerances))
 
