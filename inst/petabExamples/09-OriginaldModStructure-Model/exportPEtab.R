@@ -72,11 +72,11 @@ writePE <- function(modelname="test",
                       observableName = rownames(obsDF), 
                       observableFormula = formula, 
                       observableTransformation = trafo)
-  pe_ob[observableId == names(errormodel),`:=`(noiseFormula =  errormodel[names(errormodel)], 
+  #[] adjust for multiple noise parameters
+  pe_ob[,`:=`(noiseFormula = paste0("noiseParameter1_", observableId),
                                                noiseDistribution = "normal")]
-
-  # write_tsv(out, path = paste0(exportwd,"/observables_",modelname,".tsv"))
   
+  noiseParMatch <- data.table(observableId=names(errormodel), noiseParameters=errormodel)
   
   
   cat("Writing measurements ...\n")
@@ -85,16 +85,49 @@ writePE <- function(modelname="test",
                       measurement = data$value,
                       time = data$time,
                       observableParameters = NA_character_,
-                      noiseParameters = data$sigma,
-                      datasetId = "data1",
-                      replicateId = 1,
+                      noiseParameters = NA_character_,
+                      datasetId = "data1", # is adjusted below
+                      replicateId = 1, #[] could be adjusted
                       preequilibrationConditionId = NA_character_,
                       datapointId = 1:nrow(data)
   )
   # add observable parameters
-  # merge(pe_me, obsParMatch)
+  pe_me[obsParMatch, observableParameters := i.observableParameters, on = .(observableId)]
+  # replace condition specific obspars
+  obspars <- getSymbols(obsParMatch$observableParameters)
+  selpars <- c("conditionId", obspars)
+  for(c in unique(pe_me$simulationConditionId)) {
+    replacements <- pe_ex[conditionId == c, ..selpars][,-1]
+    for(r in 1:ncol(replacements)){
+      replpar <- replacements[,..r]
+      pe_me[simulationConditionId == c, observableParameters := gsub(names(replpar), replpar, observableParameters)]
+    }
+  }
 
+  # add noise parameters (to be extended for several noise pars)
+  if (!is.null(errormodel)){
+    pe_me[noiseParMatch, noiseParameters := i.noiseParameters, on = .(observableId)]
+  } else if (!is.na(data$sigma)){
+    pe_me[, noiseParameters := data$sigma]
+  } else print("Warning: No errors provided!")
   
+  # exclude obs and noise pars and all unchanged pars from pe_ex
+  pe_ex <- pe_ex[, !..obspars]
+  noisepars <- getSymbols(pe_me$noiseParameters)
+  pe_ex <- pe_ex[, !..noisepars]
+  pe_ex_orig <- copy(pe_ex)
+  for (c in 1:ncol(pe_ex_orig)){
+    mycol <- pe_ex_orig[,..c]
+    if(all(names(mycol) == mycol[[1]])) pe_ex[, names(mycol) := NULL] 
+  }
+  
+  # adjust datasetId according to scale and offset
+  count <- 1
+  for (d in unique(pe_me$observableParameters)){
+    pe_me[observableParameters == d, datasetId := paste0("dataset", count)]
+    count <- count + 1
+  }
+
   # if(!is.null(attr(parameters, "parscales"))){
   #   out <- data.frame(parameterId = names(parameters), parameterScale=attr(parameters, "parscales"))
   # } else out <- data.frame(parameterId = names(parameters), parameterScale="log")
@@ -140,7 +173,8 @@ getEXgrid <- function(est.grid, fixed.grid){
   pe_ex <- merge(est.grid[,!..shared_pars], fixed.grid[,!..shared_pars], by = c("ID", "condition"))
   pe_ex <- merge(pe_ex, mixed.grid, by = c("ID", "condition"))
   
-  pe_ex[,ID:= paste0("condition", ID)]
+  # pe_ex[,ID:= paste0("condition", ID)]
+  pe_ex[,ID:= condition]
   setnames(pe_ex, c("ID", "condition"), c("conditionId", "conditionName"))
   
   pe_ex
