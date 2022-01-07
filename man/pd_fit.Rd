@@ -4,16 +4,16 @@
 \alias{pd_fit}
 \title{Run a fit only for observation parameters}
 \usage{
-pd_fit(
-  pd,
-  iterlim = 1000,
-  printIter = TRUE,
-  FLAGoverwrite = TRUE,
-  .outputFolder = "."
-)
+pd_fit(pd, iterlim = 1000, printIter = TRUE, FLAGoverwrite = FALSE, ...)
 }
 \arguments{
-\item{NFLAGsavePd}{3 as an option doesn't make sense hre}
+\item{iterlim}{}
+
+\item{printIter}{}
+
+\item{FLAGoverwrite}{}
+
+\item{...}{other arguments going to trust}
 }
 \value{
 

@@ -4,7 +4,7 @@
 \alias{getParInfo}
 \title{Extract parInfo data.table from equationlist}
 \usage{
-getParInfo(equationList, eventList = NULL)
+getParInfo(equationList, eventList = NULL, unit = "per_second")
 }
 \arguments{
 \item{el}{equationList}

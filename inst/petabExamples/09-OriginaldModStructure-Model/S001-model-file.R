@@ -8,7 +8,6 @@ try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 .currentWD <- getwd()
 .combiledFolder <- "Compiled_Objects"
 
-source("cf_normIndiv.R")
 # -------------------------------------------------------------------------#
 # Create enzyme kinetics model and data ----
 # -------------------------------------------------------------------------#

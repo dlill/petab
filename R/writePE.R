@@ -1,4 +1,23 @@
-writePE <- function(modelname="test",
+#' Write PE from dMod objects
+#'
+#' @param modelname 
+#' @param ODEmodel 
+#' @param obs_fun 
+#' @param errormodel 
+#' @param data 
+#' @param parameters 
+#' @param conditions 
+#' @param est_grid
+#' @param fixed_grid
+#' @param parUnit
+#'
+#' @return pe list
+#' @export
+#' @author Svenja Kemmer
+#' @md
+#'
+#' @importFrom parallel mclapply
+writePE <- function(modelname="mymodel",
                     ODEmodel=reactions,
                     obs_fun=observables,
                     errormodel = errors,
@@ -8,10 +27,6 @@ writePE <- function(modelname="test",
                     est_grid = est.grid,
                     fixed_grid = fixed.grid,
                     parUnit = "per_minute"){
-  # dir.create("Export/", showWarnings = FALSE)
-  # exportwd <- paste0("Export/",modelname)
-  # dir.create(exportwd, showWarnings = FALSE)
-  
   
   
   cat("Writing model ...\n")
@@ -23,12 +38,10 @@ writePE <- function(modelname="test",
                        speciesInfo = speciesInfo)
   
   
-  
   cat("Writing conditions ...\n")
   pe_ex <- getEXgrid(est_grid, fixed_grid)
   
   
-
   cat("Writing observables ...\n")
   obsDF <- as.data.frame(obs_fun)
   obsDF$obs_fun <- as.character(obsDF$obs_fun)
@@ -67,14 +80,14 @@ writePE <- function(modelname="test",
     # create match table for observable parameters
     obsParMatch <- rbind(obsParMatch, data.table(observableId = obs_name, observableParameters = obsStr))
   }
-
+  
   pe_ob <- data.table(observableId = rownames(obsDF), 
                       observableName = rownames(obsDF), 
                       observableFormula = formula, 
                       observableTransformation = trafo)
   #[] adjust for multiple noise parameters
   pe_ob[,`:=`(noiseFormula = paste0("noiseParameter1_", observableId),
-                                               noiseDistribution = "normal")]
+              noiseDistribution = "normal")]
   
   noiseParMatch <- data.table(observableId=names(errormodel), noiseParameters=errormodel)
   
@@ -103,7 +116,7 @@ writePE <- function(modelname="test",
       pe_me[simulationConditionId == c, observableParameters := gsub(names(replpar), replpar, observableParameters)]
     }
   }
-
+  
   # add noise parameters (to be extended for several noise pars)
   if (!is.null(errormodel)){
     pe_me[noiseParMatch, noiseParameters := i.noiseParameters, on = .(observableId)]
@@ -127,7 +140,7 @@ writePE <- function(modelname="test",
     pe_me[observableParameters == d, datasetId := paste0("dataset", count)]
     count <- count + 1
   }
-
+  
   # if(!is.null(attr(parameters, "parscales"))){
   #   out <- data.frame(parameterId = names(parameters), parameterScale=attr(parameters, "parscales"))
   # } else out <- data.frame(parameterId = names(parameters), parameterScale="log")
@@ -140,13 +153,13 @@ writePE <- function(modelname="test",
   # out <- cbind(out, estimate=parameters)
   # write_tsv(out, path = paste0(exportwd,"/parameters_",modelname,".tsv"))
   
-
   
   cat("Initialize PE ...\n")
   pe <- petab(model = pe_mo,
               experimentalCondition = pe_ex,
               measurementData = pe_me,
               observables = pe_ob)
+  
   
   cat("Writing parameters ...\n")
   
@@ -156,6 +169,7 @@ writePE <- function(modelname="test",
   pe
   # cat(green(paste0("PEtab files written to Export/", modelname, "/\n")))
 }
+
 
 
 getEXgrid <- function(est.grid, fixed.grid){
