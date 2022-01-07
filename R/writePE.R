@@ -81,10 +81,11 @@ writePE <- function(modelname="mymodel",
     obsParMatch <- rbind(obsParMatch, data.table(observableId = obs_name, observableParameters = obsStr))
   }
   
-  pe_ob <- data.table(observableId = rownames(obsDF), 
-                      observableName = rownames(obsDF), 
-                      observableFormula = formula, 
-                      observableTransformation = trafo)
+  pe_ob <- petab_observables(observableId = rownames(obsDF), 
+                             observableName = rownames(obsDF), 
+                             observableFormula = formula, 
+                             observableTransformation = trafo)
+                      
   #[] adjust for multiple noise parameters
   pe_ob[,`:=`(noiseFormula = paste0("noiseParameter1_", observableId),
               noiseDistribution = "normal")]
@@ -93,16 +94,17 @@ writePE <- function(modelname="mymodel",
   
   
   cat("Writing measurements ...\n")
-  pe_me <- data.table(observableId = data$name,
-                      simulationConditionId = data$condition,
-                      measurement = data$value,
-                      time = data$time,
-                      observableParameters = NA_character_,
-                      noiseParameters = NA_character_,
-                      datasetId = "data1", # is adjusted below
-                      replicateId = 1, #[] could be adjusted
-                      preequilibrationConditionId = NA_character_,
-                      datapointId = 1:nrow(data)
+  pe_me <- petab_measurementData(observableId = data$name,
+                                 simulationConditionId = data$condition,
+                                 measurement = data$value,
+                                 time = data$time,
+                                 observableParameters = NA_character_,
+                                 noiseParameters = NA_character_,
+                                 datasetId = "data1", # is adjusted below
+                                 replicateId = 1, #[] could be adjusted
+                                 preequilibrationConditionId = NA_character_,
+                                 datapointId = 1:nrow(data)
+                      
   )
   # add observable parameters
   pe_me[obsParMatch, observableParameters := i.observableParameters, on = .(observableId)]
