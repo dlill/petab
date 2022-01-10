@@ -62,7 +62,16 @@ try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 # 
 # pe$parameters$objectivePriorType <- NA_character_
 
-pe <- writePE()
+pe <- petab_dModmodel2PE(modelname="mymodel",
+                         ODEmodel=reactions,
+                         obs_fun=observables,
+                         errormodel = errors,
+                         data=pred, # with obligatory columns name, time, value, sigma, condition
+                         parameters=bestfit,
+                         trafo=trafo,
+                         est_grid = est.grid,
+                         fixed_grid = fixed.grid)
+              
 
 filename <- "petab"
 writePetab(pe, filename)

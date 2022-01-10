@@ -4,9 +4,9 @@
 #' @param ODEmodel 
 #' @param obs_fun 
 #' @param errormodel 
-#' @param data 
+#' @param data DF with obligatory columns name, time, value, sigma, condition
 #' @param parameters 
-#' @param conditions 
+#' @param trafo 
 #' @param est_grid
 #' @param fixed_grid
 #' @param parUnit
@@ -17,21 +17,27 @@
 #' @md
 #'
 #' @importFrom parallel mclapply
-writePE <- function(modelname="mymodel",
-                    ODEmodel=reactions,
-                    obs_fun=observables,
-                    errormodel = errors,
-                    data=pred, # with obligatory columns name, time, value, sigma, condition
-                    parameters=bestfit,
-                    conditions=condition.grid,
-                    est_grid = est.grid,
-                    fixed_grid = fixed.grid,
-                    parUnit = "per_minute"){
-  
+petab_dModmodel2PE <- function(modelname,
+                               ODEmodel,
+                               obs_fun,
+                               errormodel,
+                               data,  
+                               parameters,
+                               trafo,
+                               est_grid,
+                               fixed_grid){
+                    
   
   cat("Writing model ...\n")
-  parInfo <- getParInfo(reactions, eventList = eventlist, unit = parUnit) # modify as it writes random stuff in it
-  speciesInfo <- getSpeciesInfo(reactions) # modify as it writes random stuff in it
+  # Create parameterFormulaInjection from trafo
+  
+  # pfi <- petab_parameterFormulaInjection()
+  # Create pe_mo
+  parInfo <- getParInfo(equationList = reactions, 
+                        eventList = eventlist, 
+                        unit = "identity") # include parameterFormulaList
+  speciesInfo <- getSpeciesInfo(equationList = reactions) # include parameterFormulaList
+  
   pe_mo <- petab_model(reactions,
                        events = eventlist, 
                        parInfo = parInfo, 
@@ -46,20 +52,20 @@ writePE <- function(modelname="mymodel",
   obsDF <- as.data.frame(obs_fun)
   obsDF$obs_fun <- as.character(obsDF$obs_fun)
   formula <- NULL
-  trafo <- NULL
+  obsscale <- NULL
   obsParMatch <- NULL
   for(i in 1:length(obsDF$obs_fun)){
     obs <- obsDF$obs_fun[i]
     obs_name <- rownames(obsDF)[i]
     if(str_detect(obs, "log10\\(")){
       formula <- c(formula, gsub(" ", "", substr(obs,7,length(strsplit(obs, "")[[1]])-1)))
-      trafo <- c(trafo, "log10")
+      obsscale <- c(obsscale, "log10")
     } else if (str_detect(obs, "log\\(")){
       formula <- c(formula, gsub(" ", "", substr(obs,5,length(strsplit(obs, "")[[1]])-1)))
-      trafo <- c(trafo, "log")
+      obsscale <- c(obsscale, "log")
     } else {
       formula <- c(formula, gsub(" ", "", obs))
-      trafo <- c(trafo, "lin")
+      obsscale <- c(obsscale, "lin")
     }
     
     # replace scale and offset by standard nomenclature
@@ -84,7 +90,7 @@ writePE <- function(modelname="mymodel",
   pe_ob <- petab_observables(observableId = rownames(obsDF), 
                              observableName = rownames(obsDF), 
                              observableFormula = formula, 
-                             observableTransformation = trafo)
+                             observableTransformation = obsscale)
                       
   #[] adjust for multiple noise parameters
   pe_ob[,`:=`(noiseFormula = paste0("noiseParameter1_", observableId),
@@ -168,6 +174,11 @@ writePE <- function(modelname="mymodel",
   pe$parameters <- petab_create_parameter_df(pe)
   pe$parameters$objectivePriorType <- NA_character_
   
+  # add bestfit
+  # scale
+  bestfitDT <- data.table(parameterId = names(bestfit), nominalValue = bestfit)
+  pe$parameters <- petab_parameters_mergeParameters(pe$parameters, bestfitDT)
+  
   pe
   # cat(green(paste0("PEtab files written to Export/", modelname, "/\n")))
 }
@@ -195,3 +206,25 @@ getEXgrid <- function(est.grid, fixed.grid){
   
   pe_ex
 }
+# 
+# petab_getParameterFormulas <- function(trafo){
+#   
+#   trafoDF <- as.data.frame(trafo)
+#   trafoDF$trafo <- as.character(trafoDF$trafo)
+#   formula <- NULL
+#   parscale <- NULL
+#   obsParMatch <- NULL
+#   for(i in 1:length(trafoDF$trafo)){
+#     par_value <- trafoDF$trafo[i]
+#     par_name <- rownames(trafoDF)[i]
+#     if(str_detect(par_value, "exp\\(")){
+#       formula <- c(formula, gsub("exp\\(", "", par_value))
+#       parscale <- c(parscale, "log")
+#     } else if (str_detect(obs, "log\\(")){
+#       formula <- c(formula, gsub(" ", "", substr(obs,5,length(strsplit(obs, "")[[1]])-1)))
+#       parscale <- c(parscale, "log")
+#     } else {
+#       formula <- c(formula, gsub(" ", "", obs))
+#       parscale <- c(parscale, "lin")
+#     }
+# }

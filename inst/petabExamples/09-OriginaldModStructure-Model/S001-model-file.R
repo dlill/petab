@@ -21,7 +21,7 @@ reactions <- NULL %>%
   addReaction(from = "ERK", to = "pERK", rate = "k4 * ERK", description = "ERK to pERK basal") %>% 
   addReaction(from = "pERK", to = "ERK", rate = "k5 * pERK", description = "pERK to ERK")
   
-# reactions <- eqnlist_addDefaultCompartment(reactions, "cytoplasm") # Need compartment information for SBML
+reactions <- eqnlist_addDefaultCompartment(reactions, "cytoplasm") # Need compartment information for SBML
 
 # .. 2 Observables -----
 observables <- eqnvec(
@@ -106,7 +106,7 @@ plotData(mydata)+geom_line()
 condition.grid <- attr(mydata, "condition.grid")
 
 # .. 8 trafo -----
-innerpars <- c(unique(c(getParameters(reactions), getSymbols(observables), getSymbols(errors))))
+innerpars <- setdiff(c(unique(c(getParameters(reactions), getSymbols(observables), getSymbols(errors)))), getCompartmentInfo(reactions)$compName)
 trafo <- define(NULL, "x~y", x = innerpars, y = innerpars) %>% 
   insert("x~0", x = c("ligand")) %>% 
   insert("x~1", x = "cytoplasm") %>% 
