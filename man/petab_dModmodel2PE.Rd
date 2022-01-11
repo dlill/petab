@@ -5,7 +5,6 @@
 \title{Write PE from dMod objects}
 \usage{
 petab_dModmodel2PE(
-  modelname,
   ODEmodel,
   obs_fun,
   errormodel,
@@ -18,15 +17,13 @@ petab_dModmodel2PE(
 )
 }
 \arguments{
-\item{modelname}{}
-
 \item{ODEmodel}{}
 
 \item{obs_fun}{}
 
 \item{errormodel}{}
 
-\item{data}{DF with obligatory columns name, time, value, sigma, condition}
+\item{data}{DT with obligatory columns name, time, value, sigma, condition}
 
 \item{parameters}{}
 
@@ -35,11 +32,35 @@ petab_dModmodel2PE(
 \item{eventlist}{}
 }
 \value{
-pe list
+pe: list with PEtab content that can be exported with writePetab()
 }
 \description{
 Write PE from dMod objects
 }
+\seealso{
+Other SBML export: 
+\code{\link{eqnlist_addDefaultCompartment}()},
+\code{\link{getCompartmentInfo}()},
+\code{\link{getParInfo}()},
+\code{\link{getReactionInfo}()},
+\code{\link{getSpeciesInfo}()},
+\code{\link{getUnitInfo}()},
+\code{\link{sbml_addOneCompartment}()},
+\code{\link{sbml_addOneEvent}()},
+\code{\link{sbml_addOneParameter}()},
+\code{\link{sbml_addOneReaction}()},
+\code{\link{sbml_addOneSpecies}()},
+\code{\link{sbml_addOneUnit}()},
+\code{\link{sbml_exportEquationList}()},
+\code{\link{sbml_initialize}()},
+\code{\link{sbml_kineticLawAddParameters}()},
+\code{\link{sbml_reactionAddKineticLaw}()},
+\code{\link{sbml_reactionAddModifiers}()},
+\code{\link{sbml_reactionAddProducts}()},
+\code{\link{sbml_reactionAddReactants}()},
+\code{\link{sbml_validateSBML}()}
+}
 \author{
 Svenja Kemmer
 }
+\concept{SBML export}

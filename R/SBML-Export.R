@@ -55,14 +55,24 @@ getParInfo <- function(equationList, eventList = NULL, parameterFormulaList = NU
     parInfo <- rbindlist(list(parInfo, parInfoEv), use.names = TRUE)
   }
   
-  # include info from parameterFormulaList
-  parInfo[, parValue := as.character(parValue)]
-  for (d in parameterFormulaList$parameterId){ parInfo[parName == d, parValue := parameterFormulaList[parameterId == d]$parameterFormula] }
-  
-  # split in sym and num
-  parInfo[, type := if_else(suppressWarnings(is.na(as.numeric(parValue))), "sym", "num")]
-  out <- list(num = parInfo[type == "num"][,-4], sym = parInfo[type == "sym"][,-4])
-  
+  if (!is.null(parameterFormulaList)){
+    
+    # include info from parameterFormulaList
+    parInfo[, parValue := as.character(parValue)]
+    for (d in parameterFormulaList$parameterId){ parInfo[parName == d, parValue := parameterFormulaList[parameterId == d]$parameterFormula] }
+    
+    # split in sym and num
+    parInfo[, type := if_else(suppressWarnings(is.na(as.numeric(parValue))), "sym", "num")]
+    out <- list(num = parInfo[type == "num"][,-4], sym = parInfo[type == "sym"][,-4])
+    out$num[, parValue := as.numeric(parValue)]
+    
+    # ensure linear scale in parValue
+    for (d in parameterFormulaList$parameterId){ 
+      if (nrow(parameterFormulaList[parameterId == d & trafoType == "log"]) == 1 & d %in% out$num$parName) out$num[parName == d, parValue :=  exp(parValue)]
+      }
+    
+  } else out <- parInfo
+
   out
 }
 
@@ -83,19 +93,29 @@ getParInfo <- function(equationList, eventList = NULL, parameterFormulaList = NU
 #' library(dMod)
 #' example(eqnlist)
 #' getSpeciesInfo(f)
-getSpeciesInfo <- function(equationList, parameterFormulaList){
+getSpeciesInfo <- function(equationList = NULL, parameterFormulaList = NULL){
   sInfo <- data.table(speciesName = equationList$states,
                       compName = ifelse(!is.null(equationList$volumes),
                                         equationList$volumes, "cytoplasm"),
                       initialAmount = 1)
   
-  # include info from parameterFormulaList
-  sInfo[, initialAmount := as.character(initialAmount)]
-  for (d in parameterFormulaList$parameterId){ sInfo[speciesName == d, initialAmount := parameterFormulaList[parameterId == d]$parameterFormula] }
-  
-  # split in sym and num
-  sInfo[, type := if_else(suppressWarnings(is.na(as.numeric(initialAmount))), "sym", "num")]
-  out <- list(num = sInfo[type == "num"][,-4], sym = sInfo[type == "sym"][,-4])
+  if (!is.null(parameterFormulaList)){
+    
+    # include info from parameterFormulaList
+    sInfo[, initialAmount := as.character(initialAmount)]
+    for (d in parameterFormulaList$parameterId){ sInfo[speciesName == d, initialAmount := parameterFormulaList[parameterId == d]$parameterFormula] }
+    
+    # split in sym and num
+    sInfo[, type := if_else(suppressWarnings(is.na(as.numeric(initialAmount))), "sym", "num")]
+    out <- list(num = sInfo[type == "num"][,-4], sym = sInfo[type == "sym"][,-4])
+    out$num[, initialAmount := as.numeric(initialAmount)]
+    
+    # ensure linear scale in initialAmount
+    for (d in parameterFormulaList$parameterId){ 
+      if (nrow(parameterFormulaList[parameterId == d & trafoType == "log"]) == 1 & d %in% out$num$speciesName) out$num[speciesName == d, initialAmount :=  exp(initialAmount)]
+    }
+    
+  } else out <- sInfo
   
   out
 }

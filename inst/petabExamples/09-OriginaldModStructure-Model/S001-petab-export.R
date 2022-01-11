@@ -62,11 +62,11 @@ try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 # 
 # pe$parameters$objectivePriorType <- NA_character_
 
-pe <- petab_dModmodel2PE(modelname="mymodel",
-                         ODEmodel=reactions,
+bestfit <- pouter
+pe <- petab_dModmodel2PE(ODEmodel=reactions,
                          obs_fun=observables,
                          errormodel = errors,
-                         data=pred, # with obligatory columns name, time, value, sigma, condition
+                         data=pred,
                          parameters=bestfit,
                          trafo=trafo,
                          est_grid = est.grid,

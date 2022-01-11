@@ -33,6 +33,7 @@ Other SBML export:
 \code{\link{getReactionInfo}()},
 \code{\link{getSpeciesInfo}()},
 \code{\link{getUnitInfo}()},
+\code{\link{petab_dModmodel2PE}()},
 \code{\link{sbml_addOneCompartment}()},
 \code{\link{sbml_addOneParameter}()},
 \code{\link{sbml_addOneReaction}()},

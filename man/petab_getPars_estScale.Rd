@@ -21,13 +21,16 @@ parsEst <- petab_getPars_estScale(pe)
 }
 \seealso{
 Other Parameter wrangling: 
+\code{\link{getEXgrid}()},
+\code{\link{petab_getParameterFormulas}()},
 \code{\link{petab_getPars_linScale}()},
 \code{\link{petab_mergeParameters}()},
 \code{\link{petab_parameters_mergeParameters}()},
 \code{\link{petab_setPars_estScale}()},
 \code{\link{petab_setPars_linScale}()},
 \code{\link{petab_transformPars_est2Lin}()},
-\code{\link{petab_transformPars_lin2Est}()}
+\code{\link{petab_transformPars_lin2Est}()},
+\code{\link{strsplit2}()}
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)

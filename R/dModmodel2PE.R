@@ -1,24 +1,23 @@
 #' Write PE from dMod objects
 #'
-#' @param modelname 
 #' @param ODEmodel 
 #' @param obs_fun 
 #' @param errormodel 
-#' @param data DF with obligatory columns name, time, value, sigma, condition
+#' @param data DT with obligatory columns name, time, value, sigma, condition
 #' @param parameters 
 #' @param trafo 
 #' @param est_grid
 #' @param fixed_grid
 #' @param eventlist
 #'
-#' @return pe list
+#' @return pe: list with PEtab content that can be exported with writePetab()
 #' @export
 #' @author Svenja Kemmer
 #' @md
 #'
-#' @importFrom parallel mclapply
-petab_dModmodel2PE <- function(modelname,
-                               ODEmodel,
+#' @importFrom data.table data.table
+#' @family SBML export
+petab_dModmodel2PE <- function(ODEmodel,
                                obs_fun,
                                errormodel,
                                data,  
@@ -161,6 +160,8 @@ petab_dModmodel2PE <- function(modelname,
   
   
   cat("Writing parameters ...\n")
+  # add pfi as meta
+  pe$meta$parameterFormulaInjection <- pfi
   
   pe$parameters <- petab_create_parameter_df(pe)
   pe$parameters$objectivePriorType <- NA_character_
@@ -170,14 +171,22 @@ petab_dModmodel2PE <- function(modelname,
   bestfitDT <- data.table(parameterId = names(bestfit), nominalValue = bestfit)
   pe$parameters <- petab_parameters_mergeParameters(pe$parameters, bestfitDT)
   
-  # add pfi as meta
-  pe$meta$ParameterFormulaInjection <- pfi
-  
   pe
 }
 
 
-
+#' Get parameter formulas from dMod trafo
+#'
+#' @param est.grid as output by dMod::getParGrids()[[1]]
+#' @param fixed.grid as output by dMod::getParGrids()[[2]]
+#'
+#' @return merge of est.grid and fixed.grid
+#' @export
+#' @author Svenja Kemmer
+#' @md
+#' @family Parameter wrangling
+#'
+#' @importFrom data.table data.table
 getEXgrid <- function(est.grid, fixed.grid){
   
   est.grid <- as.data.table(est.grid)
@@ -200,8 +209,19 @@ getEXgrid <- function(est.grid, fixed.grid){
   pe_ex
 }
 
+#' Get parameter formulas from dMod trafo
+#'
+#' @param trafo as output by dMod::define()
+#'
+#' @return DT with columns parameterId, parameterFormula and trafoType
+#' @export
+#' @author Svenja Kemmer
+#' @md
+#' @family Parameter wrangling
+#'
+#' @importFrom data.table data.table
 petab_getParameterFormulas <- function(trafo){
-  
+
   trafoDF <- as.data.frame(trafo)
   trafoDF$trafo <- as.character(trafoDF$trafo)
   trafoDF$name <- NA
@@ -212,32 +232,45 @@ petab_getParameterFormulas <- function(trafo){
     par_name <- rownames(trafoDF)[i]
     
     if(str_detect(par_value, "exp\\(")){
-      # par_value <- "par_value+exp(a_b)-(c+d)"
+      
       par_value_spl <- strsplit2(par_value, "exp\\(", type = "before")[[1]]
       par_value_spl <- unlist(strsplit2(par_value_spl, "\\)", type = "after"))
       par_value <- NULL
       for(el in par_value_spl){
-        if(str_detect(el, "exp\\(")){
+        # if (!is.na(tryCatch(eval(parse(text = el)), error = function(x) NA))) {
+        #   el <- eval(parse(text = el))
+        #   par_value <- paste0(par_value, el)
+        #   par_scale <- "lin"
+        # } else 
+          if (str_detect(el, "exp\\(")){
           el <- gsub("exp\\(", "", el)
           el <- gsub("\\)", "", el)
           par_value <- paste0(par_value, el)
+          par_scale <- "log"
         } else par_value <- paste0(par_value, el)
       }
-      par_scale <- "log"
+      
+      
     } else if (str_detect(par_value, "10\\^\\(")){
-      # par_value <- "par_value+10^(a_b)-(c+d)"
+      
       par_value_spl <- strsplit2(par_value, "10\\^\\(", type = "before")[[1]]
       par_value_spl <- unlist(strsplit2(par_value_spl, "\\)", type = "after"))
       par_value <- NULL
       for(el in par_value_spl){
-        if(str_detect(el, "10\\^\\(")){
+        # if (!is.na(tryCatch(eval(parse(text = el)), error = function(x) NA))) {
+        #   el <- eval(parse(text = el))
+        #   par_value <- paste0(par_value, el)
+        #   par_scale <- "lin"
+        # } else 
+          if (str_detect(el, "10\\^\\(")){
           el <- gsub("10\\^\\(", "", el)
           el <- gsub("\\)", "", el)
           par_value <- paste0(par_value, el)
+          par_scale <- "log10"
         } else par_value <- paste0(par_value, el)
       }
-      par_scale <- "log10"
-    } 
+      
+    } else par_scale <- "lin"
     
     trafoDF$name[i] <- par_name
     trafoDF$trafo[i] <- par_value
@@ -248,6 +281,20 @@ petab_getParameterFormulas <- function(trafo){
   trafoDF <- trafoDF[parameterId!=parameterFormula]
 }
 
+
+#' strsplit with additional position argument
+#'
+#' @param x character to split
+#' @param split pattern as split criterion
+#' @param type position of split c("remove", "before", "after")
+#' @param perl
+#' @param ...
+#'
+#' @return character vector with split x
+#' @author Svenja Kemmer
+#' @md
+#' @family Parameter wrangling
+#'
 strsplit2 <- function(x,
                      split,
                      type = "remove",

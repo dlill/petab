@@ -21,7 +21,7 @@ reactions <- NULL %>%
   addReaction(from = "ERK", to = "pERK", rate = "k4 * ERK", description = "ERK to pERK basal") %>% 
   addReaction(from = "pERK", to = "ERK", rate = "k5 * pERK", description = "pERK to ERK")
   
-reactions <- eqnlist_addDefaultCompartment(reactions, "cytoplasm") # Need compartment information for SBML
+# reactions <- eqnlist_addDefaultCompartment(reactions, "cytoplasm") # Need compartment information for SBML
 
 # .. 2 Observables -----
 observables <- eqnvec(
