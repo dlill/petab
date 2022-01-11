@@ -26,6 +26,7 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10", lb
   model                 <- pe$model
   measurementData       <- pe$measurementData
   experimentalCondition <- pe$experimentalCondition
+  pfi                   <- pe$meta$parameterFormulaInjection
 
   # Species
   speciesInfo <- model$speciesInfo
@@ -52,7 +53,7 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10", lb
                                parameterScale = "lin") # up to debate
     par_pa <- data.table::rbindlist(list(par_pa, par_ev))
   }
-  
+
   # Observable parameters
   par_ob <- NULL
   if (length(cOde::getSymbols(measurementData$observableParameters)))
@@ -97,11 +98,30 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10", lb
     par <- data.table::rbindlist(list(par, par_ec))
   }
   
-  pfi <- pe$meta$parameterFormulaInjection
   if (!is.null(pfi)) {
     if (all(pfi$trafoType %in% c("log", "log10", "lin"))){
-      # use pfi to adjust parameterScale, nominalValue and estimate
       
+      # Kinetic parameters defined in Trafo
+        trafo_pars <- setdiff(cOde::getSymbols(pfi$parameterFormula), par$parameterId)
+        par_scales <- NULL
+        for (p in trafo_pars){
+          par_scale <- unique(pfi[parameterFormula %in% grep(p, pfi$parameterFormula, value = T)]$trafoType)
+          if (length(par_scale) > 1) stop(paste0("Scale of ", p, " is not uniquely defined."))
+          par_scales <- c(par_scales, par_scale)
+        }
+        
+        par_tr <- petab_parameters(parameterId = trafo_pars,
+                                   parameterName = trafo_pars,
+                                   nominalValue =  1,
+                                   estimate = 1,
+                                   parameterScale = par_scales
+        )
+        
+        # Append par_tr
+        par <- data.table::rbindlist(list(par, par_tr))
+        
+        # [] use pfi to adjust parameterScale, nominalValue and estimate 
+        
     } else {
       # parameterFormulaInjection by L1
       # Ensure parameterScale and nominalValue is set correctly for L1 parameters

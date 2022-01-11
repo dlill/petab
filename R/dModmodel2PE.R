@@ -141,8 +141,15 @@ petab_dModmodel2PE <- function(ODEmodel,
   pe_ex_orig <- copy(pe_ex)
   for (c in 1:ncol(pe_ex_orig)){
     mycol <- pe_ex_orig[,..c]
-    if(all(names(mycol) == mycol[[1]])) pe_ex[, names(mycol) := NULL] 
+    if(all(names(mycol) == mycol[[1]])) {
+      pe_ex[, names(mycol) := NULL] 
+      
+      # exclude parameters that are fixed to the same value in all conditions
+    } else if (nrow(unique(mycol))==1 & all(suppressWarnings(!is.na(as.numeric(mycol[[1]])))) ){ 
+      pe_ex[, names(mycol) := NULL]
+    }
   }
+
   
   # adjust datasetId according to scale and offset
   count <- 1
