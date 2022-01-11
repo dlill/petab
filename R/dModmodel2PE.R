@@ -9,7 +9,7 @@
 #' @param trafo 
 #' @param est_grid
 #' @param fixed_grid
-#' @param parUnit
+#' @param eventlist
 #'
 #' @return pe list
 #' @export
@@ -25,20 +25,23 @@ petab_dModmodel2PE <- function(modelname,
                                parameters,
                                trafo,
                                est_grid,
-                               fixed_grid){
+                               fixed_grid,
+                               eventlist){
                     
   
   cat("Writing model ...\n")
-  # Create parameterFormulaInjection from trafo
-  
-  # pfi <- petab_parameterFormulaInjection()
+  pfi <- petab_getParameterFormulas(trafo)
+
   # Create pe_mo
-  parInfo <- getParInfo(equationList = reactions, 
-                        eventList = eventlist, 
-                        unit = "identity") # include parameterFormulaList
-  speciesInfo <- getSpeciesInfo(equationList = reactions) # include parameterFormulaList
+  if(!is.null(ODEmodel$volumes)) ODEmodel <- eqnlist_addDefaultCompartment(ODEmodel, "cytoplasm")
   
-  pe_mo <- petab_model(reactions,
+  parInfo <- getParInfo(equationList = ODEmodel, 
+                        eventList = eventlist, 
+                        parameterFormulaList = pfi) 
+  speciesInfo <- getSpeciesInfo(equationList = ODEmodel,
+                                parameterFormulaList = pfi)
+  
+  pe_mo <- petab_model(ODEmodel,
                        events = eventlist, 
                        parInfo = parInfo, 
                        speciesInfo = speciesInfo)
@@ -148,19 +151,7 @@ petab_dModmodel2PE <- function(modelname,
     pe_me[observableParameters == d, datasetId := paste0("dataset", count)]
     count <- count + 1
   }
-  
-  # if(!is.null(attr(parameters, "parscales"))){
-  #   out <- data.frame(parameterId = names(parameters), parameterScale=attr(parameters, "parscales"))
-  # } else out <- data.frame(parameterId = names(parameters), parameterScale="log")
-  # if(!is.null(attr(parameters, "lowerBound"))){
-  #   out <- merge(out, lowerBound = attr(parameters, "lowerBound"))  
-  # } else out <- cbind(out, data.frame(parameterId = names(parameters), lowerBound="-12"))
-  # if(!is.null(attr(parameters, "upperBound"))){
-  #   out <- cbind(out, upperBound = attr(parameters, "upperBound"))  
-  # } else out <- cbind(out, data.frame(parameterId = names(parameters), upperBound="12"))
-  # out <- cbind(out, estimate=parameters)
-  # write_tsv(out, path = paste0(exportwd,"/parameters_",modelname,".tsv"))
-  
+
   
   cat("Initialize PE ...\n")
   pe <- petab(model = pe_mo,
@@ -179,8 +170,10 @@ petab_dModmodel2PE <- function(modelname,
   bestfitDT <- data.table(parameterId = names(bestfit), nominalValue = bestfit)
   pe$parameters <- petab_parameters_mergeParameters(pe$parameters, bestfitDT)
   
+  # add pfi as meta
+  pe$meta$ParameterFormulaInjection <- pfi
+  
   pe
-  # cat(green(paste0("PEtab files written to Export/", modelname, "/\n")))
 }
 
 
@@ -206,25 +199,78 @@ getEXgrid <- function(est.grid, fixed.grid){
   
   pe_ex
 }
-# 
-# petab_getParameterFormulas <- function(trafo){
-#   
-#   trafoDF <- as.data.frame(trafo)
-#   trafoDF$trafo <- as.character(trafoDF$trafo)
-#   formula <- NULL
-#   parscale <- NULL
-#   obsParMatch <- NULL
-#   for(i in 1:length(trafoDF$trafo)){
-#     par_value <- trafoDF$trafo[i]
-#     par_name <- rownames(trafoDF)[i]
-#     if(str_detect(par_value, "exp\\(")){
-#       formula <- c(formula, gsub("exp\\(", "", par_value))
-#       parscale <- c(parscale, "log")
-#     } else if (str_detect(obs, "log\\(")){
-#       formula <- c(formula, gsub(" ", "", substr(obs,5,length(strsplit(obs, "")[[1]])-1)))
-#       parscale <- c(parscale, "log")
-#     } else {
-#       formula <- c(formula, gsub(" ", "", obs))
-#       parscale <- c(parscale, "lin")
-#     }
-# }
+
+petab_getParameterFormulas <- function(trafo){
+  
+  trafoDF <- as.data.frame(trafo)
+  trafoDF$trafo <- as.character(trafoDF$trafo)
+  trafoDF$name <- NA
+  trafoDF$scale <- NA
+  parscale <- NULL
+  for(i in 1:length(trafoDF$trafo)){
+    par_value <- trafoDF$trafo[i]
+    par_name <- rownames(trafoDF)[i]
+    
+    if(str_detect(par_value, "exp\\(")){
+      # par_value <- "par_value+exp(a_b)-(c+d)"
+      par_value_spl <- strsplit2(par_value, "exp\\(", type = "before")[[1]]
+      par_value_spl <- unlist(strsplit2(par_value_spl, "\\)", type = "after"))
+      par_value <- NULL
+      for(el in par_value_spl){
+        if(str_detect(el, "exp\\(")){
+          el <- gsub("exp\\(", "", el)
+          el <- gsub("\\)", "", el)
+          par_value <- paste0(par_value, el)
+        } else par_value <- paste0(par_value, el)
+      }
+      par_scale <- "log"
+    } else if (str_detect(par_value, "10\\^\\(")){
+      # par_value <- "par_value+10^(a_b)-(c+d)"
+      par_value_spl <- strsplit2(par_value, "10\\^\\(", type = "before")[[1]]
+      par_value_spl <- unlist(strsplit2(par_value_spl, "\\)", type = "after"))
+      par_value <- NULL
+      for(el in par_value_spl){
+        if(str_detect(el, "10\\^\\(")){
+          el <- gsub("10\\^\\(", "", el)
+          el <- gsub("\\)", "", el)
+          par_value <- paste0(par_value, el)
+        } else par_value <- paste0(par_value, el)
+      }
+      par_scale <- "log10"
+    } 
+    
+    trafoDF$name[i] <- par_name
+    trafoDF$trafo[i] <- par_value
+    trafoDF$scale[i] <- par_scale
+  }
+  trafoDF <- as.data.table(trafoDF)
+  trafoDF <- trafoDF[, list(parameterId = name, parameterFormula = trafo, trafoType = scale)]
+  trafoDF <- trafoDF[parameterId!=parameterFormula]
+}
+
+strsplit2 <- function(x,
+                     split,
+                     type = "remove",
+                     perl = FALSE,
+                     ...) {
+  if (type == "remove") {
+    # use base::strsplit
+    out <- base::strsplit(x = x, split = split, perl = perl, ...)
+  } else if (type == "before") {
+    # split before the delimiter and keep it
+    out <- base::strsplit(x = x,
+                          split = paste0("(?<=.)(?=", split, ")"),
+                          perl = TRUE,
+                          ...)
+  } else if (type == "after") {
+    # split after the delimiter and keep it
+    out <- base::strsplit(x = x,
+                          split = paste0("(?<=", split, ")"),
+                          perl = TRUE,
+                          ...)
+  } else {
+    # wrong type input
+    stop("type must be remove, after or before!")
+  }
+  return(out)
+}

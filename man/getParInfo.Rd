@@ -4,10 +4,15 @@
 \alias{getParInfo}
 \title{Extract parInfo data.table from equationlist}
 \usage{
-getParInfo(equationList, eventList = NULL, unit = "per_second")
+getParInfo(
+  equationList,
+  eventList = NULL,
+  parameterFormulaList = NULL,
+  unit = "identity"
+)
 }
 \arguments{
-\item{el}{equationList}
+\item{unit}{}
 }
 \value{
 data.table(parName,parValue,parUnit)

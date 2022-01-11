@@ -24,7 +24,10 @@ eqnlist_addDefaultCompartment <- function(equationList, compName) {
 
 #' Extract parInfo data.table from equationlist
 #'
-#' @param el equationList
+#' @param equationList
+#' @param eventList
+#' @param parameterFormulaList
+#' @param unit
 #'
 #' @return data.table(parName,parValue,parUnit)
 #' @export
@@ -37,7 +40,7 @@ eqnlist_addDefaultCompartment <- function(equationList, compName) {
 #' library(dMod)
 #' example(eqnlist)
 #' getParInfo(f)
-getParInfo <- function(equationList, eventList = NULL, unit = "per_second") {
+getParInfo <- function(equationList, eventList = NULL, parameterFormulaList = NULL, unit = "identity") {
   parName <- setdiff(getParameters(equationList), c(equationList$states, equationList$volumes))
   parInfo <- data.table::data.table(parName = parName)
   parInfo[,`:=`(parValue = seq(0.1,1,length.out = .N))]
@@ -52,14 +55,23 @@ getParInfo <- function(equationList, eventList = NULL, unit = "per_second") {
     parInfo <- rbindlist(list(parInfo, parInfoEv), use.names = TRUE)
   }
   
-  parInfo
+  # include info from parameterFormulaList
+  parInfo[, parValue := as.character(parValue)]
+  for (d in parameterFormulaList$parameterId){ parInfo[parName == d, parValue := parameterFormulaList[parameterId == d]$parameterFormula] }
+  
+  # split in sym and num
+  parInfo[, type := if_else(suppressWarnings(is.na(as.numeric(parValue))), "sym", "num")]
+  out <- list(num = parInfo[type == "num"][,-4], sym = parInfo[type == "sym"][,-4])
+  
+  out
 }
 
 
 
 #' Extract speciesInfo data.table from equationlist
 #'
-#' @param el equationList
+#' @param equationList
+#' @param parameterFormulaList
 #'
 #' @return data.table(speciesName, compName, initialAmount)
 #' @export
@@ -71,11 +83,21 @@ getParInfo <- function(equationList, eventList = NULL, unit = "per_second") {
 #' library(dMod)
 #' example(eqnlist)
 #' getSpeciesInfo(f)
-getSpeciesInfo <- function(equationList){
-  data.table(speciesName = equationList$states,
-             compName = ifelse(!is.null(equationList$volumes),
-                               equationList$volumes, "cytoplasm"),
-             initialAmount = 1)
+getSpeciesInfo <- function(equationList, parameterFormulaList){
+  sInfo <- data.table(speciesName = equationList$states,
+                      compName = ifelse(!is.null(equationList$volumes),
+                                        equationList$volumes, "cytoplasm"),
+                      initialAmount = 1)
+  
+  # include info from parameterFormulaList
+  sInfo[, initialAmount := as.character(initialAmount)]
+  for (d in parameterFormulaList$parameterId){ sInfo[speciesName == d, initialAmount := parameterFormulaList[parameterId == d]$parameterFormula] }
+  
+  # split in sym and num
+  sInfo[, type := if_else(suppressWarnings(is.na(as.numeric(initialAmount))), "sym", "num")]
+  out <- list(num = sInfo[type == "num"][,-4], sym = sInfo[type == "sym"][,-4])
+  
+  out
 }
 
 #' get compartmentInfo

@@ -70,7 +70,8 @@ pe <- petab_dModmodel2PE(modelname="mymodel",
                          parameters=bestfit,
                          trafo=trafo,
                          est_grid = est.grid,
-                         fixed_grid = fixed.grid)
+                         fixed_grid = fixed.grid,
+                         eventlist = eventlist)
               
 
 filename <- "petab"

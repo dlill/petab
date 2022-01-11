@@ -4,10 +4,10 @@
 \alias{getSpeciesInfo}
 \title{Extract speciesInfo data.table from equationlist}
 \usage{
-getSpeciesInfo(equationList)
+getSpeciesInfo(equationList, parameterFormulaList)
 }
 \arguments{
-\item{el}{equationList}
+\item{parameterFormulaList}{}
 }
 \value{
 data.table(speciesName, compName, initialAmount)
