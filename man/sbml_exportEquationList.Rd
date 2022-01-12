@@ -9,10 +9,11 @@ sbml_exportEquationList(
   filename,
   modelname = "Model",
   unitInfo = getUnitInfo(),
-  speciesInfo = getSpeciesInfo(equationList),
-  parInfo = getParInfo(equationList, eventList = events),
+  speciesInfo = getSpeciesInfo(equationList, parameterFormulaList),
+  parInfo = getParInfo(equationList, eventList = events, parameterFormulaList),
   compartmentInfo = getCompartmentInfo(equationList),
-  events = NULL
+  events = NULL,
+  parameterFormulaList = NULL
 )
 }
 \arguments{

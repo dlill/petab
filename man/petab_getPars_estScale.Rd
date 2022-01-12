@@ -22,7 +22,7 @@ parsEst <- petab_getPars_estScale(pe)
 \seealso{
 Other Parameter wrangling: 
 \code{\link{getEXgrid}()},
-\code{\link{petab_getParameterFormulas}()},
+\code{\link{petab_getParameterFormulaList}()},
 \code{\link{petab_getPars_linScale}()},
 \code{\link{petab_mergeParameters}()},
 \code{\link{petab_parameters_mergeParameters}()},

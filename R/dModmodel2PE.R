@@ -31,21 +31,22 @@ petab_dModmodel2PE <- function(ODEmodel,
                     
   
   cat("Writing model ...\n")
-  pfi <- petab_getParameterFormulas(trafo)
+  pfl <- petab_getParameterFormulaList(trafo)
 
   # Create pe_mo
-  if(!is.null(ODEmodel$volumes)) ODEmodel <- eqnlist_addDefaultCompartment(ODEmodel, "cytoplasm")
+  if(is.null(ODEmodel$volumes)) ODEmodel <- eqnlist_addDefaultCompartment(ODEmodel, "cytoplasm")
   
   parInfo <- getParInfo(equationList = ODEmodel, 
                         eventList = eventList, 
-                        parameterFormulaList = pfi) 
+                        parameterFormulaList = pfl) 
   speciesInfo <- getSpeciesInfo(equationList = ODEmodel,
-                                parameterFormulaList = pfi)
+                                parameterFormulaList = pfl)
   
   pe_mo <- petab_model(ODEmodel,
                        events = eventList, 
                        parInfo = parInfo, 
-                       speciesInfo = speciesInfo)
+                       speciesInfo = speciesInfo,
+                       parameterFormulaList = pfl)
   
   
   cat("Writing conditions ...\n")
@@ -169,9 +170,6 @@ petab_dModmodel2PE <- function(ODEmodel,
   
   
   cat("Writing parameters ...\n")
-  # add pfi as meta
-  pe$meta$parameterFormulaInjection <- pfi
-  
   pe$parameters <- petab_create_parameter_df(pe)
   pe$parameters$objectivePriorType <- NA_character_
   
@@ -181,10 +179,10 @@ petab_dModmodel2PE <- function(ODEmodel,
   
   # add bestfit
   pe$parameters$estimate <- 0
-  if(attr(pfi, "generalScale")=="log") bestfit <- exp(bestfit)
-  if(attr(pfi, "generalScale")=="log10") bestfit <- 10^(bestfit)
+  if(attr(pfl, "generalScale")=="log") bestfit <- exp(bestfit)
+  if(attr(pfl, "generalScale")=="log10") bestfit <- 10^(bestfit)
   bestfitDT <- data.table(parameterId = names(bestfit), 
-                          parameterScale = attr(pfi, "generalScale"),
+                          parameterScale = attr(pfl, "generalScale"),
                           nominalValue = bestfit, 
                           estimate = 1)
   pe$parameters <- petab_parameters_mergeParameters(pe$parameters, bestfitDT)
@@ -238,7 +236,7 @@ getEXgrid <- function(est.grid, fixed.grid){
 #' @family Parameter wrangling
 #'
 #' @importFrom data.table data.table
-petab_getParameterFormulas <- function(trafo){
+petab_getParameterFormulaList <- function(trafo){
 
   trafoDF <- as.data.frame(trafo)
   trafoDF$trafo <- as.character(trafoDF$trafo)
@@ -249,17 +247,14 @@ petab_getParameterFormulas <- function(trafo){
     par_value <- trafoDF$trafo[i]
     par_name <- rownames(trafoDF)[i]
     
-    if(str_detect(par_value, "exp\\(")){
+    if (suppressWarnings(!is.na(as.numeric(par_value)))){
+      next
+    } else if(str_detect(par_value, "exp\\(")){
       
       par_value_spl <- strsplit2(par_value, "exp\\(", type = "before")[[1]]
       par_value_spl <- unlist(strsplit2(par_value_spl, "\\)", type = "after"))
       par_value <- NULL
       for(el in par_value_spl){
-        # if (!is.na(tryCatch(eval(parse(text = el)), error = function(x) NA))) {
-        #   el <- eval(parse(text = el))
-        #   par_value <- paste0(par_value, el)
-        #   par_scale <- "lin"
-        # } else 
           if (str_detect(el, "exp\\(")){
           el <- gsub("exp\\(", "", el)
           el <- gsub("\\)", "", el)
@@ -275,11 +270,6 @@ petab_getParameterFormulas <- function(trafo){
       par_value_spl <- unlist(strsplit2(par_value_spl, "\\)", type = "after"))
       par_value <- NULL
       for(el in par_value_spl){
-        # if (!is.na(tryCatch(eval(parse(text = el)), error = function(x) NA))) {
-        #   el <- eval(parse(text = el))
-        #   par_value <- paste0(par_value, el)
-        #   par_scale <- "lin"
-        # } else 
           if (str_detect(el, "10\\^\\(")){
           el <- gsub("10\\^\\(", "", el)
           el <- gsub("\\)", "", el)
@@ -296,8 +286,9 @@ petab_getParameterFormulas <- function(trafo){
   }
   trafoDF <- as.data.table(trafoDF)
   gscale <- setdiff(unique(trafoDF$scale), "lin")[1]
-  trafoDF <- trafoDF[, list(parameterId = name, parameterFormula = trafo, trafoType = scale)]
+  trafoDF <- trafoDF[, list(parameterId = name, parameterFormula = trafo)]
   trafoDF <- trafoDF[parameterId!=parameterFormula]
+
   attr(trafoDF, "generalScale") <- gscale
   trafoDF
 }

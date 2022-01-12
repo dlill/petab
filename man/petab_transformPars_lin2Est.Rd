@@ -24,7 +24,7 @@ parsLin <- parsLin[sample(1:length(parsLin), 5)] + rnorm(5)
 \seealso{
 Other Parameter wrangling: 
 \code{\link{getEXgrid}()},
-\code{\link{petab_getParameterFormulas}()},
+\code{\link{petab_getParameterFormulaList}()},
 \code{\link{petab_getPars_estScale}()},
 \code{\link{petab_getPars_linScale}()},
 \code{\link{petab_mergeParameters}()},

@@ -26,7 +26,7 @@ Merge parameter values from one petab into another petab
 \seealso{
 Other Parameter wrangling: 
 \code{\link{getEXgrid}()},
-\code{\link{petab_getParameterFormulas}()},
+\code{\link{petab_getParameterFormulaList}()},
 \code{\link{petab_getPars_estScale}()},
 \code{\link{petab_getPars_linScale}()},
 \code{\link{petab_parameters_mergeParameters}()},

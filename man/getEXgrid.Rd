@@ -19,7 +19,7 @@ Get condition specific parameters
 }
 \seealso{
 Other Parameter wrangling: 
-\code{\link{petab_getParameterFormulas}()},
+\code{\link{petab_getParameterFormulaList}()},
 \code{\link{petab_getPars_estScale}()},
 \code{\link{petab_getPars_linScale}()},
 \code{\link{petab_mergeParameters}()},

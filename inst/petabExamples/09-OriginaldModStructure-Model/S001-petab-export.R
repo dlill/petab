@@ -74,6 +74,15 @@ pe <- petab_dModmodel2PE(ODEmodel=reactions,
                          eventList=eventlist
                          )
               
+ODEmodel=reactions
+obsFun=observables
+errormodel=errors
+data=pred
+bestfit=pouter
+trafo=trafo
+estGrid=est.grid
+fixedGrid=fixed.grid
+eventList=eventlist
 
 filename <- "petab"
 writePetab(pe, filename)
