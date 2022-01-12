@@ -365,7 +365,7 @@ sbml_addOneCompartment <- function(model, compName, compSize) {
 #' @family SBML export
 #'
 #' @examples
-sbml_addOneSpecies <- function(model, speciesName, compName, initialAmount) {
+sbml_addOneSpeciesNum <- function(model, speciesName, compName, initialAmount) {
   sp = Model_createSpecies(model)  
   Species_setCompartment(sp,compName)
   Species_setId(sp,speciesName)
@@ -387,11 +387,51 @@ sbml_addOneSpecies <- function(model, speciesName, compName, initialAmount) {
 #' @family SBML export
 #'
 #' @examples
-sbml_addOneParameter <- function(model, parName, parValue, parUnit) {
+sbml_addOneSpeciesSym <- function(model, speciesName, compName, initialAmount) {
+  ass = Model_createInitialAssignment(model)
+  InitialAssignment_setSymbol(ass, speciesName)
+  InitialAssignment_setMath(ass, initialAmount)
+}
+
+#' Title
+#'
+#' @param model 
+#' @param speciesName 
+#' @param compName 
+#' @param speciesInitialAmount 
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family SBML export
+#'
+#' @examples
+sbml_addOneParameterNum <- function(model, parName, parValue, parUnit) {
   parm = Model_createParameter(model)  
   Parameter_setId(parm, parName)
   Parameter_setValue(parm, parValue)
   Parameter_setUnits(parm, parUnit)
+}
+
+#' Title
+#'
+#' @param model 
+#' @param speciesName 
+#' @param compName 
+#' @param speciesInitialAmount 
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family SBML export
+#'
+#' @examples
+sbml_addOneParameterSym <- function(model, parName, parValue, parUnit) {
+  ass = Model_createInitialAssignment(model)  
+  InitialAssignment_setSymbol(ass, parName)
+  InitialAssignment_setMath(ass, parValue)
 }
 
 #' Title
@@ -760,8 +800,8 @@ sbml_exportEquationList <- function(equationList,
   # Populate with content
   for (x in unitInfoList)        do.call(sbml_addOneUnit,        c(list(model = model),x))
   for (x in compartmentInfoList) do.call(sbml_addOneCompartment, c(list(model = model),x))
-  for (x in speciesInfoNumList)  do.call(sbml_addOneSpecies,     c(list(model = model),x))
-  for (x in parInfoNumList)      do.call(sbml_addOneParameter,   c(list(model = model),x))
+  for (x in speciesInfoNumList)  do.call(sbml_addOneSpeciesNum,  c(list(model = model),x))
+  for (x in parInfoNumList)      do.call(sbml_addOneParameterNum,c(list(model = model),x))
   for (x in reactionInfoList)    do.call(sbml_addOneReaction,    c(list(model = model),x))
   if (!is.null(events))               for (x in eventInfoList)       do.call(sbml_addOneEvent,          c(list(model = model),x))
   # if (!is.null(parameterFormulaList)) for (x in speciesInfoSymList)  do.call(sbml_addOneSpeciesSym,     c(list(model = model),x))
