@@ -1,4 +1,4 @@
-conditionId	conditionName	R1R2	ligand	k1	k2
-C1	C1	0	0	-1000	-1000
-C2	C2	0	0	k1_C2	k2_C2
-C3	C3	0	0	k1_C3	k2_C3
+conditionId	conditionName	k1	k2
+C1	C1	-1000	-1000
+C2	C2	k1_C2	k2_C2
+C3	C3	k1_C3	k2_C3

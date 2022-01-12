@@ -4,21 +4,12 @@
 \alias{petab_create_parameter_df}
 \title{Original petab function didn't work}
 \usage{
-petab_create_parameter_df(
-  pe,
-  observableParameterScale = "log10",
-  lb = 1e-05,
-  ub = 1000
-)
+petab_create_parameter_df(pe, observableParameterScale = "log10")
 }
 \arguments{
 \item{pe}{petab without a parameter_df}
 
 \item{observableParameterScale}{"lin", "log" or "log10"}
-
-\item{lb}{lower bound}
-
-\item{ub}{upper bound}
 }
 \value{
 \code{\link[=petab_parameters]{petab_parameters()}} data.table

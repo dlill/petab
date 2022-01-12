@@ -6,30 +6,32 @@
 \usage{
 petab_dModmodel2PE(
   ODEmodel,
-  obs_fun,
+  obsFun,
   errormodel,
   data,
-  parameters,
+  bestfit,
   trafo,
-  est_grid,
-  fixed_grid,
-  eventlist
+  estGrid,
+  fixedGrid,
+  eventList,
+  lb = 6.14e-06,
+  ub = 162754.8
 )
 }
 \arguments{
 \item{ODEmodel}{}
 
-\item{obs_fun}{}
+\item{obsFun}{}
 
 \item{errormodel}{}
 
 \item{data}{DT with obligatory columns name, time, value, sigma, condition}
 
-\item{parameters}{}
-
 \item{trafo}{}
 
-\item{eventlist}{}
+\item{eventList}{}
+
+\item{parameters}{}
 }
 \value{
 pe: list with PEtab content that can be exported with writePetab()

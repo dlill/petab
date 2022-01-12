@@ -2,7 +2,7 @@
 % Please edit documentation in R/dModmodel2PE.R
 \name{getEXgrid}
 \alias{getEXgrid}
-\title{Get parameter formulas from dMod trafo}
+\title{Get condition specific parameters}
 \usage{
 getEXgrid(est.grid, fixed.grid)
 }
@@ -15,7 +15,7 @@ getEXgrid(est.grid, fixed.grid)
 merge of est.grid and fixed.grid
 }
 \description{
-Get parameter formulas from dMod trafo
+Get condition specific parameters
 }
 \seealso{
 Other Parameter wrangling: 

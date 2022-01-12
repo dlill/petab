@@ -64,14 +64,15 @@ try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 
 bestfit <- pouter
 pe <- petab_dModmodel2PE(ODEmodel=reactions,
-                         obs_fun=observables,
-                         errormodel = errors,
-                         data=pred,
-                         parameters=bestfit,
+                         obsFun=observables,
+                         errormodel=errors,
+                         data=pred,  
+                         bestfit=bestfit,
                          trafo=trafo,
-                         est_grid = est.grid,
-                         fixed_grid = fixed.grid,
-                         eventlist = eventlist)
+                         estGrid=est.grid,
+                         fixedGrid=fixed.grid,
+                         eventList=eventlist
+                         )
               
 
 filename <- "petab"

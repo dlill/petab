@@ -1,14 +1,14 @@
 #' Write PE from dMod objects
 #'
 #' @param ODEmodel 
-#' @param obs_fun 
+#' @param obsFun 
 #' @param errormodel 
 #' @param data DT with obligatory columns name, time, value, sigma, condition
 #' @param parameters 
 #' @param trafo 
-#' @param est_grid
-#' @param fixed_grid
-#' @param eventlist
+#' @param estGrid
+#' @param fixedGrid
+#' @param eventList
 #'
 #' @return pe: list with PEtab content that can be exported with writePetab()
 #' @export
@@ -18,14 +18,16 @@
 #' @importFrom data.table data.table
 #' @family SBML export
 petab_dModmodel2PE <- function(ODEmodel,
-                               obs_fun,
+                               obsFun,
                                errormodel,
                                data,  
-                               parameters,
+                               bestfit,
                                trafo,
-                               est_grid,
-                               fixed_grid,
-                               eventlist){
+                               estGrid,
+                               fixedGrid,
+                               eventList,
+                               lb = 6.14e-06, 
+                               ub = 162754.8){
                     
   
   cat("Writing model ...\n")
@@ -35,29 +37,29 @@ petab_dModmodel2PE <- function(ODEmodel,
   if(!is.null(ODEmodel$volumes)) ODEmodel <- eqnlist_addDefaultCompartment(ODEmodel, "cytoplasm")
   
   parInfo <- getParInfo(equationList = ODEmodel, 
-                        eventList = eventlist, 
+                        eventList = eventList, 
                         parameterFormulaList = pfi) 
   speciesInfo <- getSpeciesInfo(equationList = ODEmodel,
                                 parameterFormulaList = pfi)
   
   pe_mo <- petab_model(ODEmodel,
-                       events = eventlist, 
+                       events = eventList, 
                        parInfo = parInfo, 
                        speciesInfo = speciesInfo)
   
   
   cat("Writing conditions ...\n")
-  pe_ex <- getEXgrid(est_grid, fixed_grid)
+  pe_ex <- getEXgrid(estGrid, fixedGrid)
   
   
   cat("Writing observables ...\n")
-  obsDF <- as.data.frame(obs_fun)
-  obsDF$obs_fun <- as.character(obsDF$obs_fun)
+  obsDF <- as.data.frame(obsFun)
+  obsDF$obsFun <- as.character(obsDF$obsFun)
   formula <- NULL
   obsscale <- NULL
   obsParMatch <- NULL
-  for(i in 1:length(obsDF$obs_fun)){
-    obs <- obsDF$obs_fun[i]
+  for(i in 1:length(obsDF$obsFun)){
+    obs <- obsDF$obsFun[i]
     obs_name <- rownames(obsDF)[i]
     if(str_detect(obs, "log10\\(")){
       formula <- c(formula, gsub(" ", "", substr(obs,7,length(strsplit(obs, "")[[1]])-1)))
@@ -173,16 +175,25 @@ petab_dModmodel2PE <- function(ODEmodel,
   pe$parameters <- petab_create_parameter_df(pe)
   pe$parameters$objectivePriorType <- NA_character_
   
+  # adjust bounds
+  pe$parameters$lowerBound <- lb
+  pe$parameters$upperBound <- ub
+  
   # add bestfit
-  # scale
-  bestfitDT <- data.table(parameterId = names(bestfit), nominalValue = bestfit)
+  pe$parameters$estimate <- 0
+  if(attr(pfi, "generalScale")=="log") bestfit <- exp(bestfit)
+  if(attr(pfi, "generalScale")=="log10") bestfit <- 10^(bestfit)
+  bestfitDT <- data.table(parameterId = names(bestfit), 
+                          parameterScale = attr(pfi, "generalScale"),
+                          nominalValue = bestfit, 
+                          estimate = 1)
   pe$parameters <- petab_parameters_mergeParameters(pe$parameters, bestfitDT)
   
   pe
 }
 
 
-#' Get parameter formulas from dMod trafo
+#' Get condition specific parameters
 #'
 #' @param est.grid as output by dMod::getParGrids()[[1]]
 #' @param fixed.grid as output by dMod::getParGrids()[[2]]
@@ -193,7 +204,7 @@ petab_dModmodel2PE <- function(ODEmodel,
 #' @md
 #' @family Parameter wrangling
 #'
-#' @importFrom data.table data.table
+#' @importFrom data.table data.table 
 getEXgrid <- function(est.grid, fixed.grid){
   
   est.grid <- as.data.table(est.grid)
@@ -284,8 +295,11 @@ petab_getParameterFormulas <- function(trafo){
     trafoDF$scale[i] <- par_scale
   }
   trafoDF <- as.data.table(trafoDF)
+  gscale <- setdiff(unique(trafoDF$scale), "lin")[1]
   trafoDF <- trafoDF[, list(parameterId = name, parameterFormula = trafo, trafoType = scale)]
   trafoDF <- trafoDF[parameterId!=parameterFormula]
+  attr(trafoDF, "generalScale") <- gscale
+  trafoDF
 }
 
 

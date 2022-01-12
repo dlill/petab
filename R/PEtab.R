@@ -6,8 +6,6 @@
 #'
 #' @param pe petab without a parameter_df
 #' @param observableParameterScale "lin", "log" or "log10"
-#' @param lb lower bound
-#' @param ub upper bound
 #'
 #' @return [petab_parameters()] data.table
 #' @export
@@ -21,7 +19,7 @@
 #' pe <- petab_exampleRead("01", "pe")
 #' pe$parameters <- NULL
 #' petab_create_parameter_df(pe)
-petab_create_parameter_df <- function(pe, observableParameterScale = "log10", lb = 1e-05, ub = 1000) {
+petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
   
   model                 <- pe$model
   measurementData       <- pe$measurementData
@@ -119,9 +117,7 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10", lb
         
         # Append par_tr
         par <- data.table::rbindlist(list(par, par_tr))
-        
-        # [] use pfi to adjust parameterScale, nominalValue and estimate 
-        
+
     } else {
       # parameterFormulaInjection by L1
       # Ensure parameterScale and nominalValue is set correctly for L1 parameters
