@@ -47,6 +47,6 @@ Other SBML export:
 \code{\link{sbml_validateSBML}()}
 }
 \author{
-Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+Svenja Kemmer
 }
 \concept{SBML export}

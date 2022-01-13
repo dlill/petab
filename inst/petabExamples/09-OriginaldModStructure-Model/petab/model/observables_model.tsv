@@ -1,2 +1,0 @@
-observableId	observableName	observableFormula	observableTransformation	noiseFormula	noiseDistribution
-pERK_obs	pERK_obs	observableParameter1_pERK_obs*pERK+observableParameter2_pERK_obs	log10	noiseParameter1_pERK_obs	normal

@@ -9,8 +9,8 @@ sbml_exportEquationList(
   filename,
   modelname = "Model",
   unitInfo = getUnitInfo(),
-  speciesInfo = getSpeciesInfo(equationList, parameterFormulaList),
-  parInfo = getParInfo(equationList, eventList = events, parameterFormulaList),
+  speciesInfo = getSpeciesInfo(equationList),
+  parInfo = getParInfo(equationList, eventList = events),
   compartmentInfo = getCompartmentInfo(equationList),
   events = NULL,
   parameterFormulaList = NULL

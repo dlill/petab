@@ -73,6 +73,31 @@
       <parameter id="k3" value="0.55" units="identity"/>
       <parameter id="k5" value="1" units="identity"/>
     </listOfParameters>
+    <listOfInitialAssignments>
+      <initialAssignment symbol="pERK">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <divide/>
+            <apply>
+              <times/>
+              <ci> ERK </ci>
+              <ci> k5 </ci>
+              <ci> k_ratio </ci>
+            </apply>
+            <ci> k5 </ci>
+          </apply>
+        </math>
+      </initialAssignment>
+      <initialAssignment symbol="k4">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <times/>
+            <ci> k5 </ci>
+            <ci> k_ratio </ci>
+          </apply>
+        </math>
+      </initialAssignment>
+    </listOfInitialAssignments>
     <listOfReactions>
       <reaction reversible="false">
         <listOfReactants>
