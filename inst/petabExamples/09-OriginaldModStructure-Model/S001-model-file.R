@@ -8,7 +8,6 @@ try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 .currentWD <- getwd()
 .combiledFolder <- "Compiled_Objects"
 
-source("cf_normIndiv.R")
 # -------------------------------------------------------------------------#
 # Create enzyme kinetics model and data ----
 # -------------------------------------------------------------------------#
@@ -107,7 +106,7 @@ plotData(mydata)+geom_line()
 condition.grid <- attr(mydata, "condition.grid")
 
 # .. 8 trafo -----
-innerpars <- c(unique(c(getParameters(reactions), getSymbols(observables), getSymbols(errors))))
+innerpars <- setdiff(c(unique(c(getParameters(reactions), getSymbols(observables), getSymbols(errors)))), getCompartmentInfo(reactions)$compName)
 trafo <- define(NULL, "x~y", x = innerpars, y = innerpars) %>% 
   insert("x~0", x = c("ligand")) %>% 
   insert("x~1", x = "cytoplasm") %>% 

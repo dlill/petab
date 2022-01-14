@@ -24,7 +24,10 @@ eqnlist_addDefaultCompartment <- function(equationList, compName) {
 
 #' Extract parInfo data.table from equationlist
 #'
-#' @param el equationList
+#' @param equationList
+#' @param eventList
+#' @param parameterFormulaList
+#' @param unit
 #'
 #' @return data.table(parName,parValue,parUnit)
 #' @export
@@ -37,7 +40,7 @@ eqnlist_addDefaultCompartment <- function(equationList, compName) {
 #' library(dMod)
 #' example(eqnlist)
 #' getParInfo(f)
-getParInfo <- function(equationList, eventList = NULL, unit = "per_second") {
+getParInfo <- function(equationList, eventList = NULL, parameterFormulaList = NULL, unit = "identity") {
   parName <- setdiff(getParameters(equationList), c(equationList$states, equationList$volumes))
   parInfo <- data.table::data.table(parName = parName)
   parInfo[,`:=`(parValue = seq(0.1,1,length.out = .N))]
@@ -52,14 +55,28 @@ getParInfo <- function(equationList, eventList = NULL, unit = "per_second") {
     parInfo <- rbindlist(list(parInfo, parInfoEv), use.names = TRUE)
   }
   
-  parInfo
+  if (!is.null(parameterFormulaList)){
+    
+    # include info from parameterFormulaList
+    parInfo[, parValue := as.character(parValue)]
+    for (d in parameterFormulaList$parameterId){ parInfo[parName == d, parValue := parameterFormulaList[parameterId == d]$parameterFormula] }
+    
+    # split in sym and num
+    parInfo[, type := if_else(suppressWarnings(is.na(as.numeric(parValue))), "sym", "num")]
+    out <- list(num = parInfo[type == "num"][,-4], sym = parInfo[type == "sym"][,-4])
+    
+  } else out <- list(num = parInfo, sym = NULL)
+
+  out$num$parValue <- as.numeric(out$num$parValue)
+  out
 }
 
 
 
 #' Extract speciesInfo data.table from equationlist
 #'
-#' @param el equationList
+#' @param equationList
+#' @param parameterFormulaList
 #'
 #' @return data.table(speciesName, compName, initialAmount)
 #' @export
@@ -71,11 +88,26 @@ getParInfo <- function(equationList, eventList = NULL, unit = "per_second") {
 #' library(dMod)
 #' example(eqnlist)
 #' getSpeciesInfo(f)
-getSpeciesInfo <- function(equationList){
-  data.table(speciesName = equationList$states,
-             compName = ifelse(!is.null(equationList$volumes),
-                               equationList$volumes, "cytoplasm"),
-             initialAmount = 1)
+getSpeciesInfo <- function(equationList = NULL, parameterFormulaList = NULL){
+  sInfo <- data.table(speciesName = equationList$states,
+                      compName = ifelse(!is.null(equationList$volumes),
+                                        equationList$volumes, "cytoplasm"),
+                      initialAmount = 1)
+  
+  if (!is.null(parameterFormulaList)){
+    
+    # include info from parameterFormulaList
+    sInfo[, initialAmount := as.character(initialAmount)]
+    for (d in parameterFormulaList$parameterId){ sInfo[speciesName == d, initialAmount := parameterFormulaList[parameterId == d]$parameterFormula] }
+    
+    # split in sym and num
+    sInfo[, type := if_else(suppressWarnings(is.na(as.numeric(initialAmount))), "sym", "num")]
+    out <- list(num = sInfo[type == "num"][,-4], sym = sInfo[type == "sym"][,-4])
+    
+  } else out <- list(num = sInfo, sym = NULL)
+  
+  out$num$initialAmount <- as.numeric(out$num$initialAmount)
+  out
 }
 
 #' get compartmentInfo
@@ -333,7 +365,7 @@ sbml_addOneCompartment <- function(model, compName, compSize) {
 #' @family SBML export
 #'
 #' @examples
-sbml_addOneSpecies <- function(model, speciesName, compName, initialAmount) {
+sbml_addOneSpeciesNum <- function(model, speciesName, compName, initialAmount) {
   sp = Model_createSpecies(model)  
   Species_setCompartment(sp,compName)
   Species_setId(sp,speciesName)
@@ -350,16 +382,61 @@ sbml_addOneSpecies <- function(model, speciesName, compName, initialAmount) {
 #'
 #' @return
 #' @export
+#' @author Svenja Kemmer
+#' @md
+#' @family SBML export
+#'
+#' @examples
+sbml_addOneSpeciesSym <- function(model, speciesName, compName, initialAmount) {
+  rule = Model_createInitialAssignment(model)  
+  InitialAssignment_setSymbol(rule, speciesName)
+  InitialAssignment_setMath(rule, parseL3Formula(initialAmount))
+}
+
+#' Title
+#'
+#' @param model 
+#' @param speciesName 
+#' @param compName 
+#' @param speciesInitialAmount 
+#'
+#' @return
+#' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family SBML export
 #'
 #' @examples
-sbml_addOneParameter <- function(model, parName, parValue, parUnit) {
+sbml_addOneParameterNum <- function(model, parName, parValue, parUnit) {
   parm = Model_createParameter(model)  
   Parameter_setId(parm, parName)
   Parameter_setValue(parm, parValue)
   Parameter_setUnits(parm, parUnit)
+}
+
+#' Title
+#'
+#' @param model 
+#' @param speciesName 
+#' @param compName 
+#' @param speciesInitialAmount 
+#'
+#' @return
+#' @export
+#' @author Svenja Kemmer
+#' @md
+#' @family SBML export
+#'
+#' @examples
+sbml_addOneParameterSym <- function(model, parName, parValue, parUnit) {
+  rule = Model_createInitialAssignment(model)  
+  InitialAssignment_setSymbol(rule, parName)
+  InitialAssignment_setMath(rule, parseL3Formula(parValue))
+  
+  # for Assignment rules use:
+  # rule = Model_createAssignmentRule(model)  
+  # Rule_setVariable(rule, parName)
+  # Rule_setFormula(rule, parValue)
 }
 
 #' Title
@@ -702,20 +779,24 @@ sbml_exportEquationList <- function(equationList,
                                     speciesInfo     = getSpeciesInfo(equationList),
                                     parInfo         = getParInfo(equationList, eventList = events),
                                     compartmentInfo = getCompartmentInfo(equationList),
-                                    events = NULL) {
+                                    events = NULL,
+                                    parameterFormulaList = NULL) {
   
   # Load libSBML
   library(libSBML)
   
   # Collect arguments
-  reactionInfo <- getReactionInfo(equationList,parInfo = parInfo)
+  reactionInfo <- getReactionInfo(equationList,parInfo = parInfo$num)
   if (!is.null(events)) eventInfo <- getEventInfo(events)
   unitInfoList        <- purrr::transpose(unitInfo)
-  speciesInfoList     <- purrr::transpose(speciesInfo)
-  parInfoList         <- purrr::transpose(parInfo)
+  speciesInfoNumList  <- purrr::transpose(speciesInfo$num)
+  parInfoNumList      <- purrr::transpose(parInfo$num)
   compartmentInfoList <- purrr::transpose(compartmentInfo)
   reactionInfoList    <- purrr::transpose(reactionInfo)
-  if (!is.null(events)) eventInfoList    <- purrr::transpose(eventInfo)
+  if (!is.null(events)) eventInfoList                     <- purrr::transpose(eventInfo)
+  if (!is.null(parameterFormulaList)) parInfoSymList      <- purrr::transpose(getParInfo(equationList, eventList = events, parameterFormulaList)$sym)
+  if (!is.null(parameterFormulaList)) speciesInfoSymList  <- purrr::transpose(getSpeciesInfo(equationList, parameterFormulaList)$sym)
+           
   
   # Start SBML document
   sbmlDoc = SBMLDocument(level = 2, version = 4) 
@@ -724,10 +805,12 @@ sbml_exportEquationList <- function(equationList,
   # Populate with content
   for (x in unitInfoList)        do.call(sbml_addOneUnit,        c(list(model = model),x))
   for (x in compartmentInfoList) do.call(sbml_addOneCompartment, c(list(model = model),x))
-  for (x in speciesInfoList)     do.call(sbml_addOneSpecies,     c(list(model = model),x))
-  for (x in parInfoList)         do.call(sbml_addOneParameter,   c(list(model = model),x))
+  for (x in speciesInfoNumList)  do.call(sbml_addOneSpeciesNum,  c(list(model = model),x))
+  for (x in parInfoNumList)      do.call(sbml_addOneParameterNum,c(list(model = model),x))
   for (x in reactionInfoList)    do.call(sbml_addOneReaction,    c(list(model = model),x))
-  if (!is.null(events)) for (x in eventInfoList)       do.call(sbml_addOneEvent,       c(list(model = model),x))
+  if (!is.null(events))               for (x in eventInfoList)       do.call(sbml_addOneEvent,          c(list(model = model),x))
+  if (!is.null(parameterFormulaList)) for (x in speciesInfoSymList)  do.call(sbml_addOneSpeciesSym,     c(list(model = model),x))
+  if (!is.null(parameterFormulaList)) for (x in parInfoSymList)      do.call(sbml_addOneParameterSym,   c(list(model = model),x))
   
   # Promote parameters to global parameters - this is an sbml thingy
   props = ConversionProperties();

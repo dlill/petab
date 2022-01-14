@@ -23,13 +23,16 @@ parsLin <- parsLin[sample(1:length(parsLin), 5)] + rnorm(5)
 }
 \seealso{
 Other Parameter wrangling: 
+\code{\link{getEXgrid}()},
+\code{\link{petab_getParameterFormulaList}()},
 \code{\link{petab_getPars_estScale}()},
 \code{\link{petab_getPars_linScale}()},
 \code{\link{petab_mergeParameters}()},
 \code{\link{petab_parameters_mergeParameters}()},
 \code{\link{petab_setPars_estScale}()},
 \code{\link{petab_transformPars_est2Lin}()},
-\code{\link{petab_transformPars_lin2Est}()}
+\code{\link{petab_transformPars_lin2Est}()},
+\code{\link{strsplit2}()}
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)

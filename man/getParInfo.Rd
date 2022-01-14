@@ -4,10 +4,15 @@
 \alias{getParInfo}
 \title{Extract parInfo data.table from equationlist}
 \usage{
-getParInfo(equationList, eventList = NULL)
+getParInfo(
+  equationList,
+  eventList = NULL,
+  parameterFormulaList = NULL,
+  unit = "identity"
+)
 }
 \arguments{
-\item{el}{equationList}
+\item{unit}{}
 }
 \value{
 data.table(parName,parValue,parUnit)
@@ -27,11 +32,14 @@ Other SBML export:
 \code{\link{getReactionInfo}()},
 \code{\link{getSpeciesInfo}()},
 \code{\link{getUnitInfo}()},
+\code{\link{petab_dModmodel2PE}()},
 \code{\link{sbml_addOneCompartment}()},
 \code{\link{sbml_addOneEvent}()},
-\code{\link{sbml_addOneParameter}()},
+\code{\link{sbml_addOneParameterNum}()},
+\code{\link{sbml_addOneParameterSym}()},
 \code{\link{sbml_addOneReaction}()},
-\code{\link{sbml_addOneSpecies}()},
+\code{\link{sbml_addOneSpeciesNum}()},
+\code{\link{sbml_addOneSpeciesSym}()},
 \code{\link{sbml_addOneUnit}()},
 \code{\link{sbml_exportEquationList}()},
 \code{\link{sbml_initialize}()},

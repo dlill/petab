@@ -12,7 +12,8 @@ sbml_exportEquationList(
   speciesInfo = getSpeciesInfo(equationList),
   parInfo = getParInfo(equationList, eventList = events),
   compartmentInfo = getCompartmentInfo(equationList),
-  events = NULL
+  events = NULL,
+  parameterFormulaList = NULL
 )
 }
 \arguments{
@@ -81,11 +82,14 @@ Other SBML export:
 \code{\link{getReactionInfo}()},
 \code{\link{getSpeciesInfo}()},
 \code{\link{getUnitInfo}()},
+\code{\link{petab_dModmodel2PE}()},
 \code{\link{sbml_addOneCompartment}()},
 \code{\link{sbml_addOneEvent}()},
-\code{\link{sbml_addOneParameter}()},
+\code{\link{sbml_addOneParameterNum}()},
+\code{\link{sbml_addOneParameterSym}()},
 \code{\link{sbml_addOneReaction}()},
-\code{\link{sbml_addOneSpecies}()},
+\code{\link{sbml_addOneSpeciesNum}()},
+\code{\link{sbml_addOneSpeciesSym}()},
 \code{\link{sbml_addOneUnit}()},
 \code{\link{sbml_initialize}()},
 \code{\link{sbml_kineticLawAddParameters}()},

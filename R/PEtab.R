@@ -24,9 +24,11 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
   model                 <- pe$model
   measurementData       <- pe$measurementData
   experimentalCondition <- pe$experimentalCondition
-  
+  pfi                   <- pe$meta$parameterFormulaInjection
+
   # Species
   speciesInfo <- model$speciesInfo
+  if (is.list(speciesInfo)) speciesInfo <- speciesInfo$num
   par_sp <- petab_parameters(parameterId =   speciesInfo$speciesName,
                              parameterName = speciesInfo$speciesName,
                              nominalValue =  speciesInfo$initialAmount,
@@ -35,6 +37,7 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
   )
   # Kinetic parameters in ODEs
   parInfo <- model$parInfo
+  if (is.list(parInfo)) parInfo <- parInfo$num
   par_pa <- petab_parameters(parameterId =   parInfo$parName,
                              parameterName = parInfo$parName,
                              nominalValue =  parInfo$parValue)
@@ -48,7 +51,7 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
                                parameterScale = "lin") # up to debate
     par_pa <- data.table::rbindlist(list(par_pa, par_ev))
   }
-  
+
   # Observable parameters
   par_ob <- NULL
   if (length(cOde::getSymbols(measurementData$observableParameters)))
@@ -93,39 +96,58 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
     par <- data.table::rbindlist(list(par, par_ec))
   }
   
-  pfi <- pe$meta$parameterFormulaInjection
   if (!is.null(pfi)) {
-    
-    # parameterFormulaInjection by L1
-    # Ensure parameterScale and nominalValue is set correctly for L1 parameters
-    pfi_L1 <- pfi[trafoType == "L1"]
-    if (nrow(pfi_L1)) {
-      for (px in pfi_L1$parameterId) {
-        # Set scale of L1 parameters
-        pxscale <- par[parameterId == px, parameterScale]
-        if (!length(pxscale)) pxscale <- par[parameterId == paste0("L1Ref_", px), parameterScale] # Might be that a parameter was already renamed
-        if (!length(pxscale)) warning(px, " has no associated scale")
-        par[grepl(paste0("L1_", px), parameterId),`:=`(parameterScale = pxscale)] # why grepl? fragile...
-        par[grepl(paste0("L1_", px), parameterId) & parameterScale != "lin",`:=`(nominalValue = 1)]
-        par[grepl(paste0("L1_", px), parameterId) & parameterScale == "lin",`:=`(nominalValue = 0)]
-        par[grepl(paste0("L1_", px), parameterId),`:=`(objectivePriorType = "parameterScaleNormal")] # [ ] Should be parameterScaleLaplace
-        par[grepl(paste0("L1_", px), parameterId),`:=`(objectivePriorParameters = "0;10")] 
-        # Update names of inner parameters to L1Ref_par, so their names are set correctly in parameters
-        par[parameterId==px,`:=`(parameterId = paste0("L1Ref_", parameterId))]
-      }}
-    
-    parnamesPFI <- setdiff(cOde::getSymbols(pfi$parameterFormula), c(par$parameterId, names(pe$experimentalCondition)))
-    if (length(parnamesPFI)){
-      warning("The following parameters appear in a parameterFormulaInjection but are otherwise unset: ", paste0(parnamesPFI, collapse = ","))
-      par_pfi <- petab_parameters(parameterId = parnamesPFI)
-      par <- rbindlist(list(par, par_pfi))
+    if (all(pfi$trafoType %in% c("log", "log10", "lin"))){
+      
+      # Kinetic parameters defined in Trafo
+        trafo_pars <- setdiff(cOde::getSymbols(pfi$parameterFormula), par$parameterId)
+        par_scales <- NULL
+        for (p in trafo_pars){
+          par_scale <- unique(pfi[parameterFormula %in% grep(p, pfi$parameterFormula, value = T)]$trafoType)
+          if (length(par_scale) > 1) stop(paste0("Scale of ", p, " is not uniquely defined."))
+          par_scales <- c(par_scales, par_scale)
+        }
+        
+        par_tr <- petab_parameters(parameterId = trafo_pars,
+                                   parameterName = trafo_pars,
+                                   nominalValue =  1,
+                                   estimate = 1,
+                                   parameterScale = par_scales
+        )
+        
+        # Append par_tr
+        par <- data.table::rbindlist(list(par, par_tr))
+
+    } else {
+      # parameterFormulaInjection by L1
+      # Ensure parameterScale and nominalValue is set correctly for L1 parameters
+      pfi_L1 <- pfi[trafoType == "L1"]
+      if (nrow(pfi_L1)) {
+        for (px in pfi_L1$parameterId) {
+          # Set scale of L1 parameters
+          pxscale <- par[parameterId == px, parameterScale]
+          if (!length(pxscale)) pxscale <- par[parameterId == paste0("L1Ref_", px), parameterScale] # Might be that a parameter was already renamed
+          if (!length(pxscale)) warning(px, " has no associated scale")
+          par[grepl(paste0("L1_", px), parameterId),`:=`(parameterScale = pxscale)] # why grepl? fragile...
+          par[grepl(paste0("L1_", px), parameterId) & parameterScale != "lin",`:=`(nominalValue = 1)]
+          par[grepl(paste0("L1_", px), parameterId) & parameterScale == "lin",`:=`(nominalValue = 0)]
+          par[grepl(paste0("L1_", px), parameterId),`:=`(objectivePriorType = "parameterScaleNormal")] # [ ] Should be parameterScaleLaplace
+          par[grepl(paste0("L1_", px), parameterId),`:=`(objectivePriorParameters = "0;10")] 
+          # Update names of inner parameters to L1Ref_par, so their names are set correctly in parameters
+          par[parameterId==px,`:=`(parameterId = paste0("L1Ref_", parameterId))]
+        }}
+      
+      parnamesPFI <- setdiff(cOde::getSymbols(pfi$parameterFormula), c(par$parameterId, names(pe$experimentalCondition)))
+      if (length(parnamesPFI)){
+        warning("The following parameters appear in a parameterFormulaInjection but are otherwise unset: ", paste0(parnamesPFI, collapse = ","))
+        par_pfi <- petab_parameters(parameterId = parnamesPFI)
+        par <- rbindlist(list(par, par_pfi))
+      }
+      
+      # Remove inner parameters which are set by injection from the petab_parameters
+      par <- par[!parameterId %in% pfi$parameterId]
     }
-    
-    # Remove inner parameters which are set by injection from the petab_parameters
-    par <- par[!parameterId %in% pfi$parameterId]
-    
   }
-  
   par
 }
 
