@@ -28,11 +28,11 @@ petab_dModmodel2PE <- function(ODEmodel,
                                eventList,
                                lb = 6.14e-06, 
                                ub = 162754.8){
-                    
+  
   
   cat("Writing model ...\n")
   pfl <- petab_getParameterFormulaList(trafo)
-
+  
   # Create pe_mo
   if(is.null(ODEmodel$volumes)) ODEmodel <- eqnlist_addDefaultCompartment(ODEmodel, "cytoplasm")
   
@@ -96,7 +96,7 @@ petab_dModmodel2PE <- function(ODEmodel,
                              observableName = rownames(obsDF), 
                              observableFormula = formula, 
                              observableTransformation = obsscale)
-                      
+  
   #[] adjust for multiple noise parameters
   pe_ob[,`:=`(noiseFormula = paste0("noiseParameter1_", observableId),
               noiseDistribution = "normal")]
@@ -116,11 +116,11 @@ petab_dModmodel2PE <- function(ODEmodel,
                                  replicateId = 1, #[] could be adjusted
                                  preequilibrationConditionId = NA_character_,
                                  datapointId = 1:nrow(data)
-                      
+                                 
   )
   # add observable parameters
   pe_me[obsParMatch, observableParameters := i.observableParameters, on = .(observableId)]
-  # replace condition specific obspars
+  # replace condition specific obspars in pe_ex
   obspars <- getSymbols(obsParMatch$observableParameters)
   selpars <- c("conditionId", obspars)
   for(c in unique(pe_me$simulationConditionId)) {
@@ -153,7 +153,7 @@ petab_dModmodel2PE <- function(ODEmodel,
       pe_ex[, names(mycol) := NULL]
     }
   }
-
+  
   
   # adjust datasetId according to scale and offset
   count <- 1
@@ -161,7 +161,7 @@ petab_dModmodel2PE <- function(ODEmodel,
     pe_me[observableParameters == d, datasetId := paste0("dataset", count)]
     count <- count + 1
   }
-
+  
   
   cat("Initialize PE ...\n")
   pe <- petab(model = pe_mo,
@@ -213,17 +213,21 @@ getEXgrid <- function(est.grid, fixed.grid){
   
   shared_columns <- intersect(names(est.grid), names(fixed.grid))
   shared_pars <- setdiff(shared_columns, c("ID", "condition"))
-  mixed.grid <- rbind(est.grid[complete.cases(est.grid),..shared_columns],
-                      fixed.grid[complete.cases(fixed.grid),..shared_columns])
-  mixed.grid <- mixed.grid[order(ID)]
-  pe_ex <- merge(est.grid[,!..shared_pars], fixed.grid[,!..shared_pars], by = c("ID", "condition"))
-  pe_ex <- merge(pe_ex, mixed.grid, by = c("ID", "condition"))
   
-  # pe_ex[,ID:= paste0("condition", ID)]
-  pe_ex[,ID:= condition]
-  setnames(pe_ex, c("ID", "condition"), c("conditionId", "conditionName"))
+  # merge shared columns
+  mixed.grid <- NULL
+  for(c in unique(est.grid$condition, fixed.grid$condition)){
+    sub_fixed <-  fixed.grid[condition == c, fixed.grid[condition == c, !is.na(.SD)], with=FALSE]
+    sub_est <-  est.grid[condition == c, est.grid[condition == c, !is.na(.SD)], with=FALSE]
+    sub_merge <- merge(sub_fixed, sub_est, by = c("ID", "condition"))
+    
+    mixed.grid <- rbind(mixed.grid, sub_merge)
+  }
   
-  pe_ex
+  mixed.grid[,ID:= condition]
+  setnames(mixed.grid, c("ID", "condition"), c("conditionId", "conditionName"))
+  
+  mixed.grid
 }
 
 #' Get parameter formulas from dMod trafo
@@ -238,7 +242,7 @@ getEXgrid <- function(est.grid, fixed.grid){
 #'
 #' @importFrom data.table data.table
 petab_getParameterFormulaList <- function(trafo){
-
+  
   trafoDF <- as.data.frame(trafo)
   trafoDF$trafo <- as.character(trafoDF$trafo)
   trafoDF$name <- NA
@@ -256,7 +260,7 @@ petab_getParameterFormulaList <- function(trafo){
       par_value_spl <- unlist(strsplit2(par_value_spl, "\\)", type = "after"))
       par_value <- NULL
       for(el in par_value_spl){
-          if (str_detect(el, "exp\\(")){
+        if (str_detect(el, "exp\\(")){
           el <- gsub("exp\\(", "", el)
           el <- gsub("\\)", "", el)
           par_value <- paste0(par_value, el)
@@ -271,7 +275,7 @@ petab_getParameterFormulaList <- function(trafo){
       par_value_spl <- unlist(strsplit2(par_value_spl, "\\)", type = "after"))
       par_value <- NULL
       for(el in par_value_spl){
-          if (str_detect(el, "10\\^\\(")){
+        if (str_detect(el, "10\\^\\(")){
           el <- gsub("10\\^\\(", "", el)
           el <- gsub("\\)", "", el)
           par_value <- paste0(par_value, el)
@@ -289,7 +293,7 @@ petab_getParameterFormulaList <- function(trafo){
   gscale <- setdiff(unique(trafoDF$scale), "lin")[1]
   trafoDF <- trafoDF[, list(parameterId = name, parameterFormula = trafo)]
   trafoDF <- trafoDF[parameterId!=parameterFormula]
-
+  
   attr(trafoDF, "generalScale") <- gscale
   trafoDF
 }
@@ -309,10 +313,10 @@ petab_getParameterFormulaList <- function(trafo){
 #' @family Parameter wrangling
 #'
 strsplit2 <- function(x,
-                     split,
-                     type = "remove",
-                     perl = FALSE,
-                     ...) {
+                      split,
+                      type = "remove",
+                      perl = FALSE,
+                      ...) {
   if (type == "remove") {
     # use base::strsplit
     out <- base::strsplit(x = x, split = split, perl = perl, ...)
