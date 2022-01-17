@@ -803,7 +803,8 @@ pd_mstrust <- function(pd, NFLAGsavePd = T, iterlim = 1000, nfits = 5, id) {
 #' @export
 #'
 #' @examples
-pd_profile <- function(pd, .outputFolder, FLAGfixParsOnBoundary = FALSE, 
+pd_profile <- function(pd, .outputFolder =  dirname(pd$filenameParts$.compiledFolder), 
+                       FLAGfixParsOnBoundary = FALSE, 
                        whichPar = pd_profile_getParsNotYetProfiled(pd = pd, .outputFolder = .outputFolder, FLAGreturnVector = TRUE),
                        ...) {
   if (!length(whichPar)) return(readPd(pd_rdsfile(pd)))
@@ -1141,8 +1142,8 @@ pd_cluster_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfi
                  fixed = pd$fixed,
                  method = "optimize",
                  algoControl = list(gamma = 0.5, reoptimize = TRUE, correction = 0.5),
-                 stepControl = list(limit = 100, min = log10(1.005), stepsize = log10(1.005)),
-                 optControl = list(iterlim = 20),
+                 stepControl = list(limit = 300, min = log10(1.005), stepsize = log10(1.005), max = 0.05),
+                 optControl = list(iterlim = 50),
                  cautiousMode = TRUE,
                  cores = 16,
                  path = file.path("~", paste0(jobnm, "_folder")))
@@ -1815,7 +1816,7 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
                                parf = NULL,
                                NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2, strict_cutTimes = 3,keepInternal_cutTimes = 3)["strict_cutTimes"],
                                FLAGsummarizeProfilePredictions = TRUE,
-                               FLAGmeanLine = FALSE,
+                               FLAGmeanLine = FALSE, caption = paste0(pd$filenameParts$modelname),
                                nrow = 4, ncol = 5,
                                aeslist = petab_plotHelpers_aeslist(),
                                ggCallback = list(),
@@ -1897,6 +1898,7 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
   
   # .. Plot -----
   pl <- conveniencefunctions::cfggplot()
+  if (length(caption)) pl <- pl + labs(caption = caption)
   if (FLAGmeanLine) { # Add first so the lines don't mask the points
     dmean <- petab_plotHelpers_meanMeasurementsValue(dplot, aeslist)
     aesmeanlist <- list(linetype = ~conditionId, group = ~conditionId)
