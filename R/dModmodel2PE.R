@@ -86,7 +86,7 @@ petab_dModmodel2PE <- function(ODEmodel,
     } else if (str_detect(obs, "offset")){
       formula <- gsub(obsPar2, paste0("observableParameter1_", obs_name), formula)
       obsStr <- obsPar2
-    }
+    } else obsStr <- NA
     
     # create match table for observable parameters
     obsParMatch <- rbind(obsParMatch, data.table(observableId = obs_name, observableParameters = obsStr))
@@ -105,6 +105,7 @@ petab_dModmodel2PE <- function(ODEmodel,
   
   
   cat("Writing measurements ...\n")
+  if(!is.data.frame(data)) data <- as.data.table(as.data.frame(data))
   pe_me <- petab_measurementData(observableId = data$name,
                                  simulationConditionId = data$condition,
                                  measurement = data$value,

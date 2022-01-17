@@ -8,7 +8,9 @@ sbml_addOneUnit(
   model,
   unitName = "litre_per_mole_per_second",
   unitKind = c("UNIT_KIND_LITRE", "UNIT_KIND_MOLE", "UNIT_KIND_SECOND"),
-  exponent = c(1, -1, -1)
+  exponent = c(1, -1, -1),
+  scale = NULL,
+  multiplier = NULL
 )
 }
 \arguments{
@@ -33,6 +35,7 @@ Other SBML export:
 \code{\link{getParInfo}()},
 \code{\link{getReactionInfo}()},
 \code{\link{getSpeciesInfo}()},
+\code{\link{getUnitInfoSimple}()},
 \code{\link{getUnitInfo}()},
 \code{\link{petab_dModmodel2PE}()},
 \code{\link{sbml_addOneCompartment}()},

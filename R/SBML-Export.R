@@ -254,6 +254,37 @@ getUnitInfo <- function(unitName = NULL, unitKind = NULL, exponent = NULL) {
   unitInfo
 }
 
+#' Assemble unitInfo using only time
+#' 
+#' Some default units, some others
+#' 
+#' @param unitName character vector
+#' @param unitKind list of character vectors
+#' @param exponent list of numeric vectors
+#'
+#' @return data.table(unitName, unitKind, exponent)
+#' @export
+#' @author Svenja Kemmer
+#' @md
+#' @family SBML export
+#'
+#' @examples
+#' getUnitInfo()
+getUnitInfoSimple <- function(unitName = NULL, unitKind = NULL, exponent = NULL, scale = NULL, multiplier = NULL) {
+  # Default list of units
+  unitInfo <- data.table(tibble::tribble(
+    ~unitName, ~unitKind, ~exponent, ~scale, ~multiplier,
+    "time"          ,c("UNIT_KIND_SECOND")        ,c(1)        ,c(0)        ,c(60)
+  ))
+  
+  # Add custom
+  unitInfo <- rbindlist(list(
+    unitInfo,
+    data.table(unitName = unitName, unitKind = unitKind, exponent = exponent, scale = scale, multiplier = multiplier)
+  ))
+  unitInfo
+}
+
 #' Title
 #'
 #' @param eventList [dMod::eventList()]
@@ -317,13 +348,17 @@ sbml_initialize <- function(modelname = "EnzymaticReaction", sbmlDoc) {
 #' @family SBML export
 sbml_addOneUnit <- function(model, unitName = "litre_per_mole_per_second", 
                             unitKind =c("UNIT_KIND_LITRE", "UNIT_KIND_MOLE", "UNIT_KIND_SECOND"),
-                            exponent = c(1,-1,-1)) {
+                            exponent = c(1,-1,-1),
+                            scale = NULL,
+                            multiplier = NULL) {
   unitdef = Model_createUnitDefinition(model)
   UnitDefinition_setId(unitdef, unitName)
   for (i in seq_along(unitKind)){
     unit = UnitDefinition_createUnit(unitdef)
     Unit_setKind(unit, unitKind[i])
     Unit_setExponent(unit,exponent[i])
+    if(!is.null(scale)) Unit_setScale(unit, scale[i])
+    if(!is.null(multiplier)) Unit_setMultiplier(unit, multiplier[i])
   }
   invisible(model)
 }
@@ -775,7 +810,7 @@ sbml_validateSBML <- function(sbmlDoc)
 sbml_exportEquationList <- function(equationList,
                                     filename,
                                     modelname = "Model",
-                                    unitInfo        = getUnitInfo(),
+                                    unitInfo        = "original",
                                     speciesInfo     = getSpeciesInfo(equationList),
                                     parInfo         = getParInfo(equationList, eventList = events),
                                     compartmentInfo = getCompartmentInfo(equationList),
@@ -786,6 +821,10 @@ sbml_exportEquationList <- function(equationList,
   library(libSBML)
   
   # Collect arguments
+  if(unitInfo == "original"){
+    unitInfo = getUnitInfo()
+  } else if (unitInfo == "simple") unitInfo = getUnitInfoSimple()
+  
   reactionInfo <- getReactionInfo(equationList,parInfo = parInfo$num)
   if (!is.null(events)) eventInfo <- getEventInfo(events)
   unitInfoList        <- purrr::transpose(unitInfo)

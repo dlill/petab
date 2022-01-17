@@ -4,7 +4,7 @@
 \alias{writePetab}
 \title{Title}
 \usage{
-writePetab(pe, filename = "petab/model")
+writePetab(pe, filename = "petab/model", unitInfo = "original")
 }
 \arguments{
 \item{filename}{}

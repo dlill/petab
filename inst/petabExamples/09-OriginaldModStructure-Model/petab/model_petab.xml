@@ -2,58 +2,9 @@
 <sbml xmlns="http://www.sbml.org/sbml/level2/version4" level="2" version="4">
   <model id="petab">
     <listOfUnitDefinitions>
-      <unitDefinition id="per_second">
+      <unitDefinition id="time">
         <listOfUnits>
-          <unit kind="second" exponent="-1"/>
-        </listOfUnits>
-      </unitDefinition>
-      <unitDefinition id="per_mole">
-        <listOfUnits>
-          <unit kind="mole" exponent="-1"/>
-        </listOfUnits>
-      </unitDefinition>
-      <unitDefinition id="per_mole_per_second">
-        <listOfUnits>
-          <unit kind="mole" exponent="-1"/>
-          <unit kind="second" exponent="-1"/>
-        </listOfUnits>
-      </unitDefinition>
-      <unitDefinition id="litre_per_mole_per_second">
-        <listOfUnits>
-          <unit kind="litre" exponent="1"/>
-          <unit kind="mole" exponent="-1"/>
-          <unit kind="second" exponent="-1"/>
-        </listOfUnits>
-      </unitDefinition>
-      <unitDefinition id="litre2_per_mole2_per_second">
-        <listOfUnits>
-          <unit kind="litre" exponent="2"/>
-          <unit kind="mole" exponent="-2"/>
-          <unit kind="second" exponent="-1"/>
-        </listOfUnits>
-      </unitDefinition>
-      <unitDefinition id="mole_per_litre_per_second">
-        <listOfUnits>
-          <unit kind="mole" exponent="1"/>
-          <unit kind="litre" exponent="-1"/>
-          <unit kind="second" exponent="-1"/>
-        </listOfUnits>
-      </unitDefinition>
-      <unitDefinition id="mole_per_litre">
-        <listOfUnits>
-          <unit kind="mole" exponent="1"/>
-          <unit kind="litre" exponent="-1"/>
-        </listOfUnits>
-      </unitDefinition>
-      <unitDefinition id="mole_per_second">
-        <listOfUnits>
-          <unit kind="mole" exponent="1"/>
-          <unit kind="second" exponent="-1"/>
-        </listOfUnits>
-      </unitDefinition>
-      <unitDefinition id="identity">
-        <listOfUnits>
-          <unit kind="dimensionless" exponent="1"/>
+          <unit kind="second" exponent="1" scale="0" multiplier="60"/>
         </listOfUnits>
       </unitDefinition>
     </listOfUnitDefinitions>
@@ -65,12 +16,14 @@
       <species id="R2" name="R2" compartment="cytoplasm" initialAmount="1"/>
       <species id="R1R2" name="R1R2" compartment="cytoplasm" initialAmount="1"/>
       <species id="ERK" name="ERK" compartment="cytoplasm" initialAmount="1"/>
+      <species id="pERK" name="pERK" compartment="cytoplasm" initialAmount="1"/>
       <species id="ligand" name="ligand" compartment="cytoplasm" initialAmount="1"/>
     </listOfSpecies>
     <listOfParameters>
       <parameter id="k1" value="0.1" units="identity"/>
       <parameter id="k2" value="0.325" units="identity"/>
       <parameter id="k3" value="0.55" units="identity"/>
+      <parameter id="k4" value="0.775" units="identity"/>
       <parameter id="k5" value="1" units="identity"/>
     </listOfParameters>
     <listOfInitialAssignments>
