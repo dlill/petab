@@ -4,12 +4,14 @@
 \alias{getEXgrid}
 \title{Get condition specific parameters}
 \usage{
-getEXgrid(est.grid, fixed.grid)
+getEXgrid(est.grid, fixed.grid, scale)
 }
 \arguments{
 \item{est.grid}{as output by dMod::getParGrids()[\link{1}]}
 
 \item{fixed.grid}{as output by dMod::getParGrids()[\link{2}]}
+
+\item{scale}{}
 }
 \value{
 merge of est.grid and fixed.grid
@@ -19,9 +21,11 @@ Get condition specific parameters
 }
 \seealso{
 Other Parameter wrangling: 
+\code{\link{petab_getParameterFixedList}()},
 \code{\link{petab_getParameterFormulaList}()},
 \code{\link{petab_getPars_estScale}()},
 \code{\link{petab_getPars_linScale}()},
+\code{\link{petab_getTrafoInfo}()},
 \code{\link{petab_mergeParameters}()},
 \code{\link{petab_parameters_mergeParameters}()},
 \code{\link{petab_setPars_estScale}()},

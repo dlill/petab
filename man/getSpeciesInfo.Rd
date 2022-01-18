@@ -4,7 +4,11 @@
 \alias{getSpeciesInfo}
 \title{Extract speciesInfo data.table from equationlist}
 \usage{
-getSpeciesInfo(equationList = NULL, parameterFormulaList = NULL)
+getSpeciesInfo(
+  equationList = NULL,
+  parameterFormulaList = NULL,
+  parameterFixedList = NULL
+)
 }
 \arguments{
 \item{parameterFormulaList}{}

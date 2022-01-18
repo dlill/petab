@@ -4,13 +4,13 @@
 \alias{petab_getParameterFormulaList}
 \title{Get parameter formulas from dMod trafo}
 \usage{
-petab_getParameterFormulaList(trafo)
+petab_getParameterFormulaList(trafoInfo)
 }
 \arguments{
-\item{trafo}{as output by dMod::define()}
+\item{trafoInfo}{as output by petab_getTrafoInfo()}
 }
 \value{
-DT with columns parameterId, parameterFormula and trafoType
+DT with columns parameterId, parameterFormula and the attribute generalScale
 }
 \description{
 Get parameter formulas from dMod trafo
@@ -18,8 +18,10 @@ Get parameter formulas from dMod trafo
 \seealso{
 Other Parameter wrangling: 
 \code{\link{getEXgrid}()},
+\code{\link{petab_getParameterFixedList}()},
 \code{\link{petab_getPars_estScale}()},
 \code{\link{petab_getPars_linScale}()},
+\code{\link{petab_getTrafoInfo}()},
 \code{\link{petab_mergeParameters}()},
 \code{\link{petab_parameters_mergeParameters}()},
 \code{\link{petab_setPars_estScale}()},

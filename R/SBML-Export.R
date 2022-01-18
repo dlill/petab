@@ -40,7 +40,8 @@ eqnlist_addDefaultCompartment <- function(equationList, compName) {
 #' library(dMod)
 #' example(eqnlist)
 #' getParInfo(f)
-getParInfo <- function(equationList, eventList = NULL, parameterFormulaList = NULL, unit = "identity") {
+getParInfo <- function(equationList, eventList = NULL, parameterFormulaList = NULL, parameterFixedList = NULL, unit = "identity") {
+  
   parName <- setdiff(getParameters(equationList), c(equationList$states, equationList$volumes))
   parInfo <- data.table::data.table(parName = parName)
   parInfo[,`:=`(parValue = seq(0.1,1,length.out = .N))]
@@ -53,6 +54,14 @@ getParInfo <- function(equationList, eventList = NULL, parameterFormulaList = NU
       parInfoEv[,`:=`(parUnit = "mole")]
     }
     parInfo <- rbindlist(list(parInfo, parInfoEv), use.names = TRUE)
+  }
+  
+  if (!is.null(parameterFixedList)){
+    pfil <- parameterFixedList[parameterId %in% parInfo$parName]
+    parInfo <- parInfo[, list(parameterId = parName, nominalValue = as.numeric(parValue), parUnit)]
+    pfil <- pfil[, list(parameterId, nominalValue = as.numeric(parameterValue))]
+    parInfo <- petab_parameters_mergeParameters(parInfo, pfil)
+    parInfo <- parInfo[, list(parName = parameterId, parValue = nominalValue, parUnit)]
   }
   
   if (!is.null(parameterFormulaList)){
@@ -88,11 +97,20 @@ getParInfo <- function(equationList, eventList = NULL, parameterFormulaList = NU
 #' library(dMod)
 #' example(eqnlist)
 #' getSpeciesInfo(f)
-getSpeciesInfo <- function(equationList = NULL, parameterFormulaList = NULL){
+getSpeciesInfo <- function(equationList = NULL, parameterFormulaList = NULL, parameterFixedList = NULL){
+  
   sInfo <- data.table(speciesName = equationList$states,
                       compName = ifelse(!is.null(equationList$volumes),
                                         equationList$volumes, "cytoplasm"),
                       initialAmount = 1)
+  
+  if (!is.null(parameterFixedList)){
+    pfil <- parameterFixedList[parameterId %in% sInfo$speciesName]
+    sInfo <- sInfo[, list(parameterId = speciesName, compName, nominalValue = as.numeric(initialAmount))]
+    pfil <- pfil[, list(parameterId, nominalValue = as.numeric(parameterValue))]
+    sInfo <- petab_parameters_mergeParameters(sInfo, pfil)
+    sInfo <- sInfo[, list(speciesName = parameterId, compName, initialAmount = nominalValue)]
+  }
   
   if (!is.null(parameterFormulaList)){
     

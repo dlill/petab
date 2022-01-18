@@ -8,6 +8,7 @@ getParInfo(
   equationList,
   eventList = NULL,
   parameterFormulaList = NULL,
+  parameterFixedList = NULL,
   unit = "identity"
 )
 }
