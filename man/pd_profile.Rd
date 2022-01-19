@@ -6,7 +6,7 @@
 \usage{
 pd_profile(
   pd,
-  .outputFolder,
+  .outputFolder = dirname(pd$filenameParts$.compiledFolder),
   FLAGfixParsOnBoundary = FALSE,
   whichPar = pd_profile_getParsNotYetProfiled(pd = pd, .outputFolder = .outputFolder,
     FLAGreturnVector = TRUE),

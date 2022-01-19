@@ -40,7 +40,8 @@ eqnlist_addDefaultCompartment <- function(equationList, compName) {
 #' library(dMod)
 #' example(eqnlist)
 #' getParInfo(f)
-getParInfo <- function(equationList, eventList = NULL, parameterFormulaList = NULL, unit = "identity") {
+getParInfo <- function(equationList, eventList = NULL, parameterFormulaList = NULL, parameterFixedList = NULL, unit = "identity") {
+  
   parName <- setdiff(getParameters(equationList), c(equationList$states, equationList$volumes))
   parInfo <- data.table::data.table(parName = parName)
   parInfo[,`:=`(parValue = seq(0.1,1,length.out = .N))]
@@ -53,6 +54,14 @@ getParInfo <- function(equationList, eventList = NULL, parameterFormulaList = NU
       parInfoEv[,`:=`(parUnit = "mole")]
     }
     parInfo <- rbindlist(list(parInfo, parInfoEv), use.names = TRUE)
+  }
+  
+  if (!is.null(parameterFixedList)){
+    pfil <- parameterFixedList[parameterId %in% parInfo$parName]
+    parInfo <- parInfo[, list(parameterId = parName, nominalValue = as.numeric(parValue), parUnit)]
+    pfil <- pfil[, list(parameterId, nominalValue = as.numeric(parameterValue))]
+    parInfo <- petab_parameters_mergeParameters(parInfo, pfil)
+    parInfo <- parInfo[, list(parName = parameterId, parValue = nominalValue, parUnit)]
   }
   
   if (!is.null(parameterFormulaList)){
@@ -88,11 +97,20 @@ getParInfo <- function(equationList, eventList = NULL, parameterFormulaList = NU
 #' library(dMod)
 #' example(eqnlist)
 #' getSpeciesInfo(f)
-getSpeciesInfo <- function(equationList = NULL, parameterFormulaList = NULL){
+getSpeciesInfo <- function(equationList = NULL, parameterFormulaList = NULL, parameterFixedList = NULL){
+  
   sInfo <- data.table(speciesName = equationList$states,
                       compName = ifelse(!is.null(equationList$volumes),
                                         equationList$volumes, "cytoplasm"),
                       initialAmount = 1)
+  
+  if (!is.null(parameterFixedList)){
+    pfil <- parameterFixedList[parameterId %in% sInfo$speciesName]
+    sInfo <- sInfo[, list(parameterId = speciesName, compName, nominalValue = as.numeric(initialAmount))]
+    pfil <- pfil[, list(parameterId, nominalValue = as.numeric(parameterValue))]
+    sInfo <- petab_parameters_mergeParameters(sInfo, pfil)
+    sInfo <- sInfo[, list(speciesName = parameterId, compName, initialAmount = nominalValue)]
+  }
   
   if (!is.null(parameterFormulaList)){
     
@@ -254,6 +272,37 @@ getUnitInfo <- function(unitName = NULL, unitKind = NULL, exponent = NULL) {
   unitInfo
 }
 
+#' Assemble unitInfo using only time
+#' 
+#' Some default units, some others
+#' 
+#' @param unitName character vector
+#' @param unitKind list of character vectors
+#' @param exponent list of numeric vectors
+#'
+#' @return data.table(unitName, unitKind, exponent)
+#' @export
+#' @author Svenja Kemmer
+#' @md
+#' @family SBML export
+#'
+#' @examples
+#' getUnitInfo()
+getUnitInfoSimple <- function(unitName = NULL, unitKind = NULL, exponent = NULL, scale = NULL, multiplier = NULL) {
+  # Default list of units
+  unitInfo <- data.table(tibble::tribble(
+    ~unitName, ~unitKind, ~exponent, ~scale, ~multiplier,
+    "time"          ,c("UNIT_KIND_SECOND")        ,c(1)        ,c(0)        ,c(60)
+  ))
+  
+  # Add custom
+  unitInfo <- rbindlist(list(
+    unitInfo,
+    data.table(unitName = unitName, unitKind = unitKind, exponent = exponent, scale = scale, multiplier = multiplier)
+  ))
+  unitInfo
+}
+
 #' Title
 #'
 #' @param eventList [dMod::eventList()]
@@ -317,13 +366,17 @@ sbml_initialize <- function(modelname = "EnzymaticReaction", sbmlDoc) {
 #' @family SBML export
 sbml_addOneUnit <- function(model, unitName = "litre_per_mole_per_second", 
                             unitKind =c("UNIT_KIND_LITRE", "UNIT_KIND_MOLE", "UNIT_KIND_SECOND"),
-                            exponent = c(1,-1,-1)) {
+                            exponent = c(1,-1,-1),
+                            scale = NULL,
+                            multiplier = NULL) {
   unitdef = Model_createUnitDefinition(model)
   UnitDefinition_setId(unitdef, unitName)
   for (i in seq_along(unitKind)){
     unit = UnitDefinition_createUnit(unitdef)
     Unit_setKind(unit, unitKind[i])
     Unit_setExponent(unit,exponent[i])
+    if(!is.null(scale)) Unit_setScale(unit, scale[i])
+    if(!is.null(multiplier)) Unit_setMultiplier(unit, multiplier[i])
   }
   invisible(model)
 }
@@ -775,7 +828,7 @@ sbml_validateSBML <- function(sbmlDoc)
 sbml_exportEquationList <- function(equationList,
                                     filename,
                                     modelname = "Model",
-                                    unitInfo        = getUnitInfo(),
+                                    unitInfo        = "original",
                                     speciesInfo     = getSpeciesInfo(equationList),
                                     parInfo         = getParInfo(equationList, eventList = events),
                                     compartmentInfo = getCompartmentInfo(equationList),
@@ -786,6 +839,10 @@ sbml_exportEquationList <- function(equationList,
   library(libSBML)
   
   # Collect arguments
+  if(unitInfo == "original"){
+    unitInfo = getUnitInfo()
+  } else if (unitInfo == "simple") unitInfo = getUnitInfoSimple()
+  
   reactionInfo <- getReactionInfo(equationList,parInfo = parInfo$num)
   if (!is.null(events)) eventInfo <- getEventInfo(events)
   unitInfoList        <- purrr::transpose(unitInfo)

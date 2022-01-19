@@ -4,7 +4,11 @@
 \alias{getSpeciesInfo}
 \title{Extract speciesInfo data.table from equationlist}
 \usage{
-getSpeciesInfo(equationList = NULL, parameterFormulaList = NULL)
+getSpeciesInfo(
+  equationList = NULL,
+  parameterFormulaList = NULL,
+  parameterFixedList = NULL
+)
 }
 \arguments{
 \item{parameterFormulaList}{}
@@ -26,6 +30,7 @@ Other SBML export:
 \code{\link{getCompartmentInfo}()},
 \code{\link{getParInfo}()},
 \code{\link{getReactionInfo}()},
+\code{\link{getUnitInfoSimple}()},
 \code{\link{getUnitInfo}()},
 \code{\link{petab_dModmodel2PE}()},
 \code{\link{sbml_addOneCompartment}()},

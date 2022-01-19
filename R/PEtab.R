@@ -24,6 +24,7 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
   model                 <- pe$model
   measurementData       <- pe$measurementData
   experimentalCondition <- pe$experimentalCondition
+  pfl                   <- pe$model$parameterFormulaList
   pfi                   <- pe$meta$parameterFormulaInjection
 
   # Species
@@ -69,6 +70,20 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
   # Get all base-parameters
   par <- data.table::rbindlist(list(par_sp, par_pa, par_ob, par_meErr))
   
+  # Kinetic parameters defined in Trafo
+  if (!is.null(pfl)) {
+    
+    trafo_pars <- setdiff(cOde::getSymbols(pfl$parameterFormula), par$parameterId)
+    par_tr <- petab_parameters(parameterId = trafo_pars,
+                               parameterName = trafo_pars,
+                               nominalValue =  1,
+                               estimate = 1,
+                               parameterScale = attr(pfl, "generalScale")
+    )
+    
+    # Append par_tr
+    par <- data.table::rbindlist(list(par, par_tr))
+  }
   
   # Parameters from experimentalConditions
   # More complicated, need also to exclude colnames
@@ -95,59 +110,37 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
     # Append par_ec
     par <- data.table::rbindlist(list(par, par_ec))
   }
-  
-  if (!is.null(pfi)) {
-    if (all(pfi$trafoType %in% c("log", "log10", "lin"))){
-      
-      # Kinetic parameters defined in Trafo
-        trafo_pars <- setdiff(cOde::getSymbols(pfi$parameterFormula), par$parameterId)
-        par_scales <- NULL
-        for (p in trafo_pars){
-          par_scale <- unique(pfi[parameterFormula %in% grep(p, pfi$parameterFormula, value = T)]$trafoType)
-          if (length(par_scale) > 1) stop(paste0("Scale of ", p, " is not uniquely defined."))
-          par_scales <- c(par_scales, par_scale)
-        }
-        
-        par_tr <- petab_parameters(parameterId = trafo_pars,
-                                   parameterName = trafo_pars,
-                                   nominalValue =  1,
-                                   estimate = 1,
-                                   parameterScale = par_scales
-        )
-        
-        # Append par_tr
-        par <- data.table::rbindlist(list(par, par_tr))
 
-    } else {
-      # parameterFormulaInjection by L1
-      # Ensure parameterScale and nominalValue is set correctly for L1 parameters
-      pfi_L1 <- pfi[trafoType == "L1"]
-      if (nrow(pfi_L1)) {
-        for (px in pfi_L1$parameterId) {
-          # Set scale of L1 parameters
-          pxscale <- par[parameterId == px, parameterScale]
-          if (!length(pxscale)) pxscale <- par[parameterId == paste0("L1Ref_", px), parameterScale] # Might be that a parameter was already renamed
-          if (!length(pxscale)) warning(px, " has no associated scale")
-          par[grepl(paste0("L1_", px), parameterId),`:=`(parameterScale = pxscale)] # why grepl? fragile...
-          par[grepl(paste0("L1_", px), parameterId) & parameterScale != "lin",`:=`(nominalValue = 1)]
-          par[grepl(paste0("L1_", px), parameterId) & parameterScale == "lin",`:=`(nominalValue = 0)]
-          par[grepl(paste0("L1_", px), parameterId),`:=`(objectivePriorType = "parameterScaleNormal")] # [ ] Should be parameterScaleLaplace
-          par[grepl(paste0("L1_", px), parameterId),`:=`(objectivePriorParameters = "0;10")] 
-          # Update names of inner parameters to L1Ref_par, so their names are set correctly in parameters
-          par[parameterId==px,`:=`(parameterId = paste0("L1Ref_", parameterId))]
-        }}
-      
-      parnamesPFI <- setdiff(cOde::getSymbols(pfi$parameterFormula), c(par$parameterId, names(pe$experimentalCondition)))
-      if (length(parnamesPFI)){
-        warning("The following parameters appear in a parameterFormulaInjection but are otherwise unset: ", paste0(parnamesPFI, collapse = ","))
-        par_pfi <- petab_parameters(parameterId = parnamesPFI)
-        par <- rbindlist(list(par, par_pfi))
-      }
-      
-      # Remove inner parameters which are set by injection from the petab_parameters
-      par <- par[!parameterId %in% pfi$parameterId]
+  if (!is.null(pfi)) {
+    # parameterFormulaInjection by L1
+    # Ensure parameterScale and nominalValue is set correctly for L1 parameters
+    pfi_L1 <- pfi[trafoType == "L1"]
+    if (nrow(pfi_L1)) {
+      for (px in pfi_L1$parameterId) {
+        # Set scale of L1 parameters
+        pxscale <- par[parameterId == px, parameterScale]
+        if (!length(pxscale)) pxscale <- par[parameterId == paste0("L1Ref_", px), parameterScale] # Might be that a parameter was already renamed
+        if (!length(pxscale)) warning(px, " has no associated scale")
+        par[grepl(paste0("L1_", px), parameterId),`:=`(parameterScale = pxscale)] # why grepl? fragile...
+        par[grepl(paste0("L1_", px), parameterId) & parameterScale != "lin",`:=`(nominalValue = 1)]
+        par[grepl(paste0("L1_", px), parameterId) & parameterScale == "lin",`:=`(nominalValue = 0)]
+        par[grepl(paste0("L1_", px), parameterId),`:=`(objectivePriorType = "parameterScaleNormal")] # [ ] Should be parameterScaleLaplace
+        par[grepl(paste0("L1_", px), parameterId),`:=`(objectivePriorParameters = "0;10")] 
+        # Update names of inner parameters to L1Ref_par, so their names are set correctly in parameters
+        par[parameterId==px,`:=`(parameterId = paste0("L1Ref_", parameterId))]
+      }}
+    
+    parnamesPFI <- setdiff(cOde::getSymbols(pfi$parameterFormula), c(par$parameterId, names(pe$experimentalCondition)))
+    if (length(parnamesPFI)){
+      warning("The following parameters appear in a parameterFormulaInjection but are otherwise unset: ", paste0(parnamesPFI, collapse = ","))
+      par_pfi <- petab_parameters(parameterId = parnamesPFI)
+      par <- rbindlist(list(par, par_pfi))
     }
+    
+    # Remove inner parameters which are set by injection from the petab_parameters
+    par <- par[!parameterId %in% pfi$parameterId]
   }
+  
   par
 }
 
@@ -886,7 +879,12 @@ readPetab <- function(filename) {
 #' @importFrom yaml write_yaml
 #'
 #' @examples
-writePetab <- function(pe, filename = "petab/model") {
+writePetab <- function(pe, filename = "petab/model", unitInfo = "original") {
+  
+  # remove parInfo and speciesInfo from model as they are generated automatically
+  # and case trubble in sbml_exportEquationList when present
+  pe$model$parInfo <- NULL
+  pe$model$speciesInfo <- NULL
   
   # run linter
   petab_lint(pe)
@@ -933,7 +931,8 @@ writePetab <- function(pe, filename = "petab/model") {
   files_xml <- grep("xml", files, value = TRUE)
   if (length(files_xml)) {
     args <- c(pe$model, list(filename = files_xml,
-                             modelname = modelname))
+                             modelname = modelname,
+                             unitInfo = unitInfo))
     # args <- args[setdiff(names(args), "events")] # [ ] Todo: Events
     do.call(sbml_exportEquationList, args)
   }

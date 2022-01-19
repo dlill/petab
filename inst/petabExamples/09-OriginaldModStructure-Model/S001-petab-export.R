@@ -84,8 +84,19 @@ estGrid=est.grid
 fixedGrid=fixed.grid
 eventList=eventlist
 
+# sbml_exportEquationList
+equationList = args$equationList
+events = args$events
+parameterFormulaList = args$parameterFormulaList
+modelname = "Model"
+unitInfo        = getUnitInfo()
+speciesInfo     = getSpeciesInfo(equationList)
+parInfo         = getParInfo(equationList, eventList = events)
+compartmentInfo = getCompartmentInfo(equationList)
+
+
 filename <- "petab"
-writePetab(pe, filename)
+writePetab(pe, filename, unitInfo = "simple")
 unlink(list.files(".", "\\.o$|\\.so$|\\.c$"))
 
 # Exit ----

@@ -8,6 +8,7 @@ getParInfo(
   equationList,
   eventList = NULL,
   parameterFormulaList = NULL,
+  parameterFixedList = NULL,
   unit = "identity"
 )
 }
@@ -31,6 +32,7 @@ Other SBML export:
 \code{\link{getCompartmentInfo}()},
 \code{\link{getReactionInfo}()},
 \code{\link{getSpeciesInfo}()},
+\code{\link{getUnitInfoSimple}()},
 \code{\link{getUnitInfo}()},
 \code{\link{petab_dModmodel2PE}()},
 \code{\link{sbml_addOneCompartment}()},

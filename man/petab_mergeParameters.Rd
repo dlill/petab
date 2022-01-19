@@ -26,9 +26,11 @@ Merge parameter values from one petab into another petab
 \seealso{
 Other Parameter wrangling: 
 \code{\link{getEXgrid}()},
+\code{\link{petab_getParameterFixedList}()},
 \code{\link{petab_getParameterFormulaList}()},
 \code{\link{petab_getPars_estScale}()},
 \code{\link{petab_getPars_linScale}()},
+\code{\link{petab_getTrafoInfo}()},
 \code{\link{petab_parameters_mergeParameters}()},
 \code{\link{petab_setPars_estScale}()},
 \code{\link{petab_setPars_linScale}()},

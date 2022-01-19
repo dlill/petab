@@ -18,6 +18,7 @@ pd_predictAndPlot2(
     keepInternal_cutTimes = 3)["strict_cutTimes"],
   FLAGsummarizeProfilePredictions = TRUE,
   FLAGmeanLine = FALSE,
+  caption = paste0(pd$filenameParts$modelname),
   nrow = 4,
   ncol = 5,
   aeslist = petab_plotHelpers_aeslist(),

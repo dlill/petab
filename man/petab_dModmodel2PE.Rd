@@ -46,6 +46,7 @@ Other SBML export:
 \code{\link{getParInfo}()},
 \code{\link{getReactionInfo}()},
 \code{\link{getSpeciesInfo}()},
+\code{\link{getUnitInfoSimple}()},
 \code{\link{getUnitInfo}()},
 \code{\link{sbml_addOneCompartment}()},
 \code{\link{sbml_addOneEvent}()},
