@@ -1719,7 +1719,7 @@ pd_L1_getUnbiasedValues <- function(pd, ...) {
     
     # Fit unbiased
     # Calculate unbiased obj value
-    pd$obj(dMod::as.parvec(pd$result$L1,i), fixed = pd$fixed, deriv = FALSE)
+    pd$obj(dMod::as.parvec(pd$result$L1[i]), fixed = pd$fixed, deriv = FALSE)
   })
   pd$result$L1$valueUnbiased <- values
   pd
