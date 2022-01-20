@@ -2156,6 +2156,7 @@ pd_plotParsParallelLines2 <- function(pd, stepMax = 3, filename = NULL, i, ggCal
           panel.grid.major.y = element_line(color="grey95"),
           panel.grid.major.x = element_line(color="grey95")
     ) + 
+    labs(color = "step:n")
     geom_blank()
   # Hack to draw lines in order: best step on top
   for (sx in sort(unique(p$step),decreasing = TRUE)) pl <- pl + geom_line(aes(alpha = step), data = p[step == sx])
