@@ -730,7 +730,52 @@ pd_fit <- function(pd, iterlim = 1000, printIter = TRUE, FLAGoverwrite = FALSE, 
   conveniencefunctions::dMod_saveMstrust(fit = parf_base_fitted, path = file.path(.outputFolder), identifier = "singleFit", FLAGoverwrite = FLAGoverwrite)
   
   pd <- readPd(pd_rdsfile(pd)) #don't print
+}
+
+
+#' Run a mstrust locally
+#'
+#' @param pd
+#' @param iterlim 
+#' @param printIter 
+#' @param FLAGoverwrite 
+#' @param ... other arguments going to dMod::mstrust
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#'
+#' @family pd
+#' @family pd fittting
+#'
+#' @importFrom dMod trust
+#'
+#' @examples
+pd_fitMstrust <- function(pd, fits = 20, iterlim = 1000, printIter = TRUE, FLAGoverwrite = FALSE, ...) {
+  .outputFolder <- dirname(pd$filenameParts$.compiledFolder)
+  
+  fit_file <- conveniencefunctions::dMod_files(.outputFolder, "mstrust")$mstrust
+  if (!FLAGoverwrite && file.exists(fit_file)) {
+    cat("FitObsPars: Previous parameters were loaded")
+    return(readPd(pd_files(pd$filenameParts)$rdsfile))
   }
+  
+  
+  center <- pepy_sample_parameter_startpoints(pd$pe, n_starts = fits, 
+                                              seed = 1, 
+                                              FLAGincludeCurrent = TRUE)
+  parlower <- petab_getParameterBoundaries(pd$pe, "lower")
+  parupper <- petab_getParameterBoundaries(pd$pe, "upper")
+  fit <- dMod::mstrust(objfun = pd$obj, center = center, studyname = "mstrust",
+                       iterlim = iterlim, parlower = parlower, parupper = parupper, ...)
+  fit <- cf_as.parframe(fit)
+  conveniencefunctions::dMod_saveMstrust(fit = fit, 
+                                         path = file.path(.outputFolder), identifier = "mstrust", 
+                                         FLAGoverwrite = FLAGoverwrite)
+  unlink("mstrust",T) # clean up logfiles in working directory
+  pd <- readPd(pd_rdsfile(pd)) #don't print
+}
 
 
 #' Run mstrust
@@ -750,7 +795,7 @@ pd_fit <- function(pd, iterlim = 1000, printIter = TRUE, FLAGoverwrite = FALSE, 
 #'
 #' @examples
 pd_mstrust <- function(pd, NFLAGsavePd = T, iterlim = 1000, nfits = 5, id) {
-
+  
   cat("not yet stable: results must be written into pd$filenameParts$.resultFolder")
   
   .outputFolder <- paste0("SelectionProblem/", id)
@@ -807,7 +852,7 @@ pd_profile <- function(pd, .outputFolder, FLAGfixParsOnBoundary = FALSE,
                        whichPar = pd_profile_getParsNotYetProfiled(pd = pd, .outputFolder = .outputFolder, FLAGreturnVector = TRUE),
                        ...) {
   if (!length(whichPar)) return(readPd(pd_rdsfile(pd)))
-    
+  
   # Fix pars which went to boundary
   if (FLAGfixParsOnBoundary){
     fixed_boundary <- pd_pars_getFixedOnBoundary(pd, tol = 1e-2)
@@ -815,7 +860,7 @@ pd_profile <- function(pd, .outputFolder, FLAGfixParsOnBoundary = FALSE,
     pd$pars        <- pd$pars[setdiff(names(pd$pars), names(pd$fixed))]
   }
   # Run profiles
-    cf_profile(pd$obj, pd$pars, fixed = pd$fixed, whichPar = whichPar, cautiousMode = TRUE, path = .outputFolder, ...)
+  cf_profile(pd$obj, pd$pars, fixed = pd$fixed, whichPar = whichPar, cautiousMode = TRUE, path = .outputFolder, ...)
   
   pd <- readPd(pd_rdsfile(pd)) #don't print
 }
@@ -2291,10 +2336,10 @@ pd_plotProfile <- function(pd, ggCallback = NULL, nrow = 3, ncol = 4, ...) {
 #' @importFrom conveniencefunctions cf_profile_prepareAffectedPaths
 #' 
 pd_plotProfilePaths <- function(profiles, tol = 1e-1, 
-                                         FLAGnormalizeYParameters = TRUE,
-                                         nrow = 3,ncol = 4,
-                                         ggCallback = list(),
-                                         ...
+                                FLAGnormalizeYParameters = TRUE,
+                                nrow = 3,ncol = 4,
+                                ggCallback = list(),
+                                ...
 ) {
   
   dp <- conveniencefunctions::cf_profile_prepareAffectedPaths(profiles, tol = tol, FLAGnormalizeYParameters = FLAGnormalizeYParameters)

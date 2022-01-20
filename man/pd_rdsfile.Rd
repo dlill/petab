@@ -17,6 +17,7 @@ Get the rds file path in one simple command
 }
 \seealso{
 Other pd: 
+\code{\link{pd_fitMstrust}()},
 \code{\link{pd_fit}()},
 \code{\link{pd_mstrust}()}
 }
