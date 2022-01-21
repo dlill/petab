@@ -817,7 +817,8 @@ petab_files_fromYaml <- function(filename) {
     measurementData            = yaml_content$problems[[1]]$measurement_files[[1]],
     modelXML                   = yaml_content$problems[[1]]$sbml_files[[1]],
     # [ ] not very elegant. Remove rds when sbml is stable
-    model                      = yaml_content$problems[[1]]$model_files[[1]],
+    # model                      = yaml_content$problems[[1]]$model_files[[1]],
+    model                      = gsub("xml$", "rds",yaml_content$problems[[1]]$sbml_files[[1]]),
     observables                = yaml_content$problems[[1]]$observable_files[[1]],
     parameters                 = yaml_content$parameter_file,
     # simulatedData              = paste0("_simulatedData"             , ".tsv"),
