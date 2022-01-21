@@ -114,6 +114,22 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
         par[parameterId==px,`:=`(parameterId = paste0("L1Ref_", parameterId))]
       }}
     
+    pfi_qNLME <- pfi[trafoType == "qNLME"]
+    if (nrow(pfi_qNLME)) {
+      for (px in pfi_qNLME$parameterId) {
+        # Set scale of qNLME parameters
+        pxscale <- par[parameterId == px, parameterScale]
+        if (!length(pxscale)) pxscale <- par[parameterId == paste0("qNLMERef_", px), parameterScale] # Might be that a parameter was already renamed
+        if (!length(pxscale)) warning(px, " has no associated scale")
+        par[grepl(paste0("qNLME_", px), parameterId),`:=`(parameterScale = pxscale)] # why grepl? fragile...
+        par[grepl(paste0("qNLME_", px), parameterId) & parameterScale != "lin",`:=`(nominalValue = 1)]
+        par[grepl(paste0("qNLME_", px), parameterId) & parameterScale == "lin",`:=`(nominalValue = 0)]
+        par[grepl(paste0("qNLME_", px), parameterId),`:=`(objectivePriorType = "parameterScaleNormal")] 
+        par[grepl(paste0("qNLME_", px), parameterId),`:=`(objectivePriorParameters = "0;10")] 
+        # Update names of inner parameters to qNLMERef_par, so their names are set correctly in parameters
+        par[parameterId==px,`:=`(parameterId = paste0("qNLMERef_", parameterId))]
+      }}
+    
     parnamesPFI <- setdiff(cOde::getSymbols(pfi$parameterFormula), c(par$parameterId, names(pe$experimentalCondition)))
     if (length(parnamesPFI)){
       warning("The following parameters appear in a parameterFormulaInjection but are otherwise unset: ", paste0(parnamesPFI, collapse = ","))
@@ -1862,6 +1878,7 @@ petab_getParameterType <- function(pe) {
   parameters[parameterId %in% observableParameters,`:=`(parameterType = "observableParameters")]
   parameters[parameterId %in% noiseParameters     ,`:=`(parameterType = "noiseParameters")]
   parameters[grep("^L1_",parameterId)             ,`:=`(parameterType = "L1")]
+  parameters[grep("^qNLME_",parameterId)             ,`:=`(parameterType = "qNLME")]
   
   parameters
 }
@@ -1995,9 +2012,8 @@ petab_getPars_linScale <- function(pe) {
 #' parsLin <- petab_getPars_linScale(pe)
 #' parsLin <- parsLin[sample(1:length(parsLin), 5)] + rnorm(5)
 petab_setPars_linScale <- function(pe, parsLin) {
-  # Careful: This is technically a set* function in data.table parlance
   parsLin <- parsLin[order(names(parsLin))]
-  pe$parameters[parameterId %in% names(parsLin),`:=`(nominalValue = parsLin)]
+  for (nm in names(parsLin)) pe$parameters[parameterId == nm,`:=`(nominalValue = parsLin[nm])]
   invisible(pe)
 }
 
@@ -2038,10 +2054,9 @@ petab_setPars_estScale <- function(pe, parsEst) {
 #' parsLin <- petab_getPars_linScale(pe)
 #' parsLin <- parsLin[sample(1:length(parsLin), 5)] + rnorm(5)
 petab_transformPars_lin2Est <- function(pe, parsLin) {
-  parsLinMerge <- parsLin[order(names(parsLin))]
+  parsLinMerge <- data.table(estValue = parsLin, parameterId = names(parsLin))
   p <- copy(pe$parameters)
-  p <- p[parameterId %in% names(parsLinMerge)]
-  p[,`:=`(nominalValue = parsLinMerge)]
+  p <- p[parsLinMerge,on = .NATURAL]
   p[,`:=`(estValue = eval(parse(text = paste0(parameterScale, "(", nominalValue, ")")))),by = 1:nrow(p)]
   parsEst <- setNames(p$estValue, p$parameterId)
   parsEst <- parsEst[names(parsLin)]
@@ -2065,10 +2080,9 @@ petab_transformPars_lin2Est <- function(pe, parsLin) {
 #' parsLin <- petab_getPars_linScale(pe)
 #' parsLin <- parsLin[sample(1:length(parsLin), 5)] + rnorm(5)
 petab_transformPars_est2Lin <- function(pe, parsEst) {
-  parsEstMerge <- parsEst[order(names(parsEst))]
+  parsEstMerge <- data.table(estValue = parsEst, parameterId = names(parsEst))
   p <- copy(pe$parameters)
-  p <- p[parameterId %in% names(parsEstMerge)]
-  p[,`:=`(estValue = parsEstMerge)]
+  p <- p[parsEstMerge,on = .NATURAL]
   p[,`:=`(nominalValue = eval(parse(text = paste0(inverse_scale(parameterScale), "(", estValue, ")")))),by = 1:nrow(p)]
   parsLin <- setNames(p$nominalValue, p$parameterId)
   parsLin <- parsLin[names(parsEst)]
@@ -2466,6 +2480,142 @@ pe_L1_createL1Problem <- function(pe, parameterId_base, conditionSpecL1_referenc
   pepaOld <- pe$parameters
   pepaOld[parameterId %in% parameterId_base,`:=`(parameterId = paste0("L1Ref_", parameterId))]
   pe$parameters <- petab_parameters_mergeParameters(pepaL1, pepaOld)
+  pe
+}
+# -------------------------------------------------------------------------#
+# qNLME quasi-NLME ----
+# -------------------------------------------------------------------------#
+
+#' Create qNLME Trafo, depending on parameterScale
+#' 
+#' Trafo injection
+#' 
+#' * For logpars: par * qNLME_par
+#' * For linpars: par + qNLME_par
+#' 
+#' @param pe 
+#' @param parameterId_base vector of parameterId which should be qNLME'd.
+#'
+#' @return data.table(parameterId, parameterFormula, trafoType = "qNLME")
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family petab qNLME
+#'
+#' @examples
+#' pe <- petab_exampleRead("05")
+#' qNLME_getParameterFormulaInjection(pe, c("kcat", "E"))
+qNLME_getParameterFormulaInjection <- function(pe, parameterId_base) {
+  p <- pe$parameters[parameterId %in% parameterId_base]
+  p[,`:=`(parameterIdqNLME = paste0("qNLME_", parameterId))]
+  p[,`:=`(parameterIdBase = paste0("qNLMERef_", parameterId))]
+  p[,`:=`(parameterFormula = paste0(parameterIdBase, ifelse(grepl("lin", parameterScale), " + ", " * "), parameterIdqNLME))]
+  p[,list(parameterId, parameterFormula, trafoType = "qNLME")]
+}
+
+#' Title
+#'
+#' @inheritParams qNLME_getParameterFormulaInjection
+#' @return petab with updated parameterFormulaInjection, see [qNLME_getParameterFormulaInjection()]
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family petab qNLME
+#' @importFrom data.table rbindlist
+#'
+#' @examples
+#' pe <- petab_exampleRead("05")
+#' pe_qNLME_updateParameterFormulaInjection(pe, c("kcat", "E"))
+pe_qNLME_updateParameterFormulaInjection <- function(pe, parameterId_base) {
+  pfi <- qNLME_getParameterFormulaInjection(pe, parameterId_base)
+  pe$meta$parameterFormulaInjection <- data.table::rbindlist(list(pe$meta$parameterFormulaInjection, pfi), use.names = TRUE, fill = TRUE)
+  pe
+}
+
+#' Title
+#' 
+#' Does not work yet with observable parameters
+#' 
+#' @param pe 
+#' @param priorStrength 
+#' @param Nsub 
+#' @param seed if not NULL, subjects will be sampled based on objectivePriorParameters
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family 
+#' @importFrom data.table as.data.table data.table
+#'
+#' @examples
+#' # see example 09
+petab_createqNLMEProblem <- function(pe, priorStrength, Nsub, seed = 1) {
+  
+  pe <- copy(pe)
+  
+  subjectId <- seq_len(Nsub)
+  parameterId_base <- names(priorStrength)
+  
+  # 1 Create parameterFormulaInjection
+  pe <- pe_qNLME_updateParameterFormulaInjection(pe, parameterId_base)
+  
+  # 2 Copy condition.grid for each subject
+  cg <- data.table::data.table(expand.grid(conditionId=pe$experimentalCondition$conditionId, subjectId = subjectId))
+  cg0 <- copy(cg)
+  cg0[,`:=`(conditionIdNew = paste0(conditionId,"_",subjectId))]
+  cg <- pe$experimentalCondition[cg,on = .NATURAL]
+  cg[,`:=`(conditionId = paste0(conditionId,"_",subjectId))]
+  cg[,`:=`(conditionName = paste0(conditionName,"_",subjectId))]
+  
+  # 2 Add qNLME spec and add other information to pe$meta$qNLME
+  pe$meta$qNLME$parameterId_base <- parameterId_base
+  pe$meta$qNLME$priorStrength    <- priorStrength
+  pe$meta$qNLME$subjects         <- subjectId 
+  pe$meta$parameters_qNLME       <- data.table::as.data.table(lapply(setNames(parameterId_base, paste0("qNLME_", parameterId_base)), function(px) paste0("qNLME_", subjectId, "_", px)))
+  pe$meta$parameters_qNLME[,`:=`(subjectId =  subjectId)]
+  
+  # 3 Add qNLME parameters to experimentalCondition
+  cg <- pe$meta$parameters_qNLME[cg,on = .NATURAL]
+  cg[,`:=`(subjectId = NULL)]
+  pe$experimentalCondition <- do.call(petab_experimentalCondition, cg) 
+  
+  # 4 Re-create parameters_df including qNLME parameters
+  pepaqNLME <- petab_create_parameter_df(pe)
+  pepaOld   <- pe$parameters
+  pepaOld[parameterId %in% parameterId_base,`:=`(parameterId = paste0("qNLMERef_", parameterId))]
+  pe$parameters <- petab_parameters_mergeParameters(pepaqNLME, pepaOld)
+  # Apply prior strength
+  dprior  <- data.table::data.table(priorStrength = priorStrength, parameterId_base = names(priorStrength))
+  dprior2 <- data.table::data.table(expand.grid(parameterId_base = names(priorStrength), subjectId = subjectId))
+  dprior  <- dprior[dprior2,on = .NATURAL]
+  dprior[,`:=`(parameterId = paste0("qNLME_", subjectId, "_", parameterId_base))]
+  dprior[,`:=`(objectivePriorParameters = paste0("0;", priorStrength))]
+  # Merge manually, because only a subset of rows is merged
+  for (pi in dprior$parameterId) pe$parameters[parameterId == pi,`:=`(objectivePriorParameters = dprior[parameterId == pi, objectivePriorParameters])]
+  
+  # 5 Sample subjects if seed is provided
+  if (!is.null(seed)) {
+    pars    <- unlist(pepy_sample_parameter_startpoints(pe, 1,seed,F))
+    pars    <- pars[grep("qNLME_", names(pars))]
+    parsOld <- petab_getPars_estScale(pe)
+    parsOld <- parsOld[grep("qNLME_", names(parsOld), invert = TRUE)]
+    parsEst <- c(parsOld, pars)[pe$parameters$parameterId]
+    pe      <- petab_setPars_estScale(pe, parsEst = parsEst)
+  }
+  
+  # 6 Copy data to dummy data
+  pe$measurementData <- pe$measurementData[cg0[,list(simulationConditionId = conditionId, conditionIdNew)],on = .NATURAL, allow.cartesian = TRUE]
+  pe$measurementData[,`:=`(simulationConditionId= NULL)]
+  setnames(pe$measurementData, "conditionIdNew", "simulationConditionId")
+  
+  # 7 Add subjectId to metaInformation
+  if (!is.null(pe$meta$metaInformation$experimentalCondition$conditionId$pattern)){
+    pe$meta$metaInformation$experimentalCondition$conditionId$pattern <- paste0(pe$meta$metaInformation$experimentalCondition$conditionId$pattern, "_subjectId")
+  } else {
+    pe$meta$metaInformation$experimentalCondition$conditionId$pattern <- paste0("condition_subjectId")
+  }
+  # 8 return updated pe
   pe
 }
 

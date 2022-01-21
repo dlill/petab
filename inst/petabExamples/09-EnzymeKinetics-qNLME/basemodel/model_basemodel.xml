@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level2/version4" level="2" version="4">
+  <model id="basemodel">
+    <listOfUnitDefinitions>
+      <unitDefinition id="per_second">
+        <listOfUnits>
+          <unit kind="second" exponent="-1"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="per_mole">
+        <listOfUnits>
+          <unit kind="mole" exponent="-1"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="per_mole_per_second">
+        <listOfUnits>
+          <unit kind="mole" exponent="-1"/>
+          <unit kind="second" exponent="-1"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="litre_per_mole_per_second">
+        <listOfUnits>
+          <unit kind="litre" exponent="1"/>
+          <unit kind="mole" exponent="-1"/>
+          <unit kind="second" exponent="-1"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="litre2_per_mole2_per_second">
+        <listOfUnits>
+          <unit kind="litre" exponent="2"/>
+          <unit kind="mole" exponent="-2"/>
+          <unit kind="second" exponent="-1"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="mole_per_litre_per_second">
+        <listOfUnits>
+          <unit kind="mole" exponent="1"/>
+          <unit kind="litre" exponent="-1"/>
+          <unit kind="second" exponent="-1"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="mole_per_litre">
+        <listOfUnits>
+          <unit kind="mole" exponent="1"/>
+          <unit kind="litre" exponent="-1"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="mole_per_second">
+        <listOfUnits>
+          <unit kind="mole" exponent="1"/>
+          <unit kind="second" exponent="-1"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="identity">
+        <listOfUnits>
+          <unit kind="dimensionless" exponent="1"/>
+        </listOfUnits>
+      </unitDefinition>
+    </listOfUnitDefinitions>
+    <listOfCompartments>
+      <compartment id="cytoplasm" size="1"/>
+    </listOfCompartments>
+    <listOfSpecies>
+      <species id="E" name="E" compartment="cytoplasm" initialAmount="1"/>
+      <species id="S" name="S" compartment="cytoplasm" initialAmount="100"/>
+      <species id="ES" name="ES" compartment="cytoplasm" initialAmount="1e-12"/>
+      <species id="P" name="P" compartment="cytoplasm" initialAmount="1e-12"/>
+    </listOfSpecies>
+    <listOfParameters>
+      <parameter id="kon" value="1" units="litre_per_mole_per_second"/>
+      <parameter id="koff" value="0.1" units="per_second"/>
+      <parameter id="kcat" value="0.1" units="per_second"/>
+    </listOfParameters>
+    <listOfReactions>
+      <reaction id="productionofcomplex" reversible="false">
+        <listOfReactants>
+          <speciesReference species="E" stoichiometry="1"/>
+          <speciesReference species="S" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ES" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> kon </ci>
+              <ci> E </ci>
+              <ci> S </ci>
+              <ci> cytoplasm </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="decayofcomplex" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ES" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="E" stoichiometry="1"/>
+          <speciesReference species="S" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> koff </ci>
+              <ci> ES </ci>
+              <ci> cytoplasm </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="productionofproduct" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ES" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="E" stoichiometry="1"/>
+          <speciesReference species="P" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> kcat </ci>
+              <ci> ES </ci>
+              <ci> cytoplasm </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+    </listOfReactions>
+  </model>
+</sbml>

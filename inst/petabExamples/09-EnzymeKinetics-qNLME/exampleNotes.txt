@@ -1,0 +1,3 @@
+* DEPRECATED. Workflow needs to be updated!
+* Shows how to setup a L1 analysis
+

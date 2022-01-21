@@ -1,0 +1,3 @@
+experimentalCondition:
+  conditionId:
+    pattern: condition_subjectId
