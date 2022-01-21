@@ -764,7 +764,7 @@ pd_fitMstrust <- function(pd, fits = 20, iterlim = 1000, printIter = TRUE, FLAGo
   
   center <- pepy_sample_parameter_startpoints(pd$pe, n_starts = fits, 
                                               seed = 1, 
-                                              FLAGincludeCurrent = TRUE)
+                                              FLAGincludeCurrent = TRUE, pd = pd)
   parlower <- petab_getParameterBoundaries(pd$pe, "lower")
   parupper <- petab_getParameterBoundaries(pd$pe, "upper")
   fit <- dMod::mstrust(objfun = pd$obj, center = center, studyname = "mstrust",

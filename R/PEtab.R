@@ -1277,7 +1277,7 @@ petab_lint <- function(pe) {
 #' n_starts = 100L
 #' seed = 1L
 #' FLAGincludeCurrent = TRUE
-pepy_sample_parameter_startpoints <- function(pe, n_starts = 100L, seed = 1L, FLAGincludeCurrent = TRUE) {
+pepy_sample_parameter_startpoints <- function(pe, n_starts = 100L, seed = 1L, FLAGincludeCurrent = TRUE, pd = NULL) {
   n_starts <- as.integer(n_starts-as.numeric(FLAGincludeCurrent))
   seed     <- as.integer(seed)
   
