@@ -117,15 +117,16 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
     pfi_qNLME <- pfi[trafoType == "qNLME"]
     if (nrow(pfi_qNLME)) {
       for (px in pfi_qNLME$parameterId) {
+        # Does not work if scales have been reset manually
         # Set scale of qNLME parameters
         pxscale <- par[parameterId == px, parameterScale]
         if (!length(pxscale)) pxscale <- par[parameterId == paste0("qNLMERef_", px), parameterScale] # Might be that a parameter was already renamed
         if (!length(pxscale)) warning(px, " has no associated scale")
-        par[grepl(paste0("qNLME_", px), parameterId),`:=`(parameterScale = pxscale)] # why grepl? fragile...
-        par[grepl(paste0("qNLME_", px), parameterId) & parameterScale != "lin",`:=`(nominalValue = 1)]
-        par[grepl(paste0("qNLME_", px), parameterId) & parameterScale == "lin",`:=`(nominalValue = 0)]
-        par[grepl(paste0("qNLME_", px), parameterId),`:=`(objectivePriorType = "parameterScaleNormal")] 
-        par[grepl(paste0("qNLME_", px), parameterId),`:=`(objectivePriorParameters = "0;10")] 
+        par[grepl(paste0("qNLME_\\d+", px), parameterId),`:=`(parameterScale = pxscale)] # why grepl? fragile...
+        par[grepl(paste0("qNLME_\\d+", px), parameterId) & parameterScale != "lin",`:=`(nominalValue = 1)]
+        par[grepl(paste0("qNLME_\\d+", px), parameterId) & parameterScale == "lin",`:=`(nominalValue = 0)]
+        par[grepl(paste0("qNLME_\\d+", px), parameterId),`:=`(objectivePriorType = "parameterScaleNormal")] 
+        par[grepl(paste0("qNLME_\\d+", px), parameterId),`:=`(objectivePriorParameters = "0;0.1")] 
         # Update names of inner parameters to qNLMERef_par, so their names are set correctly in parameters
         par[parameterId==px,`:=`(parameterId = paste0("qNLMERef_", parameterId))]
       }}
@@ -913,7 +914,7 @@ writePetab <- function(pe, filename = "petab/model") {
   file_metaInformation <- NULL
   if (!is.null(pe$meta$metaInformation)) {
     # Ugly to split up meta into meta and metaInformation.yaml
-    file_metaInformation <- petab_files(filename = filename)[["metaInformation"]]
+    file_metaInformation <- files0[["metaInformation"]]
     yaml::write_yaml(pe$meta$metaInformation, file_metaInformation) 
     pe$meta$metaInformation <- NULL
   }
@@ -2586,6 +2587,9 @@ petab_createqNLMEProblem <- function(pe, priorStrength, Nsub, seed = 1) {
   pepaOld   <- pe$parameters
   pepaOld[parameterId %in% parameterId_base,`:=`(parameterId = paste0("qNLMERef_", parameterId))]
   pe$parameters <- petab_parameters_mergeParameters(pepaqNLME, pepaOld)
+  
+  
+  
   # Apply prior strength
   dprior  <- data.table::data.table(priorStrength = priorStrength, parameterId_base = names(priorStrength))
   dprior2 <- data.table::data.table(expand.grid(parameterId_base = names(priorStrength), subjectId = subjectId))
@@ -2594,15 +2598,28 @@ petab_createqNLMEProblem <- function(pe, priorStrength, Nsub, seed = 1) {
   dprior[,`:=`(objectivePriorParameters = paste0("0;", priorStrength))]
   # Merge manually, because only a subset of rows is merged
   for (pi in dprior$parameterId) pe$parameters[parameterId == pi,`:=`(objectivePriorParameters = dprior[parameterId == pi, objectivePriorParameters])]
+  # Set sampling scale
+  priorStrengthLin   <- priorStrength[names(priorStrength) %in% gsub("qNLMERef_","",pe$parameters[parameterScale == "lin", parameterId])]
+  priorStrengthLog   <- priorStrength[names(priorStrength) %in% gsub("qNLMERef_","",pe$parameters[parameterScale == "log", parameterId])]
+  priorStrengthLog10 <- priorStrength[names(priorStrength) %in% gsub("qNLMERef_","",pe$parameters[parameterScale == "log10", parameterId])]
+  for (nm in names(priorStrengthLin))   pe$parameters[grep(paste0("qNLME_\\d+_",nm), parameterId),`:=`(parameterScale = "lin")]
+  for (nm in names(priorStrengthLog))   pe$parameters[grep(paste0("qNLME_\\d+_",nm), parameterId),`:=`(parameterScale = "log")]
+  for (nm in names(priorStrengthLog10)) pe$parameters[grep(paste0("qNLME_\\d+_",nm), parameterId),`:=`(parameterScale = "log10")]
+  pe$parameters[grep("qNLME_", parameterId), `:=`(initializationPriorType = objectivePriorType, initializationPriorParameters = objectivePriorParameters)]
   
   # 5 Sample subjects if seed is provided
   if (!is.null(seed)) {
-    pars    <- unlist(pepy_sample_parameter_startpoints(pe, 1,seed,F))
-    pars    <- pars[grep("qNLME_", names(pars))]
-    parsOld <- petab_getPars_estScale(pe)
-    parsOld <- parsOld[grep("qNLME_", names(parsOld), invert = TRUE)]
-    parsEst <- c(parsOld, pars)[pe$parameters$parameterId]
-    pe      <- petab_setPars_estScale(pe, parsEst = parsEst)
+    # pepy sampling still has bugs
+    # pars    <- unlist(pepy_sample_parameter_startpoints(pe, 1,seed,F))
+    # pars    <- pars[grep("qNLME_", names(pars))]
+    # parsOld <- petab_getPars_estScale(pe)
+    # parsOld <- parsOld[grep("qNLME_", names(parsOld), invert = TRUE)]
+    # parsEst <- c(parsOld, pars)[pe$parameters$parameterId]
+    # pe      <- petab_setPars_estScale(pe, parsEst = parsEst)
+    set.seed(1)
+    for (nm in names(priorStrengthLin))   pe$parameters[grep(paste0("qNLME_\\d+_",nm), parameterId),`:=`(nominalValue = rnorm(.N, 0, priorStrength[nm]))]
+    for (nm in names(priorStrengthLog))   pe$parameters[grep(paste0("qNLME_\\d+_",nm), parameterId),`:=`(nominalValue = exp(rnorm(.N, 0, priorStrength[nm])))]
+    for (nm in names(priorStrengthLog10)) pe$parameters[grep(paste0("qNLME_\\d+_",nm), parameterId),`:=`(nominalValue = 10^rnorm(.N, 0, priorStrength[nm]))]
   }
   
   # 6 Copy data to dummy data
