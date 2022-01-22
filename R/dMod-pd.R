@@ -736,10 +736,12 @@ pd_fit <- function(pd, iterlim = 1000, printIter = TRUE, FLAGoverwrite = FALSE, 
 #' Run a mstrust locally
 #'
 #' @param pd
+#' @param fits number of fits, see [dMod::mstrust()]
 #' @param iterlim 
 #' @param printIter 
+#' @param ... other arguments going to [dMod::mstrust()]
 #' @param FLAGoverwrite 
-#' @param ... other arguments going to dMod::mstrust
+#' @param FLAGjobPurgedFile add a jobPurged-file as if the mstrust was run by a pd_cluster function
 #'
 #' @return
 #' @export
@@ -752,12 +754,12 @@ pd_fit <- function(pd, iterlim = 1000, printIter = TRUE, FLAGoverwrite = FALSE, 
 #' @importFrom dMod trust
 #'
 #' @examples
-pd_fitMstrust <- function(pd, fits = 20, iterlim = 1000, printIter = TRUE, FLAGoverwrite = FALSE, ...) {
-  .outputFolder <- dirname(pd$filenameParts$.compiledFolder)
+pd_fitMstrust <- function(pd, fits = 20, iterlim = 1000, FLAGoverwrite = FALSE, FLAGjobPurgedFile = TRUE, ...) {
+  .outputFolder <- pd$filenameParts$.projectFolder
   
   fit_file <- conveniencefunctions::dMod_files(.outputFolder, "mstrust")$mstrust
   if (!FLAGoverwrite && file.exists(fit_file)) {
-    cat("FitObsPars: Previous parameters were loaded")
+    cat("fitMstrust: Previous parameters were loaded")
     return(readPd(pd_files(pd$filenameParts)$rdsfile))
   }
   
@@ -768,12 +770,22 @@ pd_fitMstrust <- function(pd, fits = 20, iterlim = 1000, printIter = TRUE, FLAGo
   parlower <- petab_getParameterBoundaries(pd$pe, "lower")
   parupper <- petab_getParameterBoundaries(pd$pe, "upper")
   fit <- dMod::mstrust(objfun = pd$obj, center = center, studyname = "mstrust",
-                       iterlim = iterlim, parlower = parlower, parupper = parupper, ...)
+                       iterlim = iterlim, parlower = parlower, parupper = parupper,
+                       cautiousMode = TRUE, ...)
   fit <- cf_as.parframe(fit)
   conveniencefunctions::dMod_saveMstrust(fit = fit, 
                                          path = file.path(.outputFolder), identifier = "mstrust", 
                                          FLAGoverwrite = FLAGoverwrite)
   unlink("mstrust",T) # clean up logfiles in working directory
+  
+  if (FLAGjobPurgedFile) {
+    identifier     <- "mstrust"
+    jobnm          <- paste0("mstrust_", identifier, "_", gsub("-","_",gsub("(S\\d+(-\\d+)?).*", "\\1", basename(.outputFolder))))
+    fileJobDone    <- conveniencefunctions::dMod_files(.outputFolder, identifier)[["mstrust"]]
+    fileJobPurged  <- file.path(dirname(fileJobDone), paste0(".", jobnm, "jobPurged"))
+    writeLines("jobPurged", fileJobPurged)
+  }
+  
   pd <- readPd(pd_rdsfile(pd)) #don't print
 }
 
@@ -2157,7 +2169,7 @@ pd_plotParsParallelLines2 <- function(pd, stepMax = 3, filename = NULL, i, ggCal
           panel.grid.major.x = element_line(color="grey95")
     ) + 
     labs(color = "step:n")
-    geom_blank()
+  geom_blank()
   # Hack to draw lines in order: best step on top
   for (sx in sort(unique(p$step),decreasing = TRUE)) pl <- pl + geom_line(aes(alpha = step), data = p[step == sx])
   for (plx in ggCallback) pl <- pl + plx
