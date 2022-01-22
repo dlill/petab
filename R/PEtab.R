@@ -2616,7 +2616,7 @@ petab_createqNLMEProblem <- function(pe, priorStrength, Nsub, seed = 1) {
     # parsOld <- parsOld[grep("qNLME_", names(parsOld), invert = TRUE)]
     # parsEst <- c(parsOld, pars)[pe$parameters$parameterId]
     # pe      <- petab_setPars_estScale(pe, parsEst = parsEst)
-    set.seed(1)
+    set.seed(seed)
     for (nm in names(priorStrengthLin))   pe$parameters[grep(paste0("qNLME_\\d+_",nm), parameterId),`:=`(nominalValue = rnorm(.N, 0, priorStrength[nm]))]
     for (nm in names(priorStrengthLog))   pe$parameters[grep(paste0("qNLME_\\d+_",nm), parameterId),`:=`(nominalValue = exp(rnorm(.N, 0, priorStrength[nm])))]
     for (nm in names(priorStrengthLog10)) pe$parameters[grep(paste0("qNLME_\\d+_",nm), parameterId),`:=`(nominalValue = 10^rnorm(.N, 0, priorStrength[nm]))]
