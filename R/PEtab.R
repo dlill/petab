@@ -1327,6 +1327,7 @@ petab_python_installPackages <- function(FLAGcleanInstall = FALSE, FLAGforcePip 
   }
   
   reticulate::use_virtualenv("petab")
+  reticulate::virtualenv_install("petab", "pandas", ignore_installed = TRUE)
   reticulate::virtualenv_install("petab", "petab", ignore_installed = TRUE)
   reticulate::virtualenv_install("petab", "petab-select", ignore_installed = TRUE)
   "installed petab in virtual environment"
