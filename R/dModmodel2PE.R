@@ -32,8 +32,6 @@ petab_dModmodel2PE <- function(ODEmodel,
   
   cat("Writing model ...\n")
   ti <- petab_getTrafoInfo(trafo)
-  if(setdiff(ti$trafoScale, "lin") == "log") generalScale <- "log" 
-  if(setdiff(ti$trafoScale, "lin") == "log10") generalScale <- "log10"
   
   pfl <- petab_getParameterFormulaList(ti)
   pfil <- petab_getParameterFixedList(ti)
@@ -57,7 +55,7 @@ petab_dModmodel2PE <- function(ODEmodel,
   
   
   cat("Writing conditions ...\n")
-  pe_ex <- getEXgrid(estGrid, fixedGrid, generalScale)
+  pe_ex <- getEXgrid(estGrid, fixedGrid, trafo)
   
   
   cat("Writing observables ...\n")
@@ -80,19 +78,16 @@ petab_dModmodel2PE <- function(ODEmodel,
       obsscale <- c(obsscale, "lin")
     }
     
-    # replace scale and offset by standard nomenclature
-    obsPar1 <- grep("scale", getSymbols(obs), value = T)
-    obsPar2 <- grep("offset", getSymbols(obs), value = T)
-    if(str_detect(obs, "scale") & str_detect(obs, "offset")){
-      formula <- gsub(obsPar1, paste0("observableParameter1_", obs_name), formula)
-      formula <- gsub(obsPar2, paste0("observableParameter2_", obs_name), formula)
-      obsStr <- paste0(obsPar1,";", obsPar2)
-    } else if (str_detect(obs, "scale")){
-      formula <- gsub(obsPar1, paste0("observableParameter1_", obs_name), formula)
-      obsStr <- obsPar1
-    } else if (str_detect(obs, "offset")){
-      formula <- gsub(obsPar2, paste0("observableParameter1_", obs_name), formula)
-      obsStr <- obsPar2
+    # replace obspars by standard nomenclature
+    obsPars <- setdiff(getSymbols(obs), ODEmodel$states)
+    if(length(obsPars) != 0) {
+      names(obsPars) <- paste0("observableParameter", 1:length(obsPars), "_", obs_name)
+      obsStr <- paste(obsPars, collapse= ";")
+      for(i in 1:length(obsPars)){
+        op <- obsPars[i]
+        op_name <- names(op)
+        formula <- gsub(op, op_name, formula)
+      }
     } else obsStr <- NA
     
     # create match table for observable parameters
@@ -228,17 +223,21 @@ petab_dModmodel2PE <- function(ODEmodel,
 #' @family Parameter wrangling
 #'
 #' @importFrom data.table data.table 
-getEXgrid <- function(est.grid, fixed.grid, scale){
+getEXgrid <- function(est.grid, fixed.grid, trafo){
   
   est.grid <- as.data.table(est.grid)
   est.grid[est.grid == "dummy"] <- NA
   fixed.grid <- as.data.table(fixed.grid)
   fixed.grid[fixed.grid == "NA"] <- NA
   
-  # bring values to lin scale
+  # bring values to lin scale when defined on log or log10 scale
   mycols <- names(fixed.grid)[3:ncol(fixed.grid)]
-  if (scale == "log") fixed.grid[,(mycols) := lapply(.SD, function(x) exp(as.numeric(x))), .SDcols = mycols]
-  if (scale == "log10") fixed.grid[,(mycols) := lapply(.SD, function(x) 10^(as.numeric(x))), .SDcols = mycols]
+  pars_on_lin_scale <- names(grep("exp\\(|10\\^\\(", trafo[intersect(mycols, names(trafo))], value = T, invert = T))
+  pars_on_log_scale <- setdiff(mycols, pars_on_lin_scale)
+  
+  ti <- petab_getTrafoInfo(trafo)
+  if(setdiff(ti$trafoScale, "lin") == "log") fixed.grid[,(pars_on_log_scale) := lapply(.SD, function(x) exp(as.numeric(x))), .SDcols = pars_on_log_scale]
+  if(setdiff(ti$trafoScale, "lin") == "log10") fixed.grid[,(pars_on_log_scale) := lapply(.SD, function(x) 10^(as.numeric(x))), .SDcols = pars_on_log_scale]
   
   shared_columns <- intersect(names(est.grid), names(fixed.grid))
   shared_pars <- setdiff(shared_columns, c("ID", "condition"))
@@ -340,7 +339,7 @@ petab_getParameterFormulaList <- function(trafoInfo){
   
   pfl <- trafoInfo[suppressWarnings(is.na(as.numeric(parameterFormula)))]
   trafoDF <- pfl[, list(parameterId, parameterFormula)]
-
+  
   attr(trafoDF, "generalScale") <- setdiff(unique(pfl$trafoScale), "lin")[1]
   trafoDF
 }

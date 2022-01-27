@@ -96,7 +96,7 @@ compartmentInfo = getCompartmentInfo(equationList)
 
 
 filename <- "petab"
-writePetab(pe, filename, unitInfo = "simple")
+writePetab(pe, filename)
 unlink(list.files(".", "\\.o$|\\.so$|\\.c$"))
 
 # Exit ----

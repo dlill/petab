@@ -464,7 +464,6 @@ sbml_addOneParameterNum <- function(model, parName, parValue, parUnit) {
   parm = Model_createParameter(model)  
   Parameter_setId(parm, parName)
   Parameter_setValue(parm, parValue)
-  Parameter_setUnits(parm, parUnit)
 }
 
 #' Title
@@ -828,7 +827,6 @@ sbml_validateSBML <- function(sbmlDoc)
 sbml_exportEquationList <- function(equationList,
                                     filename,
                                     modelname = "Model",
-                                    unitInfo        = "original",
                                     speciesInfo     = getSpeciesInfo(equationList),
                                     parInfo         = getParInfo(equationList, eventList = events),
                                     compartmentInfo = getCompartmentInfo(equationList),
@@ -839,9 +837,7 @@ sbml_exportEquationList <- function(equationList,
   library(libSBML)
   
   # Collect arguments
-  if(unitInfo == "original"){
-    unitInfo = getUnitInfo()
-  } else if (unitInfo == "simple") unitInfo = getUnitInfoSimple()
+  unitInfo = getUnitInfoSimple()
   
   reactionInfo <- getReactionInfo(equationList,parInfo = parInfo$num)
   if (!is.null(events)) eventInfo <- getEventInfo(events)

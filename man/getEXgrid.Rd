@@ -4,7 +4,7 @@
 \alias{getEXgrid}
 \title{Get condition specific parameters}
 \usage{
-getEXgrid(est.grid, fixed.grid, scale)
+getEXgrid(est.grid, fixed.grid, trafo)
 }
 \arguments{
 \item{est.grid}{as output by dMod::getParGrids()[\link{1}]}

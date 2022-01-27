@@ -8,7 +8,6 @@ sbml_exportEquationList(
   equationList,
   filename,
   modelname = "Model",
-  unitInfo = "original",
   speciesInfo = getSpeciesInfo(equationList),
   parInfo = getParInfo(equationList, eventList = events),
   compartmentInfo = getCompartmentInfo(equationList),
@@ -23,13 +22,13 @@ sbml_exportEquationList(
 
 \item{modelname}{}
 
-\item{unitInfo}{}
-
 \item{speciesInfo}{}
 
 \item{parInfo}{}
 
 \item{compartmentInfo}{}
+
+\item{unitInfo}{}
 }
 \value{
 NULL, called for side effect
