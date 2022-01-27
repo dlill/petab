@@ -879,7 +879,7 @@ readPetab <- function(filename) {
 #' @importFrom yaml write_yaml
 #'
 #' @examples
-writePetab <- function(pe, filename = "petab/model", unitInfo = "original") {
+writePetab <- function(pe, filename = "petab/model") {
   
   # remove parInfo and speciesInfo from model as they are generated automatically
   # and case trubble in sbml_exportEquationList when present
@@ -931,8 +931,7 @@ writePetab <- function(pe, filename = "petab/model", unitInfo = "original") {
   files_xml <- grep("xml", files, value = TRUE)
   if (length(files_xml)) {
     args <- c(pe$model, list(filename = files_xml,
-                             modelname = modelname,
-                             unitInfo = unitInfo))
+                             modelname = modelname))
     # args <- args[setdiff(names(args), "events")] # [ ] Todo: Events
     do.call(sbml_exportEquationList, args)
   }
@@ -994,11 +993,11 @@ petabYaml <- function(parameter_file = NULL,
   yaml_content <- list(format_version = 1, # Update if necessary
                        parameter_file = parameter_file, 
                        problems = list(list( # One problem
-                         condition_files = condition_files, 
-                         measurement_files = measurement_files, 
-                         observable_files = observable_files, 
-                         sbml_files = sbml_files, 
-                         visualization_files = visualization_files)), 
+                         condition_files = list(condition_files), 
+                         measurement_files = list(measurement_files), 
+                         observable_files = list(observable_files), 
+                         sbml_files = list(sbml_files), 
+                         visualization_files = list(visualization_files))), 
                        meta_file = meta_file, 
                        metaInformation_file = metaInformation_file)
   
