@@ -6,7 +6,8 @@ library(conveniencefunctions)
 
 try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 .currentWD <- getwd()
-.combiledFolder <- "Compiled_Objects"
+.combiledFolder <- "CompiledObjects"
+dir.create(file.path(.currentWD,.combiledFolder), showWarnings = FALSE)
 
 # -------------------------------------------------------------------------#
 # Create enzyme kinetics model and data ----

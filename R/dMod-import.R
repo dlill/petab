@@ -306,9 +306,11 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
   obj_data <- normL2(mydata, prd, errmodel = myerr,
                      times = seq(0,max(as.data.frame(mydata)$time), len=501))
   
-  filenameParts = list(modelname = modelname, .currentFolder = mywd,
+  model_yaml <- paste0(modelname, ".yaml")
+  
+  filenameParts = list(modelname = model_yaml, .currentFolder = mywd,
                        .compiledFolder = "CompiledObjects",type = "classic")
-  pe <- readPetab(filename = file.path(path2model, modelname))
+  pe <- readPetab(filename = file.path(modelname, model_yaml))
   # .. Collect final list -----
   pd <- list(
     # petab

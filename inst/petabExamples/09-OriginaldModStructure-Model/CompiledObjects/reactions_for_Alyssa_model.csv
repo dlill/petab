@@ -1,0 +1,3 @@
+"Description","Rate","ERK","pERK"
+"ERK to pERK basal","k4 * ERK",-1,1
+"pERK to ERK","k5 * pERK",1,-1

@@ -15,4 +15,3 @@ offset_pERK	offset_pERK	log	6.14e-06	162754.8	2.71828182845905	1	parameterScaleU
 scale_pERK_C1	scale_pERK_C1	log	6.14e-06	162754.8	2.71828182845905	1	parameterScaleUniform	-1;1		0;2
 scale_pERK_C2	scale_pERK_C2	log	6.14e-06	162754.8	2.71828182845905	1	parameterScaleUniform	-1;1		0;2
 scale_pERK_C3	scale_pERK_C3	log	6.14e-06	162754.8	2.71828182845905	1	parameterScaleUniform	-1;1		0;2
-sigma_pERK_obs	sigma_pERK_obs	log	6.14e-06	162754.8	2.71828182845905	1	parameterScaleUniform	-1;1		0;2

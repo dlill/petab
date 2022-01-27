@@ -62,6 +62,7 @@ petab_dModmodel2PE <- function(ODEmodel,
   obsDF <- as.data.frame(obsFun)
   obsDF$obsFun <- as.character(obsDF$obsFun)
   formula <- NULL
+  noiseformula <- NULL
   obsscale <- NULL
   obsParMatch <- NULL
   for(i in 1:length(obsDF$obsFun)){
@@ -90,8 +91,22 @@ petab_dModmodel2PE <- function(ODEmodel,
       }
     } else obsStr <- NA
     
+    noise <- errormodel[obs_name]
+    # replace noisepars by standard nomenclature
+    noisePars <- setdiff(getSymbols(noise), ODEmodel$states)
+    if(length(noisePars) != 0) {
+      names(noisePars) <- paste0("noiseParameter", 1:length(noisePars), "_", obs_name)
+      noiseStr <- paste(noisePars, collapse= ";")
+      for(i in 1:length(noisePars)){
+        np <- noisePars[i]
+        np_name <- names(np)
+        noise <- gsub(np, np_name, noise)
+      }
+    } else noiseStr <- NA
+    noiseformula <- rbind(noiseformula, data.table(observableId = obs_name, noiseFormula = noise))
+    
     # create match table for observable parameters
-    obsParMatch <- rbind(obsParMatch, data.table(observableId = obs_name, observableParameters = obsStr))
+    obsParMatch <- rbind(obsParMatch, data.table(observableId = obs_name, observableParameters = obsStr, noiseParameters = noiseStr))
   }
   
   pe_ob <- petab_observables(observableId = rownames(obsDF), 
@@ -99,11 +114,8 @@ petab_dModmodel2PE <- function(ODEmodel,
                              observableFormula = formula, 
                              observableTransformation = obsscale)
   
-  #[] adjust for multiple noise parameters
-  pe_ob[,`:=`(noiseFormula = paste0("noiseParameter1_", observableId),
-              noiseDistribution = "normal")]
-  
-  noiseParMatch <- data.table(observableId=names(errormodel), noiseParameters=errormodel)
+  if(!is.null(errormodel)) pe_ob[noiseformula, ":=" (noiseFormula = i.noiseFormula, 
+                                                     noiseDistribution = "normal"), on = .(observableId)]
   
   
   cat("Writing measurements ...\n")
@@ -113,16 +125,18 @@ petab_dModmodel2PE <- function(ODEmodel,
                                  measurement = data$value,
                                  time = data$time,
                                  observableParameters = NA_character_,
-                                 noiseParameters = NA_character_,
+                                 noiseParameters = data$sigma,
                                  datasetId = "data1", # is adjusted below
                                  replicateId = 1, #[] could be adjusted
                                  preequilibrationConditionId = NA_character_,
                                  datapointId = 1:nrow(data)
                                  
   )
-  # add observable parameters
-  pe_me[obsParMatch, observableParameters := i.observableParameters, on = .(observableId)]
-  # replace condition specific obspars in pe_ex
+  # add observable and noise parameters
+  pe_me[obsParMatch, ":=" (observableParameters = i.observableParameters), on = .(observableId)]
+  if(!is.null(errormodel)) pe_me[obsParMatch, ":=" (noiseParameters = i.noiseParameters), on = .(observableId)]
+  
+  # replace condition specific observable and noise parameters in pe_ex
   obspars <- getSymbols(obsParMatch$observableParameters)
   selpars <- c("conditionId", obspars)
   for(c in unique(pe_me$simulationConditionId)) {
@@ -132,17 +146,21 @@ petab_dModmodel2PE <- function(ODEmodel,
       pe_me[simulationConditionId == c, observableParameters := gsub(names(replpar), replpar, observableParameters)]
     }
   }
+  noisepars <- getSymbols(obsParMatch$noiseParameters)
+  if(length(noisepars) > 0) {
+    selpars <- c("conditionId", noisepars)
+    for(c in unique(pe_me$simulationConditionId)) {
+      replacements <- pe_ex[conditionId == c, ..selpars][,-1]
+      for(r in 1:ncol(replacements)){
+        replpar <- replacements[,..r]
+        pe_me[simulationConditionId == c, noiseParameters := gsub(names(replpar), replpar, noiseParameters)]
+      }
+    }
+  }
   
-  # add noise parameters (to be extended for several noise pars)
-  if (!is.null(errormodel)){
-    pe_me[noiseParMatch, noiseParameters := i.noiseParameters, on = .(observableId)]
-  } else if (!is.na(data$sigma)){
-    pe_me[, noiseParameters := data$sigma]
-  } else print("Warning: No errors provided!")
   
   # exclude obs and noise pars and all unchanged pars from pe_ex
   pe_ex <- pe_ex[, !..obspars]
-  noisepars <- getSymbols(pe_me$noiseParameters)
   pe_ex <- pe_ex[, !..noisepars]
   pe_ex_orig <- copy(pe_ex)
   pfix <- NULL
