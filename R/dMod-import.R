@@ -1954,7 +1954,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
                                   testCases = FALSE,
                                   path2TestCases = "PEtabTests/",
                                   .compiledFolder = file.path("CompiledObjects"),
-                                  NFLAGcompile = c(Auto = 3, Recompile = 0, RebuildGrids = 1, LoadPrevious = 2)[3],
+                                  NFLAGcompile = c(Auto = 3, Recompile = 0, RebuildGrids = 1, LoadPrevious = 2)[1],
                                   SFLAGbrowser = c("0None", "1Beginning", "2BuildGrids", "3Compilation", "4CollectList",
                                                    "5Scales", "6ParameterFormulaInjection")[1]
 )
@@ -2152,11 +2152,11 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
     myg <- dMod::Y(myobservables, myreactions, compile=TRUE, modelname=paste0("g_",modelname))
     
     cat("Compiling odemodel\n")
+    parsSens <- c(dMod::getParametersToEstimate(est.grid = gl$est.grid,trafo = c(trafo, trafoInjected),reactions = myreactions),
+                  pe$meta$parameterFormulaInjection$parameterId)
+    if (!length(parsSens)) parsSens <- c(myreactions$states[1])
     myodemodel <- dMod::odemodel(myreactions, forcings = NULL, events = myevents, fixed=NULL,
-                                 estimate = c(dMod::getParametersToEstimate(est.grid = gl$est.grid,
-                                                                            trafo = c(trafo, trafoInjected),
-                                                                            reactions = myreactions),
-                                              pe$meta$parameterFormulaInjection$parameterId),
+                                 estimate = parsSens,
                                  modelname = paste0("odemodel_", modelname),
                                  jacobian = "inz.lsodes", compile = TRUE)
     
