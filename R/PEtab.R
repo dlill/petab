@@ -1289,7 +1289,7 @@ pepy_sample_parameter_startpoints <- function(pe, n_starts = 100L, seed = 1L, FL
     seed = seed)
   pars <- `colnames<-`(pars, pe$parameters$parameterId[pe$parameters$estimate==1])
   if (FLAGincludeCurrent) {
-    pars <- pars[,names(pd$pars)]
+    pars <- pars[,names(pd$pars),drop = FALSE]
     pars <- rbind(pd$pars, pars)
   }
   pars <- dMod::parframe(pars)
