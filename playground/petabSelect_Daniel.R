@@ -12,7 +12,7 @@ dir.create(pathPSProj, showWarnings = FALSE, recursive = TRUE)
 pathPetabProjects <- file.path(pathPSProj, "petabProjects")
 dir.create(pathPetabProjects, showWarnings = FALSE, recursive = TRUE)
 
-path_problem <- "/home/daniel/Promotion/Promotion/Software/petab_select/test_cases/0002/petab_select_problem.yaml"
+path_problem <- "/home/daniel/Promotion/Promotion/Software/petab_select/test_cases/0003/petab_select_problem.yaml"
 
 
 # petabSelect <- function(path) {
@@ -25,68 +25,13 @@ selection_problem <- peps$Problem$from_yaml(path_problem)
 candidates <- peps$candidates(problem = selection_problem)
 
 # ..  -----
-
+candidates <- peps$candidates(problem = selection_problem)
 models <- candidates$models
 m  <- (models)[[1]]
-
-for (m  in models) {
-  modelId <- substr(m$model_id, 1,8)
-  pathm <- file.path(pathPetabProjects, modelId, "petab")
-  m$to_petab(output_path = pathm)
-  pathmPetab <- file.path(pathPetabProjects, modelId, "petab", paste0(modelId, ".yaml"))
-  file.copy(file.path(pathPetabProjects, modelId, "petab", "problem.yaml"), pathmPetab)
-  
-  pathmCompiled <- file.path(pathPetabProjects, modelId, "Compiled")
-  pd <- importPEtabSBML_indiv(pathmPetab, .compiledFolder = pathmCompiled, NFLAGcompile = 3)
-  
-  pd <- pd_fit(pd)
-  
-  reportYaml <- pd_petabSelect_reportYaml(pd)
-  criterion <- gsub("Criterion.", "", selection_problem$criterion)
-  m$set_criterion(selection_problem$criterion, reportYaml$criteria[[criterion]])
-  
-  m$to_yaml(file.path(pathPetabProjects, modelId, "petab", paste0("petabSelect_", modelId, ".yaml")))
-  
-}
-
-selection_problem$add_calibrated_models(models)
-m_best <- selection_problem$get_best()
-
-
-# ..  -----
-candidates <- peps$candidates(problem = selection_problem)
-models <- candidates$models
-# m  <- (models)[[1]]
-for (m  in models) {
-  modelId <- substr(m$model_id, 1,8)
-  pathm <- file.path(pathPetabProjects, modelId, "petab")
-  m$to_petab(output_path = pathm)
-  pathmPetab <- file.path(pathPetabProjects, modelId, "petab", paste0(modelId, ".yaml"))
-  file.copy(file.path(pathPetabProjects, modelId, "petab", "problem.yaml"), pathmPetab)
-  
-  pathmCompiled <- file.path(pathPetabProjects, modelId, "Compiled")
-  pd <- importPEtabSBML_indiv(pathmPetab, .compiledFolder = pathmCompiled, NFLAGcompile = 3)
-  
-  pd <- pd_fit(pd)
-  
-  reportYaml <- pd_petabSelect_reportYaml(pd)
-  criterion <- gsub("Criterion.", "", selection_problem$criterion)
-  m$set_criterion(selection_problem$criterion, reportYaml$criteria[[criterion]])
-
-  m$to_yaml(file.path(pathPetabProjects, modelId, "petab", paste0("petabSelect_", modelId, ".yaml")))
-  
-  }
-
-selection_problem$add_calibrated_models(models)
-m_best <- selection_problem$get_best()
-
-# ..  -----
-candidates <- peps$candidates(problem = selection_problem)
-models <- candidates$models
-# m  <- (models)[[1]]
 for (m  in models) {
   
   modelId <- substr(m$model_id, 1,8)
+  cat(modelId, "\n")
   pathm <- file.path(pathPetabProjects, modelId, "petab")
   pathmPSYaml <- file.path(pathPetabProjects, modelId, "petab", paste0("petabSelect_", modelId, ".yaml"))
   pathmPetab <- file.path(pathPetabProjects, modelId, "petab", paste0(modelId, ".yaml"))
@@ -98,7 +43,7 @@ for (m  in models) {
   file.copy(file.path(pathPetabProjects, modelId, "petab", "problem.yaml"), pathmPetab)
   
   pd <- importPEtabSBML_indiv(pathmPetab, .compiledFolder = pathmCompiled, NFLAGcompile = 3)
-  pd <- pd_fit(pd)
+  pd <- pd_fitMstrust(pd)
   
   reportYaml <- pd_petabSelect_reportYaml(pd)
   criterion  <- gsub("Criterion.", "", selection_problem$criterion)
@@ -110,6 +55,7 @@ for (m  in models) {
 selection_problem$add_calibrated_models(models)
 m_best <- selection_problem$get_best()
 
+selection_problem$calibrated_models
 
 
 # ..  -----
