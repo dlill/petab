@@ -19,13 +19,13 @@
 #' @family SBML export
 petab_dModmodel2PE <- function(ODEmodel,
                                obsFun,
-                               errormodel,
                                data,  
                                bestfit,
                                trafo,
                                estGrid,
                                fixedGrid,
-                               eventList,
+                               errormodel = NULL,
+                               eventList = NULL,
                                lb = 6.14e-06, 
                                ub = 162754.8){
   

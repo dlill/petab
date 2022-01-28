@@ -216,6 +216,7 @@ getReactionInfo <- function(equationList, parInfo = getParInfo(equationList)) {
   re <- fl[re, on = c("Description")]
   
   re[,`:=`(reactionName = gsub(" ", "", Description))]
+  if(any(str_detect(re$reactionName, "\\("))) re[,`:=`(reactionName = gsub("\\(|\\)", "", reactionName))]
   re[,`:=`(parName  = lapply(Rate,    function(x)  setdiff(cOde::getSymbols(x), equationList$states)))]
   re[,`:=`(parValue = lapply(parName, function(pn) parInfo[parName %in% pn, parValue]))]
   re[,`:=`(parUnit  = lapply(parName, function(pn) parInfo[parName %in% pn, parUnit]))]

@@ -21,7 +21,6 @@ sbmlImport_getCompartmentsFromSBML(modelfile)
 }
 \seealso{
 Other SBML import: 
-\code{\link{sbmlImport_getParametersFromSBML}()},
 \code{\link{smblImport_replaceFunctions}()}
 }
 \author{

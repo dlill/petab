@@ -52,7 +52,7 @@
       </initialAssignment>
     </listOfInitialAssignments>
     <listOfReactions>
-      <reaction reversible="false">
+      <reaction id="ligandinducedR1R2formationNISS" reversible="false">
         <listOfReactants>
           <speciesReference species="R1" stoichiometry="1"/>
           <speciesReference species="R2" stoichiometry="1"/>
@@ -76,7 +76,7 @@
           </math>
         </kineticLaw>
       </reaction>
-      <reaction reversible="false">
+      <reaction id="R1R2decayNISS" reversible="false">
         <listOfReactants>
           <speciesReference species="R1R2" stoichiometry="1"/>
         </listOfReactants>
@@ -95,7 +95,7 @@
           </math>
         </kineticLaw>
       </reaction>
-      <reaction reversible="false">
+      <reaction id="ERKtopERKNISS" reversible="false">
         <listOfReactants>
           <speciesReference species="ERK" stoichiometry="1"/>
         </listOfReactants>
@@ -153,7 +153,7 @@
           </math>
         </kineticLaw>
       </reaction>
-      <reaction reversible="false">
+      <reaction id="stimulationNISS" reversible="false">
         <listOfProducts>
           <speciesReference species="ligand" stoichiometry="1"/>
         </listOfProducts>

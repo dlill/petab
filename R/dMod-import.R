@@ -358,7 +358,7 @@ importPEtabSBML <- function(modelname = "Boehm_JProteomeRes2014",
 #' @export
 #' @importFrom dMod mstrust msParframe
 #'
-fitModelPEtabSBML <- function(objfun=obj, nrfits=4, nrcores=4, useBounds=TRUE){
+fitModelPEtabSBML <- function(objfun=obj, nrfits=4, nrcores=4, useBounds=TRUE, model_name = "petab_model"){
   prior <- structure(rep(0,length(pouter)))
   names(prior) <- names(pouter)
   mywd <- getwd()
@@ -1516,37 +1516,113 @@ sbmlImport_getEventsFromTrueEvents <- function(modelfile) {
   eventList
 }
 
+
 #' Extract parameters from SBML
-#' 
-#' Assumes the parameters are given numerically
-#' 
-#' @param modelfile Path to SBML file
 #'
-#' @return [petab_parameters()] with scale = "lin" and estimate = 0
+#' @description This function imports parameter values or equations describing the same from SBML and writes them in a named vector.
+#'
+#' @param model SBML file as .xml
+#'
+#' @return List of parameters vectors: pars_num and pars_sym
+#'
+#' @author Marcus Rosenblatt, Svenja Kemmer and Frank Bergmann
+#' importFrom libSBML readSBML formulaToL3String
 #' @export
-#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
-#' @md
-#' @family SBML import
 #'
-#' @examples
-#' modelfile <- file.path(petab_examplePath("01", "pe"), "model_petab.xml")
-#' sbmlImport_getCompartmentsFromSBML(modelfile)
-sbmlImport_getParametersFromSBML <- function(modelfile) {
+sbmlImport_getParametersFromSBML <- function(modelfile){
+  
   model = readSBML(modelfile)$getModel()
   nx <- model$getNumParameters()
   
-  pars <- NULL
-  for (i in (seq_len(nx)-1)) {
+  values <- pars <- NULL
+  # now we can go through all parameters
+  for (i in (seq_len(nx)-1) ){
+    current <- model$getParameter(i)
     mypar <- model$getParameter(i)$getId()
-    value <- model$getParameter(i)$getValue()
-    pars <- c(pars, setNames(value, mypar))
+    # now the parameters can have several cases that determine their value
+    
+    # CASE 1: it could be that the parameter is fully determined by an assignment rule
+    # (that apply at all times), so we have to check rules first
+    # [ ] Case 1.1 and 1.2 not yet tested, just adapted from getInitialsSBML
+    rule <- model$getRule(mypar)
+    if (!is.null(rule)) {
+      # ok there is a rule for this species so lets figure out what its type
+      # is as that determines whether it applies at t0
+      rule_type <- rule$getTypeCode()
+      type_name <- SBMLTypeCode_toString(rule_type, 'core')
+      # CASE 1.1: Assignment rule
+      if (type_name == "AssignmentRule"){
+        # the initial value is determined by the formula
+        math <- rule$getMath()
+        if (!is.null(math)){
+          formula <- formulaToL3String(math)
+          # print(paste('Species: ', current$getId(), ' is determined at all times by formula: ', formula))
+          values <- c(values,formula)
+          pars <- c(pars,current$getId())
+          # no need to look at other values so continue with next species
+          next
+        }
+      }
+      
+      # CASE 1.2: Rate rule
+      if (type_name == "RateRule") {
+        math <- rule$getMath()
+        if (!is.null(math)) {
+          formula <- formulaToL3String(math)
+          # print(paste('Species: ', current$getId(), ' has an ode rule with formula: ', formula))
+          values <- c(values,formula)
+          pars <- c(pars,current$getId())
+          # there is an ODE attached to the species, its initial value is needed
+        }
+      }
+    }
+    
+    # CASE 2 (or subcase of 1?): Initial assignment
+    # it could have an initial assignment
+    ia <- model$getInitialAssignment(mypar)
+    if (!is.null(ia)) {
+      math <- ia$getMath()
+      if (!is.null(math)) {
+        formula <- formulaToL3String(math)
+        # formula <- libSBML::formulaToL3String(math)
+        # print(paste("Parameter: ", current$getId(), " has an initial assignment with formula: ", formula))
+        values <- c(values,formula)
+        pars <- c(pars,current$getId())
+        # as soon as you have that formula, no initial concentration / amount applies
+        # so we don't have to look at anything else for this species
+        next
+      }
+    }
+    
+    # CASE 3 (or subcase of 1?): Value
+    # all parameters have a default value which is used if nothing else is specified
+    if (current$getValue()) {
+      # print (paste("Species: ", current$getId(), "has initial amount: ", current$getInitialAmount()))
+      values <- c(values,current$getValue())
+      pars <- c(pars,current$getId())
+    }
+    
   }
+  names(values) <- pars
   
-  petab_parameters(parameterId = names(pars), 
-                   parameterScale = "lin",
-                   lowerBound = 1e-10, upperBound = 1e10,
-                   nominalValue = pars,
-                   estimate = 0)
+  
+  # Post process initials: Divide into symbolic and numeric
+  # initials <- c(a = "1", b = "2")
+  # initials <- c(a = "1", b = "a+f")
+  # initials <- c(a = "c+d", b = "a+f")
+  
+  pars_sym <- suppressWarnings(values[ is.na(as.numeric(values))])
+  pars_sym <- data.table(parameterId = names(pars_sym),
+                          parameterFormula = pars_sym)
+  
+  pars_num <- suppressWarnings(values[!is.na(as.numeric(values))])
+  pars_num <- suppressWarnings(petab_parameters(parameterId = names(pars_num), 
+                                                 parameterScale = "lin",
+                                                 lowerBound = 1e-10, upperBound = 1e10,
+                                                 nominalValue = as.numeric(pars_num),
+                                                 estimate = 0))
+
+  list(pars_sym = pars_sym, pars_num = pars_num)
 }
 
 #' Extract compartments from SBML
@@ -2056,7 +2132,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
   # * SBML inits
   # * Events
   parsFix <- pe$parameters[estimate == 0] # replaces myconstraints part1
-  parsFix_SBMLPars <- sbmlImport_getParametersFromSBML(files$modelXML)   # replaces myconstraints part2
+  parsFix_SBMLPars <- sbmlImport_getParametersFromSBML(files$modelXML)$pars_num   # replaces myconstraints part2
   parsFix_SBMLPars <- parsFix_SBMLPars[!parameterId %in% c(names(cg), parsFix$parameterId, parsEst$parameterId)] 
   parsFix_SBMLComp <- sbmlImport_getCompartmentsFromSBML(files$modelXML) # replaces myconstraints part3
   parsFix_SBMLComp <- parsFix_SBMLComp[!parameterId %in% c(names(cg), parsFix$parameterId, parsEst$parameterId)] 
@@ -2120,7 +2196,8 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
   # Insert inits
   trafo_inits <- sbmlImport_getInitialsFromSBML(files$modelXML)$inits_sym
   trafo[trafo_inits$parameterId] <- trafo_inits$parameterFormula
-  trafo_assignmentRules <- NULL # [] Todo, if there is anything that needs to be done...
+  trafo_assignmentRules <- sbmlImport_getParametersFromSBML(files$modelXML)$pars_sym # [] Todo, if there is anything that needs to be done...
+  trafo[trafo_assignmentRules$parameterId] <- trafo_assignmentRules$parameterFormula
   
   # Insert scales
   trafo <- repar("x ~ 10**(x)", trafo = trafo, x = names(which(scalesBase=="log10")))
@@ -2143,6 +2220,9 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
     # trafoInjected
     trafoInjected <- setNames(pfi$parameterFormula, pfi$parameterId)
   }
+  
+  # include parameter fixes from cg in trafo
+  
   
   # -------------------------------------------------------------------------#
   # .. Model Compilation -----
@@ -2227,10 +2307,10 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
     pe                 = pe,
     # Basic dMod elements
     dModAtoms          = list(
-      # [ ] add events!
       symbolicEquations  = symbolicEquations,
       odemodel           = myodemodel,
       data               = mydata,
+      events             = myevents,
       gridlist           = gl,
       e                  = myerr,
       fns                = fns

@@ -21,8 +21,7 @@ Replace function calls by their mathematical expressions
 }
 \seealso{
 Other SBML import: 
-\code{\link{sbmlImport_getCompartmentsFromSBML}()},
-\code{\link{sbmlImport_getParametersFromSBML}()}
+\code{\link{sbmlImport_getCompartmentsFromSBML}()}
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)

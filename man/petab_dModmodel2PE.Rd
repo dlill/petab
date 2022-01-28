@@ -7,13 +7,13 @@
 petab_dModmodel2PE(
   ODEmodel,
   obsFun,
-  errormodel,
   data,
   bestfit,
   trafo,
   estGrid,
   fixedGrid,
-  eventList,
+  errormodel = NULL,
+  eventList = NULL,
   lb = 6.14e-06,
   ub = 162754.8
 )
@@ -23,11 +23,11 @@ petab_dModmodel2PE(
 
 \item{obsFun}{}
 
-\item{errormodel}{}
-
 \item{data}{DT with obligatory columns name, time, value, sigma, condition}
 
 \item{trafo}{}
+
+\item{errormodel}{}
 
 \item{eventList}{}
 

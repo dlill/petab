@@ -1188,11 +1188,11 @@ petab_lint <- function(pe) {
     warning("These rows are duplicates in conditionId :", paste0(head(dupes,10), collapse = ","), "...")
     errlist <- c(errlist, list(conditionIdDupes = dupes))}
   
-  nm_fixed <- setdiff(names(pe$experimentalCondition), c("conditionId", "conditionName"))
-  if (length(nm_fixed)) {
-    nm_fixed <- vapply(setNames(nm = nm_fixed), function(nm) {suppressWarnings(any(!is.na(as.numeric(pe$experimentalCondition[[nm]]))))}, FUN.VALUE = TRUE)
-    if (any(nm_fixed)) warning("The numeric values in experimentalCondition are assumed on estScale. The following parameters are affected: ", paste0(names(nm_fixed)[nm_fixed], collapse = ", "))
-  }
+  # nm_fixed <- setdiff(names(pe$experimentalCondition), c("conditionId", "conditionName"))
+  # if (length(nm_fixed)) {
+  #   nm_fixed <- vapply(setNames(nm = nm_fixed), function(nm) {suppressWarnings(any(!is.na(as.numeric(pe$experimentalCondition[[nm]]))))}, FUN.VALUE = TRUE)
+  #   if (any(nm_fixed)) warning("The numeric values in experimentalCondition are assumed on estScale. The following parameters are affected: ", paste0(names(nm_fixed)[nm_fixed], collapse = ", "))
+  # }
   
   # measurementData
   dupes <- which(duplicated(pe$measurementData))

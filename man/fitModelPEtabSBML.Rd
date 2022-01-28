@@ -4,7 +4,13 @@
 \alias{fitModelPEtabSBML}
 \title{Fit a model imported via importPEtabSBML}
 \usage{
-fitModelPEtabSBML(objfun = obj, nrfits = 4, nrcores = 4, useBounds = TRUE)
+fitModelPEtabSBML(
+  objfun = obj,
+  nrfits = 4,
+  nrcores = 4,
+  useBounds = TRUE,
+  model_name = "petab_model"
+)
 }
 \arguments{
 \item{objfun}{Objective function to be minimized as created by \link{importPEtabSBML}.}

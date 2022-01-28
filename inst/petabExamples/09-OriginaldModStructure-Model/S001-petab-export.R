@@ -73,6 +73,10 @@ pe <- petab_dModmodel2PE(ODEmodel=reactions,
                          fixedGrid=fixed.grid,
                          eventList=eventlist
                          )
+filename <- "petab"
+writePetab(pe, filename)
+unlink(list.files(".", "\\.o$|\\.so$|\\.c$"))
+
               
 ODEmodel=reactions
 obsFun=observables
@@ -89,14 +93,11 @@ equationList = args$equationList
 events = args$events
 parameterFormulaList = args$parameterFormulaList
 modelname = "Model"
-unitInfo        = getUnitInfo()
 speciesInfo     = getSpeciesInfo(equationList)
 parInfo         = getParInfo(equationList, eventList = events)
 compartmentInfo = getCompartmentInfo(equationList)
 
 
-filename <- "petab"
-writePetab(pe, filename)
-unlink(list.files(".", "\\.o$|\\.so$|\\.c$"))
+
 
 # Exit ----

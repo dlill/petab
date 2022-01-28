@@ -16,9 +16,9 @@ modelname <- "dMod_model"
 
 # .. 1 Reactions -----
 reactions <- NULL %>% 
-  addReaction(from = "R1+R2", to = "R1R2", rate = "k1 * R1 * R2 * ligand", description = "ligand induced R1R2 formation (N)") %>% 
-  addReaction(from = "R1R2", to = "R1+R2", rate = "k2 * R1R2", description = "R1R2 decay (N)") %>% 
-  addReaction(from = "ERK", to = "pERK", rate = "k3 * ERK * R1R2", description = "ERK to pERK (N)") %>% 
+  addReaction(from = "R1+R2", to = "R1R2", rate = "k1 * R1 * R2 * ligand", description = "ligand induced R1R2 formation (NISS)") %>% 
+  addReaction(from = "R1R2", to = "R1+R2", rate = "k2 * R1R2", description = "R1R2 decay (NISS)") %>% 
+  addReaction(from = "ERK", to = "pERK", rate = "k3 * ERK * R1R2", description = "ERK to pERK (NISS)") %>% 
   addReaction(from = "ERK", to = "pERK", rate = "k4 * ERK", description = "ERK to pERK basal") %>% 
   addReaction(from = "pERK", to = "ERK", rate = "k5 * pERK", description = "pERK to ERK")
   
@@ -32,7 +32,7 @@ observables <- eqnvec(
 observables <- as.eqnvec(paste("log10(", observables, ")"), names = names(observables))
   
 # .. 3 Events -----
-reactions <- addReaction(reactions, "0", "ligand", rate = "0", description = "stimulation (N)")
+reactions <- addReaction(reactions, "0", "ligand", rate = "0", description = "stimulation (NISS)")
 
 eventlist <- NULL %>% 
   addEvent(var = "ligand", time = 0, value = 1, method = "replace")
@@ -180,14 +180,20 @@ obj <- cf_normL2_indiv(mydata, prd0, e, est.grid, fixed.grid, times = mytimes) +
 
 # .. mstrust -----
 if(FALSE){
-  out <- mstrust(
-    objfun=obj,
-    center=pouter,
-    rinit = 1, 
-    rmax = 10,
-    fits = 2,
-    studyname = modelname
-  )
+  nrfits <- 10
+  nrcores <- 10
+  out <- mstrust(objfun=obj, 
+                 center=dMod::msParframe(pouter, n = nrfits, seed=47), 
+                 studyname=modelname, 
+                 rinit = 0.1, 
+                 rmax = 10,
+                 fits = nrfits, 
+                 cores = nrcores, 
+                 samplefun = "rnorm",
+                 stats = FALSE, 
+                 narrowing = NULL, 
+                 iterlim=400, 
+                 sd = 3)
   
   myfitlist <- as.parframe(out)
   bestfit <- as.parvec(myfitlist, 1)

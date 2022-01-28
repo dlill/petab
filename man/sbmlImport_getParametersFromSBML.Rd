@@ -7,24 +7,15 @@
 sbmlImport_getParametersFromSBML(modelfile)
 }
 \arguments{
-\item{modelfile}{Path to SBML file}
+\item{model}{SBML file as .xml}
 }
 \value{
-\code{\link[=petab_parameters]{petab_parameters()}} with scale = "lin" and estimate = 0
+List of parameters vectors: pars_num and pars_sym
 }
 \description{
-Assumes the parameters are given numerically
-}
-\examples{
-modelfile <- file.path(petab_examplePath("01", "pe"), "model_petab.xml")
-sbmlImport_getCompartmentsFromSBML(modelfile)
-}
-\seealso{
-Other SBML import: 
-\code{\link{sbmlImport_getCompartmentsFromSBML}()},
-\code{\link{smblImport_replaceFunctions}()}
+This function imports parameter values or equations describing the same from SBML and writes them in a named vector.
 }
 \author{
-Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+Marcus Rosenblatt, Svenja Kemmer and Frank Bergmann
+importFrom libSBML readSBML formulaToL3String
 }
-\concept{SBML import}
