@@ -1025,7 +1025,8 @@ clusterStatusMessage <- function(FLAGjobDone, FLAGjobPurged, FLAGjobRecover) {
 #'
 #' @examples
 pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_nodes = 10, 
-                               identifier = "mstrust", FLAGforcePurge = FALSE, opt.parameter_startpoints = "sample", passwdEnv = NULL) {
+                               identifier = "mstrust", FLAGforcePurge = FALSE, opt.parameter_startpoints = "sample",
+                               passwdEnv = NULL, machine = "cluster") {
   # .. General job handling -----
   jobnm <- paste0("mstrust_", identifier, "_", gsub("-","_",gsub("(S\\d+(-\\d+)?).*", "\\1", basename(.outputFolder))))
   
@@ -1077,7 +1078,7 @@ pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_node
     },
     jobname = jobnm, 
     partition = "single", cores = 16, nodes = 1, walltime = "12:00:00",
-    ssh_passwd = passwdEnv, machine = "cluster", 
+    ssh_passwd = passwdEnv, machine = machine, 
     var_values = NULL, no_rep = n_nodes, 
     recover = FLAGjobRecover,
     compile = F
@@ -1147,7 +1148,8 @@ pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_node
 #'
 #' @examples
 pd_cluster_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfixParsOnBoundary = TRUE, 
-                               profpars = names(pd$pars)) {
+                               profpars = names(pd$pars),
+                               passwdEnv = Sys.getenv("hurensohn"), machine = "cluster") {
   # Fix pars which went to boundary
   if (FLAGfixParsOnBoundary){
     fixed_boundary <- pd_pars_getFixedOnBoundary(pd, tol = 1e-2)
@@ -1194,7 +1196,7 @@ pd_cluster_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfi
     },
     jobname = jobnm, 
     partition = "single", cores = 16, nodes = 1, walltime = "12:00:00",
-    ssh_passwd = Sys.getenv("hurensohn"), machine = "cluster", 
+    ssh_passwd = passwdEnv, machine = machine, 
     var_values = var_list, no_rep = NULL, 
     recover = FLAGjobRecover,
     compile = F
@@ -1258,7 +1260,8 @@ pd_cluster_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfi
 #'
 #' @examples
 pd_cluster_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log10(0.0001), log10(100), length.out = n_nodes*16-1)), 
-                          identifier = "L1", FLAGforcePurge = FALSE) {
+                          identifier = "L1", FLAGforcePurge = FALSE,
+                          passwdEnv = Sys.getenv("hurensohn"), machine = "cluster") {
   # .. General job handling -----
   jobnm <- paste0("mstrust_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))
   
@@ -1308,7 +1311,7 @@ pd_cluster_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log1
     },
     jobname = jobnm, 
     partition = "single", cores = 16, nodes = 1, walltime = "12:00:00",
-    ssh_passwd = Sys.getenv("hurensohn"), machine = "cluster", 
+    ssh_passwd = passwdEnv, machine = machine, 
     var_values = var_list, no_rep = NULL, 
     recover = FLAGjobRecover,
     compile = F
@@ -1368,7 +1371,8 @@ pd_cluster_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log1
 #'
 #' @examples
 pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, 
-                                                 identifier = "L1UB", FLAGforcePurge = FALSE) {
+                                                 identifier = "L1UB", FLAGforcePurge = FALSE,
+                                                 passwdEnv = Sys.getenv("hurensohn"), machine = "cluster") {
   
   stop("implement saving the node id (see S311 for the problem)")
   # .. General job handling -----
@@ -1443,7 +1447,7 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
     },
     jobname = jobnm, 
     partition = "single", cores = 16, nodes = 1, walltime = "12:00:00",
-    ssh_passwd = Sys.getenv("hurensohn"), machine = "cluster", 
+    ssh_passwd = passwdEnv, machine = machine, 
     var_values = var_list, 
     recover = FLAGjobRecover,
     compile = F
@@ -1496,7 +1500,8 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
 #'
 #' @examples
 pd_cluster_L1_fitUnbiasedEachOnce <- function(pd, .outputFolder, n_startsPerNode = 16*3, 
-                                              identifier = "L1UBSingle", FLAGforcePurge = FALSE) {
+                                              identifier = "L1UBSingle", FLAGforcePurge = FALSE,
+                                              passwdEnv = Sys.getenv("hurensohn"), machine = "cluster") {
   
   # .. General job handling -----
   jobnm <- paste0("L1UB_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))
@@ -1571,7 +1576,7 @@ pd_cluster_L1_fitUnbiasedEachOnce <- function(pd, .outputFolder, n_startsPerNode
     },
     jobname = jobnm, 
     partition = "single", cores = 16, nodes = 1, walltime = "12:00:00",
-    ssh_passwd = Sys.getenv("hurensohn"), machine = "cluster", 
+    ssh_passwd = passwdEnv, machine = machine, 
     var_values = var_list, 
     recover = FLAGjobRecover,
     compile = F
