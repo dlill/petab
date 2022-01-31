@@ -138,9 +138,9 @@ est.grid <- getParGrids(trafo, trafoL, condition.grid, SS_pars = "pERK")[[1]]
 fixed.grid <- getParGrids(trafo, trafoL, condition.grid, SS_pars = "pERK")[[2]]
 # for (nm in setdiff(names(fixed.grid), c("ID", "condition"))) fixed.grid[[nm]] <- as.numeric(fixed.grid[[nm]])
 # .. 12 pouter -----
-outerpars <- unlist(est.grid[, getSymbols(trafo)]) %>% unique()
-# remove "dummy" :)
-outerpars <- outerpars[outerpars != "dummy"]
+innerpars <- getSymbols(trafo)
+outerpars <- setdiff(unlist(est.grid[, ..innerpars]) %>% unique(), NA)
+# pouter <- structure(rnorm(length(outerpars)), names = outerpars)
 pouter <- structure(rep(1, length(outerpars)), names = outerpars)
 
 # .. 13 compile model -----
@@ -159,24 +159,36 @@ g <- Y(observables, f = reactions, condition = NULL,
 e <- Y(errors, f = c(as.eqnvec(reactions), observables), states = names(observables), 
        compile = F, modelname = "e", attach.input = FALSE)
 
-p <- P(trafo, modelname = "p")
+p0 <- P(trafo, modelname = "p")
 
-compile(x, g, p, e, output = modelname, cores  = detectFreeCores())
+compile(x, g, p0, e, output = modelname, cores  = detectFreeCores())
 setwd(.currentWD)
 # -------------------------------------------------------------------------#
 # Fit model ----
 # -------------------------------------------------------------------------#
 mytimes <- seq(0, 40, 1)
 
-prd0 <- (g*x*p)
-prd <- cf_PRD_indiv(prd0, est.grid, fixed.grid)
+p <- P_indiv(p0, est.grid, fixed.grid)
+# p(pouter)
 
-# prediction <- prd(mytimes, pouter, FLAGbrowser = F)
-# plotPrediction(prediction)
+# Rebuild high-level prediction function
+prd0 <- Reduce("*", list(g, x, p0))
+prd <- PRD_indiv(prd0, est.grid, fixed.grid)
+# prd(mytimes, pouter)
 
-obj <- cf_normL2_indiv(mydata, prd0, e, est.grid, fixed.grid, times = mytimes) + 
-  constraintL2(pouter, sigma = 12) # constraintL2(pouterFit, sigma = 12) + priorL2(pouterL1, lambda = "lambda")
+# Rebuild obj_data
+obj_data <- normL2_indiv(mydata, prd0,
+                         e,
+                         est.grid = est.grid,
+                         fix.grid = fixed.grid,
+                         times = mytimes)
+obj_prior <- constraintL2(pouter, sigma = 12)
+
+# Rebuild obj
+obj <- Reduce("+", list(obj_data, obj_prior))
 # obj(pouter)
+
+
 
 # .. mstrust -----
 if(FALSE){
@@ -197,6 +209,7 @@ if(FALSE){
   
   myfitlist <- as.parframe(out)
   bestfit <- as.parvec(myfitlist, 1)
+  saveRDS(bestfit, "bestfit_-89.75.rds")
   
   plotCombined(prd(mytimes, bestfit, FLAGbrowser = F), mydata, name == "pERK_obs")
 }

@@ -2181,9 +2181,6 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
   for (par in parsFix$parameterId) cg[cg == par] <- parsFix[parameterId == par, estValue]
   cg <- as.data.table(cg)
   
-  # .. Split into gridlist -----
-  gl <- petab::pdIndiv_initializeGridlist(cg)
-  
   # .. Build trafo -----
   # Initialize
   trafo <- setNames(nm = unique(c(getParameters(myreactions),
@@ -2203,8 +2200,26 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
   trafo <- repar("x ~ 10**(x)", trafo = trafo, x = names(which(scalesBase=="log10")))
   trafo <- repar("x ~ exp(x)" , trafo = trafo, x = names(which(scalesBase=="log")))
   
-  if (grepl(SFLAGbrowser,"5InspectTrafo")) browser()
+  # # Insert pars from cg which are identical in all conditions
+  # insertPars <- NULL
+  # for (n in 1:ncol(cg)){
+  #   if(nrow(unique(cg[,..n])) == 1) insertPars <- cbind(insertPars, unique(cg[,..n]))
+  # }
+  # trafo <- insert("x ~ y", trafo = trafo, x = names(insertPars), y = as.character(insertPars))
+  # # Remove those pars from cg
+  # cg[,(names(insertPars)) := NULL]
   
+  # .. Split cg into gridlist -----
+  gl <- petab::pdIndiv_initializeGridlist(cg)
+  
+  # # Bring fixed pars on estimation scale
+  # cols2logscale <- intersect(names(gl$fix.grid), names(which(scalesBase=="log")))
+  # cols2log10scale <- intersect(names(gl$fix.grid), names(which(scalesBase=="log10")))
+  # if(length(cols2logscale))   gl$fix.grid[,(cols2logscale) := lapply(.SD, function(x){log(x)}), .SDcols = cols2logscale]
+  # if(length(cols2log10scale)) gl$fix.grid[,(cols2log10scale) := lapply(.SD, function(x){log(x)}), .SDcols = cols2log10scale]
+  
+  
+  if (grepl(SFLAGbrowser,"5InspectTrafo")) browser()
   
   # .. ParameterFormulaInjection -----
   if (grepl(SFLAGbrowser, "6ParameterFormulaInjection")) browser()
@@ -2220,9 +2235,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
     # trafoInjected
     trafoInjected <- setNames(pfi$parameterFormula, pfi$parameterId)
   }
-  
-  # include parameter fixes from cg in trafo
-  
+
   
   # -------------------------------------------------------------------------#
   # .. Model Compilation -----
