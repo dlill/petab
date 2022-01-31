@@ -1024,9 +1024,13 @@ clusterStatusMessage <- function(FLAGjobDone, FLAGjobPurged, FLAGjobRecover) {
 #' @importFrom dMod distributed_computing
 #'
 #' @examples
-pd_cluster_mstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_nodes = 10, 
+pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3, n_nodes = 10, 
                                identifier = "mstrust", FLAGforcePurge = FALSE, opt.parameter_startpoints = "sample",
                                passwdEnv = NULL, machine = "cluster") {
+  if (is.null(pd)) {
+    stop("'pd' needs to be defined")
+  }
+  
   # .. General job handling -----
   jobnm <- paste0("mstrust_", identifier, "_", gsub("-","_",gsub("(S\\d+(-\\d+)?).*", "\\1", basename(.outputFolder))))
   
