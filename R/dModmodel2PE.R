@@ -132,6 +132,12 @@ petab_dModmodel2PE <- function(ODEmodel,
                                  datapointId = 1:nrow(data)
                                  
   )
+  # transform data on lin scale
+  obs2log <- pe_ob$observableId[which(pe_ob$observableTransformation=="log")]
+  pe_me$measurement[which(pe_me$observableId%in%obs2log)] <- exp(pe_me$measurement[which(pe_me$observableId%in%obs2log)])
+  obs2log10 <- pe_ob$observableId[which(pe_ob$observableTransformation=="log10")]
+  pe_me$measurement[which(pe_me$observableId%in%obs2log10)] <- 10^(pe_me$measurement[which(pe_me$observableId%in%obs2log10)])
+  
   # add observable and noise parameters
   pe_me[obsParMatch, ":=" (observableParameters = i.observableParameters), on = .(observableId)]
   if(!is.null(errormodel)) pe_me[obsParMatch, ":=" (noiseParameters = i.noiseParameters), on = .(observableId)]
