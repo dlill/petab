@@ -98,6 +98,7 @@ pred[,`:=`(value = exp(log(value) + rnorm(length(value), sd = sigma)))]
 pred[condition == "C1", value := 1 + rnorm(length(value), sd = 0.01)]
 pred[condition == "C2" & time != 0, value := value - 0.1]
 pred[,`:=`(name = paste0(name, "_obs"))]
+pred[, sigma := NA]
 # ggplot(pred, aes(time, value, color = condition))+ geom_point() + geom_line()
 mydata <- copy(pred) %>% as.data.frame() %>% as.datalist(split.by = "condition")
 
@@ -174,7 +175,7 @@ p <- P_indiv(p0, est.grid, fixed.grid)
 # Rebuild high-level prediction function
 prd0 <- Reduce("*", list(g, x, p0))
 prd <- PRD_indiv(prd0, est.grid, fixed.grid)
-# prd(mytimes, pouter)
+# prd(mytimes, bestfit)
 
 # Rebuild obj_data
 obj_data <- normL2_indiv(mydata, prd0,
@@ -186,8 +187,8 @@ obj_prior <- constraintL2(pouter, sigma = 12)
 
 # Rebuild obj
 obj <- Reduce("+", list(obj_data, obj_prior))
-# obj(pouter)
-
+# obj(bestfit)$value
+bestfit <- readRDS("~/Work/Rpackages/petab/inst/petabExamples/09-OriginaldModStructure-Model/bestfit_-89.63.rds")
 
 
 # .. mstrust -----
@@ -209,7 +210,7 @@ if(FALSE){
   
   myfitlist <- as.parframe(out)
   bestfit <- as.parvec(myfitlist, 1)
-  saveRDS(bestfit, "bestfit_-89.75.rds")
+  saveRDS(bestfit, "bestfit_-89.64.rds")
   
   plotCombined(prd(mytimes, bestfit, FLAGbrowser = F), mydata, name == "pERK_obs")
 }

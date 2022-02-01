@@ -1,6 +1,6 @@
 #include <R.h>
  #include <math.h>
- void g_petab_deriv_l3r2h4qf ( double * x, double * y, double * p, int * n, int * k, int * l ) {
+ void g_petab_deriv_fa89g3b1 ( double * x, double * y, double * p, int * n, int * k, int * l ) {
  for(int i = 0; i< *n; i++) {
  y[0+i**l] = (p[0]/((p[0]*x[4+i**k]+p[1])*log(10.0)))*(x[11+i**k]) ;
 y[1+i**l] = (p[0]/((p[0]*x[4+i**k]+p[1])*log(10.0)))*(x[18+i**k]) ;

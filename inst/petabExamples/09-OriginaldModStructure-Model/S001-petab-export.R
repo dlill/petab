@@ -62,7 +62,7 @@ try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 # 
 # pe$parameters$objectivePriorType <- NA_character_
 
-bestfit <- pouter
+# bestfit <- pouter
 pe <- petab_dModmodel2PE(ODEmodel=reactions,
                          obsFun=observables,
                          errormodel=errors,
