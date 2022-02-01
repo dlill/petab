@@ -2071,8 +2071,16 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
   obsParMapping <- petab_getMeasurementParsMapping(pe, column = "observableParameters")
   cg <- merge(cg, obsParMapping, by = "conditionId", all.x = TRUE)
   
-  errParMapping <- petab_getMeasurementParsMapping(pe, column = "noiseParameters")
-  cg <- merge(cg, errParMapping, by = "conditionId", all.x = TRUE)
+  # Check if non-numeric entries are in noiseParameters of measurementData.
+  # if so, an error model must be employed. useErrormodel is only FALSE, if
+  # all entries in noiseParameters of measurementData can be casted as numeric without error.
+  useErrormodel <- any(is.na(suppressWarnings(as.numeric(pe$measurementData$noiseParameters))))
+  
+  if (useErrormodel == TRUE) {
+    errParMapping <- petab_getMeasurementParsMapping(pe, column = "noiseParameters")
+    cg <- merge(cg, errParMapping, by = "conditionId", all.x = TRUE)
+  }
+  
   
   # obsErrPars were already added => remove
   parametersObsErr <- petab_getParameterType(pe)
@@ -2164,11 +2172,17 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
                     optionsOde = list(method = "lsoda", rtol = 1e-10, atol = 1e-10, maxsteps = 5000),
                     optionsSens = list(method = "lsodes", lrw=200000, rtol = 1e-10, atol = 1e-10))
     
-    cat("Compiling errormodel\n")
-    myerr <- NULL
-    if(length(cOde::getSymbols(myerrors)))
-      myerr <- dMod::Y(myerrors, f = c(as.eqnvec(myreactions), myobservables), states = names(myobservables),
-                       attach.input = FALSE, compile = TRUE, modelname = paste0("errfn_", modelname))
+    if (useErrormodel) {
+      cat("Compiling errormodel\n")
+      myerr <- NULL
+      if(length(cOde::getSymbols(myerrors)))
+        myerr <- dMod::Y(myerrors, f = c(as.eqnvec(myreactions), myobservables), states = names(myobservables),
+                         attach.input = FALSE, compile = TRUE, modelname = paste0("errfn_", modelname))
+    } else {
+      cat("Data is passed with fixed errors. Don't use error model\n")
+      myerr <- NULL
+    }
+    
     
     # [ ] Pre-equilibration
     # mypSS <- Id()
@@ -2220,25 +2234,50 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
   )
   
   # .. Collect final list -----
-  pd <- list(
-    # petab
-    pe                 = pe,
-    # Basic dMod elements
-    dModAtoms          = list(
-      # [ ] add events!
-      symbolicEquations  = symbolicEquations,
-      odemodel           = myodemodel,
-      data               = mydata,
-      gridlist           = gl,
-      e                  = myerr,
-      fns                = fns
-    ),
-    # other components: Dump your stuff here
-    filenameParts = filenameParts,
-    # Parameters + Time
-    pars               = pars,
-    times              = predtimes(times, Nobjtimes = 200)
-  )
+  if (useErrormodel == TRUE) {
+    pd <- list(
+      # petab
+      pe                 = pe,
+      # Basic dMod elements
+      dModAtoms          = list(
+        # [ ] add events!
+        symbolicEquations  = symbolicEquations,
+        odemodel           = myodemodel,
+        data               = mydata,
+        gridlist           = gl,
+        e                  = myerr,
+        fns                = fns
+      ),
+      # other components: Dump your stuff here
+      filenameParts = filenameParts,
+      # Parameters + Time
+      pars               = pars,
+      times              = predtimes(times, Nobjtimes = 200)
+    )
+  } else {
+    pd <- list(
+      # petab
+      pe                 = pe,
+      # Basic dMod elements
+      dModAtoms          = list(
+        # [ ] add events!
+        symbolicEquations  = symbolicEquations,
+        odemodel           = myodemodel,
+        data               = mydata,
+        gridlist           = gl,
+        e                  = dMod::Id(),
+        fns                = fns
+      ),
+      # other components: Dump your stuff here
+      filenameParts = filenameParts,
+      # Parameters + Time
+      pars               = pars,
+      times              = predtimes(times, Nobjtimes = 200)
+    )
+  }
+  
+  
+  
   # High level prediction function
   pd <- pdIndiv_rebuildPrdObj(pd = pd,Nobjtimes = 100)
   

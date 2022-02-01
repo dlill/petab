@@ -1414,7 +1414,8 @@ petab_getMeasurementParsMapping <- function(pe, column = c("observableParameters
   dupes <- duplicated(mp[,list(conditionId,INNERPARAMETER)])
   if (any(dupes)) {
     print(mp[dupes, list(conditionId,INNERPARAMETER)])
-    stop(column, "contain non-unique values in some conditionIds (see print output above)")}
+    stop(column, "contain non-unique values in some conditionIds (see print output above).\n
+         Error models with multiple erros per observable are *not* supported as of today (2022-02-01)")}
   mp <- dcast(mp, conditionId ~ INNERPARAMETER, value.var = "OUTERPARAMETER")
   
   # Check that all conditionIds are specified, and if not, create empty row
