@@ -26,7 +26,8 @@ reactions <- NULL %>%
 
 # .. 2 Observables -----
 observables <- eqnvec(
-  pERK_obs = "scale_pERK * pERK + offset_pERK"
+  pERK_obs = "scale_pERK * pERK + offset_pERK",
+  ERK_total = "(ERK + pERK) + offset_ERK_total"
 )
 # log-transform observables
 observables <- as.eqnvec(paste("log10(", observables, ")"), names = names(observables))
@@ -99,6 +100,10 @@ pred[condition == "C1", value := 1 + rnorm(length(value), sd = 0.01)]
 pred[condition == "C2" & time != 0, value := value - 0.1]
 pred[,`:=`(name = paste0(name, "_obs"))]
 pred[, sigma := NA]
+
+# add total data point
+pred <- rbind(pred, data.table(time = 0, name = "ERK_total", value = 0.6, condition = c("C1", "C2", "C3"), sigma = NA))
+
 # ggplot(pred, aes(time, value, color = condition))+ geom_point() + geom_line()
 mydata <- copy(pred) %>% as.data.frame() %>% as.datalist(split.by = "condition")
 
@@ -114,8 +119,9 @@ trafo <- define(NULL, "x~y", x = innerpars, y = innerpars) %>%
   insert("x~1", x = "cytoplasm") %>% 
   #SS
   insert("x~y", x = names(steadystates), y = steadystates) %>%
-  # fixed sigma
-  insert("x~0.1", x = "sigma_R1R2_obs") %>% 
+  # fixed sigma and offset of total
+  insert("x~0.1", x = "sigma_ERK_total") %>% 
+  insert("x~8.44e-05", x = "offset_ERK_total") %>% 
   # model reduction
   insert("x~y", x = "k4", y = "k5 * k_ratio") %>% 
   # log trafo
@@ -187,8 +193,8 @@ obj_prior <- constraintL2(pouter, sigma = 12)
 
 # Rebuild obj
 obj <- Reduce("+", list(obj_data, obj_prior))
-# obj(bestfit)$value
-bestfit <- readRDS("~/Work/Rpackages/petab/inst/petabExamples/09-OriginaldModStructure-Model/bestfit_-89.63.rds")
+# obj(bestfit)
+bestfit <- readRDS("~/Work/Rpackages/petab/inst/petabExamples/09-OriginaldModStructure-Model/bestfit_-97.93.rds")
 
 
 # .. mstrust -----
@@ -210,9 +216,9 @@ if(FALSE){
   
   myfitlist <- as.parframe(out)
   bestfit <- as.parvec(myfitlist, 1)
-  saveRDS(bestfit, "bestfit_-89.64.rds")
+  saveRDS(bestfit, "bestfit_-97.93.rds")
   
-  plotCombined(prd(mytimes, bestfit, FLAGbrowser = F), mydata, name == "pERK_obs")
+  plotCombined(prd(mytimes, bestfit, FLAGbrowser = F), mydata)
 }
 
 # Exit ----

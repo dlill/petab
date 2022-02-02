@@ -10,10 +10,10 @@ try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 
 pd <- importPEtabSBML_indiv(filename = "petab/petab.yaml")
 
-# original value was -89.63
+# original value was -97.93
 pd$obj(pd$pars)
 
-
+plotCombined(pd$prd(pd$times, pd$pars, FLAGbrowser = F), pd$dModAtoms$data)
 
 
 .unbug <- F
