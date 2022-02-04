@@ -8,7 +8,8 @@ pepy_sample_parameter_startpoints(
   pe,
   n_starts = 100L,
   seed = 1L,
-  FLAGincludeCurrent = TRUE
+  FLAGincludeCurrent = TRUE,
+  pd = NULL
 )
 }
 \arguments{

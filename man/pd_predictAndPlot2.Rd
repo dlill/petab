@@ -101,6 +101,10 @@ height = 21
 scale = 1
 units = "cm"
 }
+\seealso{
+Other Plotting: 
+\code{\link{pdlist_predictAndPlot2}()}
+}
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }

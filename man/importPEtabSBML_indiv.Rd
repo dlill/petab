@@ -9,7 +9,7 @@ importPEtabSBML_indiv(
   testCases = FALSE,
   path2TestCases = "PEtabTests/",
   .compiledFolder = file.path("CompiledObjects"),
-  NFLAGcompile = c(Auto = 3, Recompile = 0, RebuildGrids = 1, LoadPrevious = 2)[3],
+  NFLAGcompile = c(Auto = 3, Recompile = 0, RebuildGrids = 1, LoadPrevious = 2)[1],
   SFLAGbrowser = c("0None", "1Beginning", "2BuildGrids", "3Compilation",
     "4CollectList", "5Scales", "6ParameterFormulaInjection")[1]
 )

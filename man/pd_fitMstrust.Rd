@@ -8,19 +8,23 @@ pd_fitMstrust(
   pd,
   fits = 20,
   iterlim = 1000,
-  printIter = TRUE,
   FLAGoverwrite = FALSE,
+  FLAGjobPurgedFile = TRUE,
   ...
 )
 }
 \arguments{
-\item{iterlim}{}
+\item{fits}{number of fits, see \code{\link[dMod:mstrust]{dMod::mstrust()}}}
 
-\item{printIter}{}
+\item{iterlim}{}
 
 \item{FLAGoverwrite}{}
 
-\item{...}{other arguments going to dMod::mstrust}
+\item{FLAGjobPurgedFile}{add a jobPurged-file as if the mstrust was run by a pd_cluster function}
+
+\item{...}{other arguments going to \code{\link[dMod:mstrust]{dMod::mstrust()}}}
+
+\item{printIter}{}
 }
 \value{
 
