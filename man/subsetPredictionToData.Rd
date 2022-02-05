@@ -20,3 +20,11 @@ subsetPredictionToData(
 \description{
 Subset predictions to observables and conditions observed in data
 }
+\seealso{
+Other simulation of data: 
+\code{\link{pd_updateData}()}
+}
+\author{
+Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+}
+\concept{simulation of data}
