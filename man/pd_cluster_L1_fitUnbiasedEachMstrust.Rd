@@ -9,7 +9,9 @@ pd_cluster_L1_fitUnbiasedEachMstrust(
   .outputFolder,
   n_startsPerNode = 16 * 3,
   identifier = "L1UB",
-  FLAGforcePurge = FALSE
+  FLAGforcePurge = FALSE,
+  passwdEnv = Sys.getenv("hurensohn"),
+  machine = "cluster"
 )
 }
 \arguments{

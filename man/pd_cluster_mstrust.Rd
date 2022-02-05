@@ -5,14 +5,15 @@
 \title{Fit model on cluster}
 \usage{
 pd_cluster_mstrust(
-  pd,
+  pd = NULL,
   .outputFolder,
   n_startsPerNode = 16 * 3,
   n_nodes = 10,
   identifier = "mstrust",
   FLAGforcePurge = FALSE,
   opt.parameter_startpoints = "sample",
-  passwdEnv = NULL
+  passwdEnv = NULL,
+  machine = "cluster"
 )
 }
 \arguments{
