@@ -48,11 +48,22 @@ Basic functionality for petab handling
     * **Observable transformations** on/off
 * `petab_python_setup` Access the original petab development library. Sets up a virtualenv via the `reticulate`-package, to have a clean installation.
 
+Petab extensions
+
+* `petab_L1` Turn your petab into a L1-problem. Additional functions for scanning and refitting
+* `petab_qNLME` Turn your petab into a quasiNLME-problem.
+* `petab_select`
+* `petab_combine` - Combine petab tables to generate one master petab
+* `pd_updateData` - for simulation studies, exchange the data set without recompiling
+* `metaInformation` - Annotate the petab in yaml format
+
 
 dMod functionality
 
 * `importPEtabSBML_indiv` - Import PEtab to dMod. Can check if the input PEtab is changed to only recompile the model when necessary
 * `writePetab` - If the model part is specified in dMod language, the SBML is exported
+* `pd_fit`, `pd_fitMstrust`, `pd_profile` - fit and profile the model
+* `pd_cluster_.*` - do intensive calculations on the cluster
 * `pd_predictAndPlot2` - Simulate and plot your model
     * **ggCallbacks**, **aeslist**
         * Easily customize the `ggplot` in terms of layers, aesthetics, layout, labels, scales and theme
@@ -68,6 +79,8 @@ dMod functionality
     * **Parameter options**
         * If you have *multistart fits*, you can directly compare different model trajectories at different optima
         * If you have *profiles* or *prediction profiles*, you can use the left and right endpoints of all profiles for predictions which are then summarized to produce *model uncertainty bands* surrounding the prediction at the best fit
+* `pdlist_predictAndPlot2` - Handle and plot multiple models at once
+
 
 # Contributing
 
