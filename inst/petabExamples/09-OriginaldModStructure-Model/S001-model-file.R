@@ -194,7 +194,7 @@ obj_prior <- constraintL2(pouter, sigma = 12)
 # Rebuild obj
 obj <- Reduce("+", list(obj_data, obj_prior))
 # obj(bestfit)
-bestfit <- readRDS("~/Work/Rpackages/petab/inst/petabExamples/09-OriginaldModStructure-Model/bestfit_-97.93.rds")
+# bestfit <- readRDS("~/Work/Rpackages/petab/inst/petabExamples/09-OriginaldModStructure-Model/bestfit_-97.93.rds")
 
 
 # .. mstrust -----
