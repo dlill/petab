@@ -14,6 +14,8 @@ petab_dModmodel2PE(
   fixedGrid,
   errormodel = NULL,
   eventList = NULL,
+  priorSigma = NULL,
+  priorCenter = NULL,
   lb = 6.14e-06,
   ub = 162754.8
 )

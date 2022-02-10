@@ -19,8 +19,9 @@ pe <- petab_dModmodel2PE(ODEmodel=reactions,
                          trafo=trafo,
                          estGrid=est.grid,
                          fixedGrid=fixed.grid,
-                         eventList=eventlist
-                         )
+                         eventList=eventlist,
+                         priorSigma = 12,
+                         priorCenter = -1)
 filename <- "petab"
 writePetab(pe, filename)
 unlink(list.files(".", "\\.o$|\\.so$|\\.c$"))

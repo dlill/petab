@@ -19,7 +19,7 @@
 #' pe <- petab_exampleRead("01", "pe")
 #' pe$parameters <- NULL
 #' petab_create_parameter_df(pe)
-petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
+petab_create_parameter_df <- function(pe, observableParameterScale = "log10", priorPars = "-1;12") {
   
   model                 <- pe$model
   measurementData       <- pe$measurementData
@@ -141,6 +141,7 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10") {
     par <- par[!parameterId %in% pfi$parameterId]
   }
   
+  par[, objectivePriorParameters := priorPars]
   par
 }
 
