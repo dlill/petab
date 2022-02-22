@@ -1843,23 +1843,29 @@ L1_getModelCandidates <- function(L1Scan) {
 #' @importFrom ggforce n_pages
 #'
 #' @examples
-#' # pd <- petab_exampleRead("02", "pd")
-#' pe = pd$pe
-#' opt.base = pd_parf_opt.base(FALSE,)
-#' opt.mstrust = pd_parf_opt.mstrust(FALSE, fitrankRange = 1:2)
-#' opt.profile <- pd_parf_opt.profile(T, parameters = c("geneSerpine1_act2", "geneSerpine1_inh1", "geneSerpine1_inh2", "geneSerpine1_inh3", "pRec_degind", "S_phos"))
-#' NFLAGsubsetType = 0
-#' FLAGsummarizeProfilePredictions = TRUE
-#' FLAGmeanLine = FALSE
-#' aeslist = petab_plotHelpers_aeslist()
-#' ggCallback = list(facet_wrap_paginate(~observableId, nrow = 4, ncol = 4, scales = "free"), scale_y_continuous(n.breaks = 5))
-#' opt.gg = list(ribbonAlpha = 0.2)
-#' filename = NULL
-#' FLAGfuture = TRUE
-#' width = 29.7
-#' height = 21
-#' scale = 1
-#' units = "cm"
+#' pd <- petab_exampleRead("04", "pd")
+#' # Show first two steps ( second step occurs at fitrank = 6)
+#' pd_predictAndPlot2(pd, opt.base = pd_parf_opt.base(F), opt.mstrust = pd_parf_opt.mstrust(fitrankRange = 1:6), nrow = 2, ncol = 2)
+#' # Show only subset of conditions and observables and time
+#' pd_predictAndPlot2(pd, i = conditionId == "C1" & observableId != "obsES" & time > 2,  opt.base = pd_parf_opt.base(F), opt.mstrust = pd_parf_opt.mstrust(fitrankRange = 1:6), nrow = 2, ncol = 2)
+#' # Supply own parframe for simulation
+#' parf <- pd$result$base
+#' parf$S <- 5
+#' parf$parameterSetId<-"modifiedBase"
+#' pd_predictAndPlot2(pd, parf = parf, nrow = 2, ncol = 2)
+#' # NFLAGsubsetType (implement examples with states without observables)
+#' 
+#' # return plotting data to customize your own plot
+#' pd_predictAndPlot2(pd, parf = parf, nrow = 2, ncol = 2, FLAGreturnPlotData = TRUE)
+#' # When profiles are available, try this: pd_parf_opt.profile(TRUE)
+#' 
+#' # ggCallback - add layers to your plot (separated by ,, not by +)
+#' pd_predictAndPlot2(pd, parf = parf, nrow = 2, ncol = 2, ggCallback = list(geom_hline(yintercept = 0, linetype = 2, color = "pink", size = 2), scale_color_brewer(palette = "Reds"), labs(title = "Hey Putin, stop this bullshit")))
+#' 
+#' # aeslist - change aesthetics
+#' pd_predictAndPlot2(pd, parf = parf, nrow = 2, ncol = 2, 
+#' aeslist = petab_plotHelpers_aeslist(x=~conditionId, color = ~time), # for nice dose response, set to the dose variable in experimentalCondition and reset the group aesthetic as well
+#' ggCallback = list(geom_hline(yintercept = 0, linetype = 2, color = "pink", size = 2), scale_color_distiller(palette = "Blues")))
 pd_predictAndPlot2 <- function(pd, pe = pd$pe,
                                i,j,
                                opt.base = pd_parf_opt.base(),
