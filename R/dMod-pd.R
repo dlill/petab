@@ -2466,6 +2466,11 @@ pd_updateData <- function(pd, measurementDataNew, .outputFolder, pdCopyName = "p
   ## new data
   pd$pe <- pe
   pd$dModAtoms$data <- datalist
+  
+  
+  ## original paths
+  filenamePartsOrig <- pd$filenameParts
+  
   ## new file paths
   
   projectDir <- file.path(.outputFolder, pdCopyName)
@@ -2476,7 +2481,7 @@ pd_updateData <- function(pd, measurementDataNew, .outputFolder, pdCopyName = "p
   lapply(pd$filenameParts[c(".compiledFolder", ".resultsFolder")], function(x) dir.create(x, recursive = T))
   
   ## Copy everything to the correct places
-  file.copy(file.path(pd$filenameParts$.currentFolder, pd$filenameParts$.compiledFolder), projectDir, recursive = T)
+  file.copy(file.path(filenamePartsOrig$.currentFolder, filenamePartsOrig$.compiledFolder), projectDir, recursive = T)
   saveRDS(pd, pd_rdsfile(pd))
   filePetabNew <- file.path(pd$filenameParts$.projectFolder, "petab")
   writePetab(pd$pe, filePetabNew)

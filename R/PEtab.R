@@ -2470,6 +2470,60 @@ pe_L1_createL1Problem <- function(pe, parameterId_base, conditionSpecL1_referenc
   pe
 }
 
+
+#' Use alignReplicates from bloIt on a PEtab
+#' 
+#' The scaling acts on a PEtab by coercing it to a dco. The column names
+#' passed \code{...} refer to the columns of the dco. The matching happens via
+#' datapointId, so this column is mandatory.
+#'
+#' @param pe petab
+#' @param ... parameters for \link{blotIt::alignReplicates}
+#'
+#' @return [petab()] with scaled replicates
+#' @export
+#' 
+#' @author Severin Bang (severin.bang@physik.uni-freiburg.de)
+#' @md
+#' @importFrom blotIt alignReplicates
+
+petab_alignReplicates <- function(
+  pe,
+  ...
+) {
+  dco <- petab_joinDCO(pe)
+  setnames(dco, "observableId", "name")
+  # setnames(dco, "TGFb", "dose")
+  setnames(dco, "measurement", "value")
+  
+  if ( !("datapointId" %in% names(dco))) {
+    stop(
+      paste0(
+        "pe$measurementData needs the column 'datapointId'. This column needs to contain individual values per row. ",
+        "\nGenerate colum for example by: \n\n",
+        "pe$measurementData[,`:=`(datapointId = sprintf(paste0('%s_%0',nchar(as.character(.N)), 'i'),  datasetId, 1:.N))]"
+      )
+    )
+  }
+
+    
+  blotitResult <- blotIt::alignReplicates(
+    data = dco,
+    ...
+  )
+  
+  
+  pe_export <- copy(pe)
+  
+  # Update measurementData
+  blotit_values <- data.table(blotitResult$scaled)
+  blotit_values <- blotit_values[,list(value = value, IDs = datapointId)]
+  
+  pe_export$measurementData[,measurement := blotit_values[IDs == datapointId,]$value, by = seq_len(nrow(pe_export$measurementData)) ]
+  
+  return(pe_export)
+}
+
 # -------------------------------------------------------------------------#
 # Todolist/Wishlist ----
 # -------------------------------------------------------------------------#
