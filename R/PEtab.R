@@ -1057,6 +1057,9 @@ petab_combine_measurementData <- function(md1, md2) {
 #'
 #' @examples
 petab_combine_observables <- function(o1,o2, NFLAGconflict = c("stop" = 0, "use_pe1" = 1, "use_pe2" = 2)[2]) {
+  if (is.null(o1) & is.null(o2)) {
+    return(NULL)
+  }
   i12 <- intersect(o1$observableId,o2$observableId)
   if (length(i12)) {
     cat("Overlapping observables =================\n-----------------pe1----------------------\n")

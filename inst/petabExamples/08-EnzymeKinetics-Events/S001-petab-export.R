@@ -1,6 +1,6 @@
 devtools::load_all("~/Promotion/Promotion/Projects/petab")
-# library(petab)
-try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
+library(petab)
+# try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 
 # -------------------------------------------------------------------------#
 # Create enzyme kinetics model and data ----
