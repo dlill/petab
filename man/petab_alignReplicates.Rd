@@ -4,10 +4,13 @@
 \alias{petab_alignReplicates}
 \title{Use alignReplicates from bloIt on a PEtab}
 \usage{
-petab_alignReplicates(pe, ...)
+petab_alignReplicates(pe, i_subset, ...)
 }
 \arguments{
 \item{pe}{petab}
+
+\item{i_subset}{optional parameter for subsetting the dco with the i
+parameter of data.table}
 
 \item{...}{parameters for \link{blotIt::alignReplicates}}
 }

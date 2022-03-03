@@ -1,4 +1,13 @@
 .Rproj.user
 .Rhistory
-.RData
+*.RData
+*job_1.R
 .Ruserdata
+.Rproj.user/
+.Rhistory
+*Thumbs.db
+*Thumbs.db:encryptable
+*.c
+*.o
+*.so
+.~lock*

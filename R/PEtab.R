@@ -2481,6 +2481,8 @@ pe_L1_createL1Problem <- function(pe, parameterId_base, conditionSpecL1_referenc
 #' datapointId, so this column is mandatory.
 #'
 #' @param pe petab
+#' @param i_subset optional parameter for subsetting the dco with the i
+#' parameter of data.table
 #' @param ... parameters for \link{blotIt::alignReplicates}
 #'
 #' @return [petab()] with scaled replicates
@@ -2492,6 +2494,7 @@ pe_L1_createL1Problem <- function(pe, parameterId_base, conditionSpecL1_referenc
 
 petab_alignReplicates <- function(
   pe,
+  i_subset,
   ...
 ) {
   dco <- petab_joinDCO(pe)
@@ -2508,8 +2511,13 @@ petab_alignReplicates <- function(
       )
     )
   }
-
-    
+  
+  if (!missing(i_subset)) {
+    si <- substitute(i_subset)
+    dco <- dco[eval(si)]
+  }
+  
+  
   blotitResult <- blotIt::alignReplicates(
     data = dco,
     ...
