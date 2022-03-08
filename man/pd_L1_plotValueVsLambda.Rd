@@ -23,6 +23,7 @@ Other L1:
 \code{\link{pd_L1_getUnbiasedValues}()},
 \code{\link{pd_L1_plotDevianceVsLambda}()},
 \code{\link{pd_L1_plotIsConvergedVsLambda}()},
+\code{\link{pd_L1_plotParValueVsLambda}()},
 \code{\link{pd_L1_preparePlottingData}()},
 \code{\link{readPd}()}
 }

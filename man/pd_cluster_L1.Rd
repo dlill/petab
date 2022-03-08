@@ -10,7 +10,9 @@ pd_cluster_L1(
   n_nodes = 6,
   lambdas = 10^(seq(log10(1e-04), log10(100), length.out = n_nodes * 16 - 1)),
   identifier = "L1",
-  FLAGforcePurge = FALSE
+  FLAGforcePurge = FALSE,
+  passwdEnv = Sys.getenv("hurensohn"),
+  machine = "cluster"
 )
 }
 \arguments{

@@ -1380,7 +1380,6 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
                                                  identifier = "L1UB", FLAGforcePurge = FALSE,
                                                  passwdEnv = Sys.getenv("hurensohn"), machine = "cluster") {
   
-  stop("implement saving the node id (see S311 for the problem)")
   # .. General job handling -----
   jobnm <- paste0("L1UB_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))
   
@@ -1449,7 +1448,9 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
                      output = TRUE, cautiousMode = TRUE,
                      stats = FALSE, 
                      parlower = parlower, parupper = parupper)
-      try(conveniencefunctions::cf_as.parframe(fit))
+      parf <- try(conveniencefunctions::cf_as.parframe(fit))
+      parf <- parframe(cbind(L1modelCandidate = node , parf), parameters = attr(parf, "parameters"))
+      parf
     },
     jobname = jobnm, 
     partition = "single", cores = 16, nodes = 1, walltime = "12:00:00",
@@ -1697,6 +1698,8 @@ pd_L1_getObjBounds <- function(pd,tol = 1e-4) {
 #' @importFrom conveniencefunctions cfggplot cf_outputFigure
 pd_L1_plotDevianceVsLambda <- function(pd, ...) {
   d <- pd_L1_preparePlottingData(pd)
+  warning("not the most intuitive plot - this shows deviation against parameter values of full model.
+          Better use pd_L1_plotParValueVsLambda()")
   pl <- conveniencefunctions::cfggplot(d, aes(lambdaL1, estDeviance, color = parameterId)) + 
     facet_wrap(~parameterType + isL1Parameter, scales = "free") + 
     geom_line() + 
@@ -1706,6 +1709,31 @@ pd_L1_plotDevianceVsLambda <- function(pd, ...) {
     geom_blank()
   conveniencefunctions::cf_outputFigure(pl, ...)
 }
+
+#' Plot L1 Parameter values vs lambda
+#'
+#' @param pd 
+#' @param ggCallback 
+#' @param ... 
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family L1
+#' @importFrom conveniencefunctions cfggplot cf_outputFigure
+pd_L1_plotParValueVsLambda <- function(pd, ggCallback = list(), ...) {
+  d <- pd_L1_preparePlottingData(pd)
+  d <- d[grep("L1_", parameterId)]
+  pl <- conveniencefunctions::cfggplot(d, aes(lambdaL1, estValue)) + 
+    geom_line(aes(color = parameterId, group = parameterId)) +
+    scale_x_log10()
+  for (plx in ggCallback) pl <- pl + plx
+  conveniencefunctions::cf_outputFigure(pl, ...)
+}
+
+
+
 
 #' Title
 #'

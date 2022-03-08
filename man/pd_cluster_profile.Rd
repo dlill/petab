@@ -9,7 +9,9 @@ pd_cluster_profile(
   .outputFolder,
   FLAGforcePurge = FALSE,
   FLAGfixParsOnBoundary = TRUE,
-  profpars = names(pd$pars)
+  profpars = names(pd$pars),
+  passwdEnv = Sys.getenv("hurensohn"),
+  machine = "cluster"
 )
 }
 \arguments{
