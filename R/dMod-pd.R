@@ -1026,6 +1026,7 @@ clusterStatusMessage <- function(FLAGjobDone, FLAGjobPurged, FLAGjobRecover) {
 #' @examples
 pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3, n_nodes = 10, 
                                identifier = "mstrust", FLAGforcePurge = FALSE, opt.parameter_startpoints = "sample",
+                               iterlim = 500,
                                passwdEnv = NULL, machine = "cluster") {
   if (is.null(pd)) {
     stop("'pd' needs to be defined")
@@ -1048,6 +1049,7 @@ pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3,
   # Assign Global variables: Important, in future, this might be a source of bugs, if other cluster-functions are written
   assign("n_startsPerNode",n_startsPerNode,.GlobalEnv)
   assign("opt.parameter_startpoints",opt.parameter_startpoints,.GlobalEnv)
+  assign("iterlim",iterlim,.GlobalEnv)
   
   # Start mstrust job
   file.copy(file.path(pd$filenameParts$.currentFolder, pd$filenameParts$.compiledFolder, "/"), ".", recursive = TRUE)
@@ -1074,7 +1076,7 @@ pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3,
       mstrust(objfun = pd$obj, center = center, studyname = paste0("fit", seed),
               fixed = pd$fixed,
               rinit = 0.1, rmax = 10, cores = 16,
-              iterlim = 500, 
+              iterlim = iterlim, 
               optmethod = "trust", 
               output = TRUE, cautiousMode = TRUE,
               stats = FALSE, 
