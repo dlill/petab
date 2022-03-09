@@ -1422,7 +1422,7 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
       fit_par <- pd$pars[setdiff(names(pd$pars), parametersFixed)]
       fit_fix <- c(pd$fixed, pd$pars[parametersFixed] * 0)
       
-      pd$pars <- fit_par
+      pd$pars  <- fit_par
       pd$fixed <- fit_fix
       
       # Sample only narrow
@@ -1434,7 +1434,7 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
                                                   FLAGincludeCurrent = TRUE)
       parlower <- petab_getParameterBoundaries(pd$pe, "lower")
       parupper <- petab_getParameterBoundaries(pd$pe, "upper")
-      
+
       # only take free paramters
       center <- center[,setdiff(names(center)     , names(pd$fixed))] # redundant, is alredy taken care of by pepy_sample_parameter_startpoints. actually this implementation is not clean, as it does not take pd but pe as input, but uses pd
       parlower <- parlower[setdiff(names(parlower), names(pd$fixed))]
@@ -1443,10 +1443,10 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
       fit <- mstrust(objfun = pd$obj, center = center, studyname = paste0("fit", node),
                      fixed = pd$fixed,
                      rinit = 0.1, rmax = 10, cores = 16,
-                     iterlim = 500, 
-                     optmethod = "trust", 
+                     iterlim = 500,
+                     optmethod = "trust",
                      output = TRUE, cautiousMode = TRUE,
-                     stats = FALSE, 
+                     stats = FALSE,
                      parlower = parlower, parupper = parupper)
       parf <- try(conveniencefunctions::cf_as.parframe(fit))
       parf <- parframe(cbind(L1modelCandidate = node , parf), parameters = attr(parf, "parameters"))
