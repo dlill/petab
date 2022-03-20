@@ -1,6 +1,6 @@
 #' Write PE from dMod objects
 #'
-#' @param ODEmodel 
+#' @param ODEmodel eqnlist with the list of equations
 #' @param obsFun 
 #' @param errormodel 
 #' @param data DT with obligatory columns name, time, value, sigma, condition
