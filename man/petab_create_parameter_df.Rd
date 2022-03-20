@@ -4,7 +4,11 @@
 \alias{petab_create_parameter_df}
 \title{Original petab function didn't work}
 \usage{
-petab_create_parameter_df(pe, observableParameterScale = "log10")
+petab_create_parameter_df(
+  pe,
+  observableParameterScale = "log10",
+  priorPars = "-1;12"
+)
 }
 \arguments{
 \item{pe}{petab without a parameter_df}

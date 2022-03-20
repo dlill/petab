@@ -2181,6 +2181,16 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
   for (par in parsFix$parameterId) cg[cg == par] <- parsFix[parameterId == par, estValue]
   cg <- as.data.table(cg)
   
+  # .. Split cg into gridlist -----
+  gl <- petab::pdIndiv_initializeGridlist(cg)
+  
+  # Bring fixed pars on estimation scale
+  cols2logscale <- intersect(names(gl$fix.grid), names(which(scalesBase=="log")))
+  cols2log10scale <- intersect(names(gl$fix.grid), names(which(scalesBase=="log10")))
+  if(length(cols2logscale))   gl$fix.grid[,(cols2logscale) := lapply(.SD, function(x){log(x)}), .SDcols = cols2logscale]
+  if(length(cols2log10scale)) gl$fix.grid[,(cols2log10scale) := lapply(.SD, function(x){log(x)}), .SDcols = cols2log10scale]
+  gl$fix.grid <- do.call(data.table,lapply(gl$fix.grid, function(x) replace(x, is.infinite(x) & x < 0,-1000)))
+  
   # .. Build trafo -----
   # Initialize
   trafo <- setNames(nm = unique(c(getParameters(myreactions),
@@ -2200,24 +2210,15 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
   trafo <- repar("x ~ 10**(x)", trafo = trafo, x = names(which(scalesBase=="log10")))
   trafo <- repar("x ~ exp(x)" , trafo = trafo, x = names(which(scalesBase=="log")))
   
-  # # Insert pars from cg which are identical in all conditions
-  # insertPars <- NULL
-  # for (n in 1:ncol(cg)){
-  #   if(nrow(unique(cg[,..n])) == 1) insertPars <- cbind(insertPars, unique(cg[,..n]))
-  # }
-  # trafo <- insert("x ~ y", trafo = trafo, x = names(insertPars), y = as.character(insertPars))
-  # # Remove those pars from cg
-  # cg[,(names(insertPars)) := NULL]
-  
-  # .. Split cg into gridlist -----
-  gl <- petab::pdIndiv_initializeGridlist(cg)
-  
-  # # Bring fixed pars on estimation scale
-  # cols2logscale <- intersect(names(gl$fix.grid), names(which(scalesBase=="log")))
-  # cols2log10scale <- intersect(names(gl$fix.grid), names(which(scalesBase=="log10")))
-  # if(length(cols2logscale))   gl$fix.grid[,(cols2logscale) := lapply(.SD, function(x){log(x)}), .SDcols = cols2logscale]
-  # if(length(cols2log10scale)) gl$fix.grid[,(cols2log10scale) := lapply(.SD, function(x){log(x)}), .SDcols = cols2log10scale]
-  
+  # Insert pars from cg which are identical in all conditions
+  for (n in 1:ncol(gl$fix.grid)){
+    if(nrow(unique(gl$fix.grid[,..n])) == 1) {
+      parname <- names(unique(gl$fix.grid[,..n]))
+      parvalue <- as.numeric(unique(gl$fix.grid[,..n]))
+      trafo <- repar("x ~ y", trafo = trafo, x = parname, y = parvalue)
+      }
+  }
+
   
   if (grepl(SFLAGbrowser,"5InspectTrafo")) browser()
   

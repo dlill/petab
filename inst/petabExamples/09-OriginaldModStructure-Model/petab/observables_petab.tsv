@@ -1,2 +1,3 @@
 observableId	observableName	observableFormula	observableTransformation	noiseFormula	noiseDistribution
+ERK_total	ERK_total	(ERK+pERK)+observableParameter1_ERK_total	log10	noiseParameter1_ERK_total	normal
 pERK_obs	pERK_obs	observableParameter1_pERK_obs*pERK+observableParameter2_pERK_obs	log10	noiseParameter1_pERK_obs	normal
