@@ -1451,6 +1451,7 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
       parf <- try(conveniencefunctions::cf_as.parframe(fit))
       parf <- parframe(cbind(L1modelCandidate = node , parf), parameters = attr(parf, "parameters"))
       parf
+      
     },
     jobname = jobnm, 
     partition = "single", cores = 16, nodes = 1, walltime = "12:00:00",
@@ -1826,6 +1827,61 @@ L1_getModelCandidates <- function(L1Scan) {
   fixed_L1
 }
 
+
+
+#' Title
+#'
+#' @param pd with pd$result$L1UB...
+#'
+#' @return parframe with L1modelCandidate
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family L1
+#' @importFrom data.table rbindlist setorder
+#' @importFrom dMod parframe
+#'
+#' @examples
+pd_L1_getUnbiasedParframeAllCandidates <- function(pd) {
+  parf <- pd$result[grep("L1UB", names(pd$result))]
+  parf <- data.table::rbindlist(parf, fill = TRUE)
+  parf <- parf[,lapply(.SD, function(x) replace(x, is.na(x), 0))]
+  data.table::setorder(parf, L1modelCandidate, fitrank)
+  parf <- parf[!duplicated(L1modelCandidate)]
+  parf <- dMod::parframe(parf, parameters = names(pd$pars))
+  parf
+}
+
+
+#' Title
+#'
+#' @param pd 
+#' @param L1modelId L1 model Id you want to export
+#' @param filename 
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family L1
+#' @importFrom dMod unclass_parvec
+#'
+#' @examples
+#' pd_L1_createPetabFromUnbiasedFit(pd, L1modelId = 4) # if 4 is for example the parsimonious model you want to profile
+pd_L1_createPetabFromUnbiasedFit <- function(pd, L1modelId, filename = NULL) {
+  parf <- pd_L1_getUnbiasedParframeAllCandidates(pd)
+  parfi <- parf[parf$L1modelCandidate == L1modelId,]
+  pars <- dMod::unclass_parvec(as.parvec(parfi))
+  
+  fixed_L1 <- L1_getModelCandidates(pd$result$L1)
+  parameterIdsFixed = names(fixed_L1[L1modelId,][fixed_L1[L1modelId,]])
+  pe <- copy(pd$pe)
+  pe$parameters[parameterId %in% parameterIdsFixed,`:=`(estimate = 0)]
+  pe <- petab_setPars_estScale(pe,parsEst = pars)
+  
+  if (!is.null(filename)) writePetab(pe, filename = filename)
+  pe
+}
 
 
 
