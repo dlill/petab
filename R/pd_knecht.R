@@ -40,7 +40,7 @@ knechts <- c(paste0("knecht",1:6), paste0("ruprecht",1:2))
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family knecht
-#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust check_knechtTimeStamp
+#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust 
 #' @importFrom dMod distributed_computing
 #'
 #' @examples
@@ -85,7 +85,7 @@ pd_knecht_mstrust <- function(pd, .outputFolder, nStartsPerCore = 4,
       cores <- dMod::detectFreeCores()
       
       if (identical(opt.parameter_startpoints, "sample")){
-        center <- pepy_sample_parameter_startpoints(pd$pe, n_starts = cores*nStartsPerCore, seed = seed, 
+        center <- pe_sample_parameter_startpoints(pd$pe, n_starts = cores*nStartsPerCore, seed = seed, 
                                                     FLAGincludeCurrent = FLAGincludeCurrent)
       } else {
         center <- opt.parameter_startpoints
@@ -175,7 +175,7 @@ pd_knecht_mstrust <- function(pd, .outputFolder, nStartsPerCore = 4,
 #' @md
 #' @family knecht
 #' @importFrom dMod profile_pars_per_node
-#' @importFrom conveniencefunctions check_knechtTimeStamp
+#'
 #'
 #' @examples
 pd_knecht_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfixParsOnBoundary = TRUE, 
@@ -204,7 +204,6 @@ pd_knecht_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfix
   FLAGjobRecover <- file.exists(fileJobRecover) | FLAGjobDone | FLAGjobPurged
   
   cat(knechtStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
-  if (!FLAGjobPurged) conveniencefunctions::check_knechtTimeStamp()
   
   assign("profpars",profpars,.GlobalEnv)
   assign("var_list",var_list,.GlobalEnv)
@@ -286,7 +285,7 @@ pd_knecht_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfix
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family knecht
-#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust cf_parf_metaNames0 check_knechtTimeStamp
+#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust cf_parf_metaNames0 
 #' @importFrom dMod distributed_computing profile_pars_per_node
 #'
 #' @examples
@@ -303,7 +302,6 @@ pd_knecht_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log10
   FLAGjobDone    <- file.exists(fileJobDone)
   FLAGjobPurged  <- file.exists(fileJobPurged)
   FLAGjobRecover <- file.exists(fileJobRecover) | FLAGjobDone | FLAGjobPurged
-  if (!FLAGjobPurged) conveniencefunctions::check_knechtTimeStamp()
   
   cat(knechtStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
   
@@ -396,7 +394,7 @@ pd_knecht_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log10
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family knecht
-#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust cf_parf_metaNames0 check_knechtTimeStamp
+#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust cf_parf_metaNames0 
 #' @importFrom dMod distributed_computing profile_pars_per_node
 #'
 #' @examples
@@ -416,7 +414,6 @@ pd_knecht_L1_mstrust <- function(pd, .outputFolder,
   FLAGjobDone    <- file.exists(fileJobDone)
   FLAGjobPurged  <- file.exists(fileJobPurged)
   FLAGjobRecover <- file.exists(fileJobRecover) | FLAGjobDone | FLAGjobPurged
-  if (!FLAGjobPurged) conveniencefunctions::check_knechtTimeStamp()
   
   cat(knechtStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
   
@@ -515,7 +512,7 @@ pd_knecht_L1_mstrust <- function(pd, .outputFolder,
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family knecht
-#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust check_knechtTimeStamp
+#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust 
 #' @importFrom dMod distributed_computing
 #'
 #' @examples
@@ -533,7 +530,6 @@ pd_knecht_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerNo
   FLAGjobDone    <- file.exists(fileJobDone)
   FLAGjobPurged  <- file.exists(fileJobPurged)
   FLAGjobRecover <- file.exists(fileJobRecover) | FLAGjobDone | FLAGjobPurged
-  if (!FLAGjobPurged) conveniencefunctions::check_knechtTimeStamp()
   
   cat(knechtStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
   
@@ -646,7 +642,7 @@ pd_knecht_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerNo
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family knecht
-#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust check_knechtTimeStamp
+#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust 
 #' @importFrom dMod distributed_computing
 #'
 #' @examples
@@ -664,7 +660,6 @@ pd_knecht_L1_fitUnbiasedEachOnce <- function(pd, .outputFolder, n_startsPerNode 
   FLAGjobDone    <- file.exists(fileJobDone)
   FLAGjobPurged  <- file.exists(fileJobPurged)
   FLAGjobRecover <- file.exists(fileJobRecover) | FLAGjobDone | FLAGjobPurged
-  if (!FLAGjobPurged) conveniencefunctions::check_knechtTimeStamp()
   
   cat(knechtStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
   
