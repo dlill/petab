@@ -20,12 +20,15 @@ Other Cluster:
 \code{\link{clusterStatusMessage}()},
 \code{\link{pd_cluster_L1_fitUnbiasedEachMstrust}()},
 \code{\link{pd_cluster_L1_fitUnbiasedEachOnce}()},
+\code{\link{pd_cluster_L1_mstrust}()},
 \code{\link{pd_cluster_L1}()},
 \code{\link{pd_cluster_mstrust}()},
 \code{\link{pd_cluster_profile}()}
 
 Other L1: 
+\code{\link{pd_L1_createPetabFromUnbiasedFit}()},
 \code{\link{pd_L1_getObjBounds}()},
+\code{\link{pd_L1_getUnbiasedParframeAllCandidates}()},
 \code{\link{pd_L1_getUnbiasedValues}()},
 \code{\link{pd_L1_plotDevianceVsLambda}()},
 \code{\link{pd_L1_plotIsConvergedVsLambda}()},

@@ -23,6 +23,7 @@ Title
 Other Cluster: 
 \code{\link{pd_cluster_L1_fitUnbiasedEachMstrust}()},
 \code{\link{pd_cluster_L1_fitUnbiasedEachOnce}()},
+\code{\link{pd_cluster_L1_mstrust}()},
 \code{\link{pd_cluster_L1}()},
 \code{\link{pd_cluster_mstrust}()},
 \code{\link{pd_cluster_profile}()},

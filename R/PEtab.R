@@ -1278,6 +1278,39 @@ pepy_sample_parameter_startpoints <- function(pe, n_starts = 100L, seed = 1L, FL
   pars
 }
 
+
+#' Title
+#'
+#' @param pe 
+#' @param n_starts 
+#' @param seed 
+#' @param FLAGincludeCurrent 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+pe_sample_parameter_startpoints <- function(pe, n_starts = 100L, seed = 1L, FLAGincludeCurrent = TRUE) {
+  n_starts <- as.integer(n_starts-as.numeric(FLAGincludeCurrent))
+  seed     <- as.integer(seed)
+  set.seed(seed)
+  pepa <- copy(pe$parameters)
+  pepa <- pepa[estimate == 1]
+  pepa[,`:=`(startpars = list({
+    start <- if(FLAGincludeCurrent) eval(parse(text = paste0(parameterScale, "(", nominalValue, ")"))) else NULL
+    c(start,
+      runif(n_starts, as.numeric(gsub(";.*","", initializationPriorParameters)), 
+            as.numeric(gsub(".*;","", initializationPriorParameters)))
+    )
+  })), by = 1:nrow(pepa)]
+  pars <- data.table::as.data.table(pepa$startpars)
+  data.table::setnames(pars, pepa$parameterId)
+  pars <- dMod::parframe(pars)
+  pars
+}
+
+
+
 # -------------------------------------------------------------------------#
 # Python setup ----
 # -------------------------------------------------------------------------#
