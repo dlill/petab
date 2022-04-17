@@ -23,7 +23,7 @@ knechtStatusMessage <- function(FLAGjobDone, FLAGjobPurged, FLAGjobRecover) {
 }
 
 #' @export
-knechts <- c(paste0("knecht",1:6), paste0("ruprecht",1:2))
+knechts <- c(paste0("knecht",c(1,2,3,5,6)), paste0("ruprecht",c(1,2,3)))
 
 
 #' Fit model on knecht
@@ -55,7 +55,7 @@ pd_knecht_mstrust <- function(pd, .outputFolder, nStartsPerCore = 4,
   
   # .. General job handling -----
   jobnm <- paste0("mstrust_", identifier, "_", gsub("-","_",gsub("(S\\d+(-\\d+)?).*", "\\1", basename(.outputFolder))))
-  dir.create(jobnm)
+  dir.create(jobnm, FALSE)
   setwd(jobnm)
   
   fileJobDone    <- conveniencefunctions::dMod_files(.outputFolder, identifier)[["mstrust"]]
@@ -79,7 +79,7 @@ pd_knecht_mstrust <- function(pd, .outputFolder, nStartsPerCore = 4,
     {
       loadDLL(pd$obj_data);
       
-      seed <- which(c(paste0("knecht",1:6), paste0("ruprecht",1:2)) == system("hostname"))
+      seed <- which(c(paste0("knecht",1:6), paste0("ruprecht",1:2)) == system("hostname", intern = TRUE))
       FLAGincludeCurrent <- TRUE
       
       cores <- dMod::detectFreeCores()
@@ -110,32 +110,34 @@ pd_knecht_mstrust <- function(pd, .outputFolder, nStartsPerCore = 4,
     filename = jobnm, 
     machine = machine, 
     recover = FLAGjobRecover,
-    compile = F
+    compile = FALSE, wait = FALSE
   )
   unlink(list.files(".", "\\.o$|\\.so$|\\.c$|\\.rds$"))
   
   if (!FLAGjobRecover) return("Job submitted")
   if (FLAGforcePurge) {
     # bit ugly code duplication...
-    job$purge(purge_local = TRUE)
+    if (readline("Purge job. Are you sure? Type yes: ") == "yes"){
+    job$purge()
     setwd(curwd)
     unlink(jobnm, T)
-    return("Job was purged")
+    return("Job was purged")}
   }
   # .. Get results -----
   if (!FLAGjobDone & !FLAGjobPurged) {
     if (job$check()) {
       Sys.sleep(0.1) # avoid being blocked
       job$get()
-      fitlist  <- if (exists(.runbgOutput)) do.call(c, .runbgOutput) else {NULL
-        #cf_dMod_rescueFits()
-        #   fitlist <- list.files(file.path(paste0(jobnm, "_folder"), "results","fit"), "\\.Rda$", recursive = TRUE, full.names = TRUE)
-        #   fitlist <- lapply(fitlist, function(x) try(local(load(x))))
-      }
-      fits <- fitlist
-      fits <- fits[vapply(fits, is.list, TRUE)]
-      class(fits) <- "parlist"
-      fits <- conveniencefunctions::cf_as.parframe(fits)
+      f <- list.files(pattern = "_result.RData")
+      f <- lapply(f, function(x) {
+        load(x)
+        .runbgOutput
+      })
+      f <- f[sapply(f, function(x) !inherits(x, "try-error"))]
+      f <- do.call(c, f)
+      try(conveniencefunctions::cf_as.parframe(f))
+      fits <- f
+      setwd(curwd)
       conveniencefunctions::dMod_saveMstrust(fit = fits, path = .outputFolder, 
                                              identifier = identifier, FLAGoverwrite = TRUE)
       savedFits <- readRDS(fileJobDone)
@@ -146,7 +148,7 @@ pd_knecht_mstrust <- function(pd, .outputFolder, nStartsPerCore = 4,
   FLAGjobDone    <- file.exists(fileJobDone)
   if (FLAGjobDone & !FLAGjobPurged) {
     if (readline("Purge job. Are you sure? Type yes: ") == "yes"){
-      job$purge(purge_local = TRUE)
+      job$purge()
       setwd(curwd)
       unlink(jobnm, T)
       writeLines("jobPurged", fileJobPurged)

@@ -1093,9 +1093,10 @@ pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3,
   
   if (!FLAGjobRecover) return("Job submitted")
   if (FLAGforcePurge) {
-    # bit ugly code duplication...
+    if (readline("Purge job. Are you sure? Type yes: ") == "yes"){
+      # bit ugly code duplication...
     job$purge(purge_local = TRUE)
-    return("Job was purged")
+    return("Job was purged")}
   }
   # .. Get results -----
   if (!FLAGjobDone & !FLAGjobPurged) {
@@ -1326,9 +1327,10 @@ pd_cluster_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log1
   
   if (!FLAGjobRecover) return("Job submitted")
   if (FLAGforcePurge) {
-    # bit ugly code duplication...
+    if (readline("Purge job. Are you sure? Type yes: ") == "yes"){
+      # bit ugly code duplication...
     job$purge(purge_local = TRUE)
-    return("Job was purged")
+    return("Job was purged")}
   }
   # .. Get results -----
   if (!FLAGjobDone & !FLAGjobPurged) {
@@ -1423,7 +1425,7 @@ pd_cluster_L1_mstrust <- function(pd, .outputFolder,
         fit <- trustL1(
           objfun = pd$obj, parinit = pars,
           mu = pd$L1$muL1, one.sided = FALSE, lambda = lambda,
-          rinit = 0.1, rmax = 10, iterlim = 500,
+          rinit = 0.1, rmax = 10, iterlim = 400,
           parupper = parupper, parlower = parlower
         )
         
@@ -1444,9 +1446,10 @@ pd_cluster_L1_mstrust <- function(pd, .outputFolder,
   
   if (!FLAGjobRecover) return("Job submitted")
   if (FLAGforcePurge) {
+    if (readline("Purge job. Are you sure? Type yes: ") == "yes"){
     # bit ugly code duplication...
     job$purge(purge_local = TRUE)
-    return("Job was purged")
+    return("Job was purged")}
   }
   # .. Get results -----
   if (!FLAGjobDone & !FLAGjobPurged) {
@@ -1457,7 +1460,7 @@ pd_cluster_L1_mstrust <- function(pd, .outputFolder,
       # Gebastelt ...
       fits <- list.files(file.path(paste0(jobnm, "_folder"),"results/"), "^L1.*R$", full.names = T) %>% lapply(source, local = TRUE) %>% lapply(function(x) x$value)
       fits <- lapply(fits, function(f) {data.table(as.data.table(f[setdiff(names(f), "argument")]), as.data.table(as.list(f$argument))) })
-      fits <- rbindlist(fits)
+      fits <- rbindlist(fits, use.names = TRUE, fill = TRUE)
       fits <- cf_parframe(fits, metanames = conveniencefunctions::cf_parf_metaNames0$l1)
       dMod_saveL1(L1 = fits, path = .outputFolder, identifier = identifier, FLAGoverwrite = TRUE)
       
@@ -1513,7 +1516,7 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
   cat(clusterStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
   
   # Hacking var_list: want to have different nodes
-  n_nodes <- nrow(L1_getModelCandidates(pd$result$L1))
+  n_nodes <- nrow(pd_L1_getModelCandidates(pd))
   var_list <- list(node = 1:n_nodes)
   
   # Assign Global variables: Important, in future, this might be a source of bugs, if other cluster-functions are written
@@ -1532,7 +1535,7 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
       # node <- var_1
       
       # Determine fixed pars and fix them
-      fixed_L1 <- L1_getModelCandidates(pd$result$L1)
+      fixed_L1 <- pd_L1_getModelCandidates(pd)
       
       parametersFixed <- fixed_L1[node,,drop = TRUE]
       parametersFixed <- names(parametersFixed)[parametersFixed]
@@ -1582,9 +1585,10 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
   
   if (!FLAGjobRecover) return("Job submitted")
   if (FLAGforcePurge) {
-    # bit ugly code duplication...
+    if (readline("Purge job. Are you sure? Type yes: ") == "yes"){
+      # bit ugly code duplication...
     job$purge(purge_local = TRUE)
-    return("Job was purged")
+    return("Job was purged")}
   }
   # .. Get results -----
   if (!FLAGjobDone & !FLAGjobPurged) {
@@ -1644,7 +1648,7 @@ pd_cluster_L1_fitUnbiasedEachOnce <- function(pd, .outputFolder, n_startsPerNode
   cat(clusterStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
   
   # Hacking var_list: want to have different nodes
-  n_nodes <- nrow(L1_getModelCandidates(pd$result$L1))
+  n_nodes <- nrow(pd_L1_getModelCandidates(pd))
   var_list <- dMod::profile_pars_per_node(1:n_nodes, 16)
   
   # Assign Global variables: Important, in future, this might be a source of bugs, if other cluster-functions are written
@@ -1667,7 +1671,7 @@ pd_cluster_L1_fitUnbiasedEachOnce <- function(pd, .outputFolder, n_startsPerNode
       parallel::mclapply(var_1:var_2, function(node) {
         pd <- copy(.pd)
         # Determine fixed pars and fix them
-        fixed_L1 <- L1_getModelCandidates(pd$result$L1)
+        fixed_L1 <- pd_L1_getModelCandidates(pd)
         
         parametersFixed <- fixed_L1[node,,drop = TRUE]
         parametersFixed <- names(parametersFixed)[parametersFixed]
@@ -1711,9 +1715,10 @@ pd_cluster_L1_fitUnbiasedEachOnce <- function(pd, .outputFolder, n_startsPerNode
   
   if (!FLAGjobRecover) return("Job submitted")
   if (FLAGforcePurge) {
-    # bit ugly code duplication...
+    if (readline("Purge job. Are you sure? Type yes: ") == "yes"){
+      # bit ugly code duplication...
     job$purge(purge_local = TRUE)
-    return("Job was purged")
+    return("Job was purged")}
   }
   # .. Get results -----
   if (!FLAGjobDone & !FLAGjobPurged) {
@@ -1900,6 +1905,48 @@ pd_L1_plotValueVsLambda <- function(pd, ...) {
   conveniencefunctions::cf_outputFigure(pl, ...)
 }
 
+#' Title
+#'
+#' @param pd 
+#' @param filename 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+pd_L1_plotModelCandidates <- function(pd, filename) {
+  fixed_L1 <- pd_L1_getModelCandidates(pd)
+  m <- as.matrix(fixed_L1)
+  m <- m * 1
+  
+  pheatmap::pheatmap(mat = m, cluster_rows = FALSE, cluster_cols = FALSE,
+                     filename = filename)
+}
+
+
+#' Title
+#'
+#' @param pd 
+#' @param filename 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+pd_L1_plotMstrustScanWaterfalls <- function(pd, filename) {
+  fileL1New <- file.path(pd$filenameParts$.projectFolder, "Results/L1Raw/L1-L1mstrust.rds")
+  l1 <- readRDS(fileL1New)
+  
+  pl <- lapply(unique(l1$lambdaL1), function(x) {
+    l <- l1[l1$lambdaL1 == x,]
+    title <- paste0("Lambda ID ", unique(l$lambdaId), ": lambda = ", round(unique(l$lambdaL1),3))
+    plotValues(l) + labs(title=title)
+  })
+  
+  cf_outputFigure(pl, filename = filename, 
+                  width = 15.5, height = 15.5*(10/16), scale = 1, units = "cm", 
+                  FLAGoverwrite = TRUE)
+}
 
 #' Title
 #'
@@ -1949,6 +1996,24 @@ L1_getModelCandidates <- function(L1Scan) {
 
 #' Title
 #'
+#' @param pd 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+pd_L1_getModelCandidates <- function(pd) {
+  candidates <- rbind(
+    L1_getModelCandidates(pd$result$L1),
+    pd$L1$otherModelCandidates
+  )
+  candidates <- candidates[!duplicated(as.data.frame(candidates)),]
+  candidates
+}
+
+
+#' Title
+#'
 #' @param pd with pd$result$L1UB...
 #'
 #' @return parframe with L1modelCandidate
@@ -1991,7 +2056,7 @@ pd_L1_createPetabFromUnbiasedFit <- function(pd, L1modelId, filename = NULL) {
   parfi <- parf[parf$L1modelCandidate == L1modelId,]
   pars <- dMod::unclass_parvec(as.parvec(parfi))
   
-  fixed_L1 <- L1_getModelCandidates(pd$result$L1)
+  fixed_L1 <- pd_L1_getModelCandidates(pd)
   parameterIdsFixed = names(fixed_L1[L1modelId,][fixed_L1[L1modelId,]])
   pe <- copy(pd$pe)
   pe$parameters[parameterId %in% parameterIdsFixed,`:=`(estimate = 0)]
@@ -2340,16 +2405,24 @@ pd_plotParsParallelLines <- function(pd, stepMax = 3, filename = NULL, i, ggCall
 #' @importFrom conveniencefunctions cfggplot cf_outputFigure
 #'
 #' @examples
-pd_plotParsParallelLines2 <- function(pd, stepMax = 3, filename = NULL, i, ggCallback = NULL, ...) {
+stepMax = 3
+filename = NULL 
+ggCallback = NULL
+FLAGaddBase = TRUE
+pd_plotParsParallelLines2 <- function(pd, stepMax = 3, filename = NULL, i, ggCallback = NULL, FLAGaddBase = TRUE, ...) {
   
   si <- substitute(i)
   mi <- missing(i)
   
   parf <- pd$result$mstrust
-  
   parameters <- attr(parf, "parameters")
   
   p <- as.data.table(as.data.frame(parf))
+  if (FLAGaddBase) {
+    pbase <- as.data.table(as.data.frame(pd$result$base))
+    pbase[,`:=`(fitrank = 0, step = 0, stepsize = 1)]
+    p <- rbindlist(list(p, pbase), use.names = TRUE)
+  }
   p <- data.table::melt(p, measure.vars = parameters, variable.name = "parameterId", variable.factor = FALSE, value.name = "estValue", verbose = F)
   pt <- petab_getParameterType(pd$pe)
   p <- pt[p, on="parameterId"]
@@ -2375,10 +2448,11 @@ pd_plotParsParallelLines2 <- function(pd, stepMax = 3, filename = NULL, i, ggCal
           panel.grid.major.y = element_line(color="grey95"),
           panel.grid.major.x = element_line(color="grey95")
     ) + 
-    labs(color = "step:n")
+    labs(color = "step:n") + 
     geom_blank()
   # Hack to draw lines in order: best step on top
   for (sx in sort(unique(p$step),decreasing = TRUE)) pl <- pl + geom_line(aes(alpha = step), data = p[step == sx])
+  if (FLAGaddBase) pl <- pl + geom_line(alpha = 1, data = p[step == "0: 1"])
   for (plx in ggCallback) pl <- pl + plx
   
   conveniencefunctions::cf_outputFigure(pl, filename, 
