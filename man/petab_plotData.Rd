@@ -75,14 +75,14 @@ petab_plotData(pe,
 }
 \seealso{
 Other plotting: 
-\code{\link{pd_plotParsParallelLines2}()},
 \code{\link{pd_plotParsParallelLines}()},
 \code{\link{pd_plotProfilePaths}()},
 \code{\link{pd_plotProfile}()},
 \code{\link{petab_plotHelpers_aeslist}()},
 \code{\link{petab_plotHelpers_meanMeasurementsValue}()},
 \code{\link{petab_plotHelpers_parameterOrder}()},
-\code{\link{petab_plotHelpers_variableOrder}()}
+\code{\link{petab_plotHelpers_variableOrder}()},
+\code{\link{stepMax}}
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
