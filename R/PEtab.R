@@ -2474,6 +2474,10 @@ pe_L1_createL1Problem <- function(pe, parameterId_base, conditionSpecL1_referenc
 }
 
 
+# -------------------------------------------------------------------------#
+# blotIt wrapper ----
+# -------------------------------------------------------------------------#
+
 #' Use alignReplicates from bloIt on a PEtab
 #' 
 #' The scaling acts on a PEtab by coercing it to a dco. The column names
@@ -2495,6 +2499,7 @@ pe_L1_createL1Problem <- function(pe, parameterId_base, conditionSpecL1_referenc
 petab_alignReplicates <- function(
   pe,
   i_subset,
+  returnBlotItResult = FALSE,
   ...
 ) {
   dco <- petab_joinDCO(pe)
@@ -2522,7 +2527,9 @@ petab_alignReplicates <- function(
     data = dco,
     ...
   )
-  
+  if (returnBlotItResult == TRUE) {
+    return(blotitResult)
+  }
   
   pe_export <- copy(pe)
   
@@ -2534,6 +2541,7 @@ petab_alignReplicates <- function(
   
   return(pe_export)
 }
+
 
 # -------------------------------------------------------------------------#
 # Todolist/Wishlist ----
