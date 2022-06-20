@@ -2449,9 +2449,18 @@ subsetPredictionToData <- function(pplot, dplot, NFLAGsubsetType = c(none = 0, s
 #' pd <- petab_exampleRead("04", "pd")
 #' pd$filenameParts$.projectFolder <- dirname(pd$filenameParts$.compiledFolder)
 #' measurementDataNew <- copy(pd$pe$measurementData)[,`:=`(measurement = exp(log(measurement) + rnorm(.N, 0, .05)))]
-#  pd_updateData(pd, measurementDataNew, ".", pdCopyName = "pd_1000")
+#' pd_updateData(pd, measurementDataNew, ".", pdCopyName = "pd_1000")
 pd_updateData <- function(pd, measurementDataNew, .outputFolder, pdCopyName = "pd_1000") {
   pe <- copy(pd$pe)
+  
+  compiled_files <- list.files(pd$filenameParts$.compiledFolder)
+  oldCurrFolder <- pd$filenameParts$.currentFolder
+  oldCompiledFilePath <- pd$filenameParts$.compiledFolder
+  oldResultsFilePath <- pd$filenameParts$.resultsFolder
+  currCompFiled <- compiled_files[grep(pd$filenameParts$modelname,compiled_files)]
+  newFileNames <- str_replace(currCompFiled, pd$filenameParts$modelname, "petab")#k
+  
+  
   # your data trafos here
   pe$measurementData <- measurementDataNew
   
@@ -2464,32 +2473,105 @@ pd_updateData <- function(pd, measurementDataNew, .outputFolder, pdCopyName = "p
   
   # update pd
   ## new data
-  pd$pe <- pe
-  pd$dModAtoms$data <- datalist
-  
-  
-  ## original paths
-  filenamePartsOrig <- pd$filenameParts
-  
+  pd_new <- copy(pd)
+  pd_new$pe <- pe
+  pd_new$dModAtoms$data <- datalist
   ## new file paths
   
   projectDir <- file.path(.outputFolder, pdCopyName)
-  pd$filenameParts$.currentFolder <- getwd()
-  pd$filenameParts$.compiledFolder <- file.path(projectDir, "Compiled")
-  pd$filenameParts$.resultsFolder <- file.path(projectDir, "Results")
-  pd$filenameParts$.projectFolder <- projectDir
-  lapply(pd$filenameParts[c(".compiledFolder", ".resultsFolder")], function(x) dir.create(x, recursive = T))
+  pd_new$filenameParts$.currentFolder <- getwd()
+  pd_new$filenameParts$.compiledFolder <- file.path(projectDir, "Compiled")
+  pd_new$filenameParts$.resultsFolder <- file.path(projectDir, "Results")
+  pd_new$filenameParts$.projectFolder <- projectDir
+  # pd_new$filenameParts$modelname <- basename(pdCopyName)
+  lapply(pd_new$filenameParts[c(".compiledFolder", ".resultsFolder")], function(x) dir.create(x, recursive = T))
   
   ## Copy everything to the correct places
-  file.copy(file.path(filenamePartsOrig$.currentFolder, filenamePartsOrig$.compiledFolder), projectDir, recursive = T)
-  saveRDS(pd, pd_rdsfile(pd))
-  filePetabNew <- file.path(pd$filenameParts$.projectFolder, "petab")
-  writePetab(pd$pe, filePetabNew)
+  
+  file.copy(file.path(oldCurrFolder, oldResultsFilePath), file.path(projectDir, "Results"), recursive = T)
+  lapply(currCompFiled, function(i) file.copy(file.path(oldCompiledFilePath, i), file.path(projectDir, "Compiled")))
+  # old_wd <- getwd()
+  # setwd(file.path(projectDir, "Compiled"))
+  # setwd(old_wd)
+  lapply(
+    seq_along(currCompFiled),
+    function(i){
+      file.rename(
+        file.path(
+          projectDir, "Compiled", currCompFiled[i]
+        ),
+        file.path(
+          projectDir,"Compiled",newFileNames[i]
+        )
+      )
+    } 
+  )
+  # file.copy(file.path(pd$filenameParts$.currentFolder, pd$filenameParts$.compiledFolder), projectDir, recursive = T)
+  saveRDS(pd_new, pd_rdsfile(pd_new))
+  filePetabNew <- file.path(pd_new$filenameParts$.projectFolder, "petab")
+  writePetab(pd_new$pe, filePetabNew)
+  
+  file.rename(
+    file.path(
+      # projectDir, "Compiled", newFileNames[grep("rds",newFileNames)]
+      projectDir, "Compiled", currCompFiled[grep("rds",newFileNames)]
+    ),
+    file.path(
+      projectDir,"Compiled","petab_indiv.rds"
+    )
+  )
+  # 
+  # file.remove(file.path(
+  #   projectDir, "Compiled", currCompFiled[grep("rds",currCompFiled)]
+  #   # projectDir, "Compiled", currCompFiled[grep("rds",newFileNames)]
+  # ))
   
   # Reimport
-  pd <- importPEtabSBML_indiv(filePetabNew,NFLAGcompile = 1, .compiledFolder = pd$filenameParts$.compiledFolder)
-  pd
+  # debugonce()
+  pd_new <- importPEtabSBML_indiv(filePetabNew,NFLAGcompile = 1, .compiledFolder = pd_new$filenameParts$.compiledFolder)
+  pd_new
 }
+#' #' @export(pd_updateDataOLD)
+#' pd_updateDataOLD <- function(pd, measurementDataNew, .outputFolder, pdCopyName = "pd_1000") {
+#'   pe <- copy(pd$pe)
+#'   # your data trafos here
+#'   pe$measurementData <- measurementDataNew
+#'   
+#'   # Marcus Funktion only takes files, not data.frames as input
+#'   tf <- tempfile(fileext = "/petab/petab.yaml")
+#'   writePetab(pe, tf)
+#'   petab_files(tf)
+#'   pf <- petab_files(tf)
+#'   datalist <- getDataPEtabSBML(data = pf$measurementData, observables = pf$observables)$data
+#'   
+#'   # update pd
+#'   ## new data
+#'   pd$pe <- pe
+#'   pd$dModAtoms$data <- datalist
+#'   
+#'   
+#'   ## original paths
+#'   filenamePartsOrig <- pd$filenameParts
+#'   
+#'   ## new file paths
+#'   
+#'   projectDir <- file.path(.outputFolder, pdCopyName)
+#'   pd$filenameParts$.currentFolder <- getwd()
+#'   pd$filenameParts$.compiledFolder <- file.path(projectDir, "Compiled")
+#'   pd$filenameParts$.resultsFolder <- file.path(projectDir, "Results")
+#'   pd$filenameParts$.projectFolder <- projectDir
+#'   lapply(pd$filenameParts[c(".compiledFolder", ".resultsFolder")], function(x) dir.create(x, recursive = T))
+#'   
+#'   ## Copy everything to the correct places
+#'   file.copy(file.path(filenamePartsOrig$.currentFolder, filenamePartsOrig$.compiledFolder), projectDir, recursive = T)
+#'   saveRDS(pd, pd_rdsfile(pd))
+#'   filePetabNew <- file.path(pd$filenameParts$.projectFolder, "petab")
+#'   writePetab(pd$pe, filePetabNew)
+#'   
+#'   # Reimport
+#'   pd <- importPEtabSBML_indiv(filePetabNew,NFLAGcompile = 1, .compiledFolder = pd$filenameParts$.compiledFolder)
+#'   pd
+#' }
 
 
 # -------------------------------------------------------------------------#
@@ -2596,6 +2678,106 @@ pd_debug_p0 <- function(pd, ID = 1) {
   pd$dModAtoms$fns$p0(pars_, fixed = fixed_)
 }
 
+#' Title
+#'
+#' @param pd a pd
+#' @param measurementDataNew new measurement data
+#' @param .outputFolder 
+#' @param pdCopyName 
+#'
+#' @return
+#' @export
+#' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
+#' @md
+#' @family simulation of data
+#'
+#' @examples
+#' 
+#' pd <- petab_exampleRead("04", "pd")
+#' pd$filenameParts$.projectFolder <- dirname(pd$filenameParts$.compiledFolder)
+#' measurementDataNew <- copy(pd$pe$measurementData)[,`:=`(measurement = exp(log(measurement) + rnorm(.N, 0, .05)))]
+#  pd_updateData(pd, measurementDataNew, ".", pdCopyName = "pd_1000")
+pd_updateData <- function(pd, measurementDataNew, .outputFolder, pdCopyName = "pd_1000") {
+  pe <- copy(pd$pe)
+  
+  compiled_files <- list.files(pd$filenameParts$.compiledFolder)
+  oldCurrFolder <- pd$filenameParts$.currentFolder
+  oldCompiledFilePath <- pd$filenameParts$.compiledFolder
+  oldResultsFilePath <- pd$filenameParts$.resultsFolder
+  currCompFiled <- compiled_files[grep(pd$filenameParts$modelname,compiled_files)]
+  newFileNames <- str_replace(currCompFiled, pd$filenameParts$modelname, "petab")#k
+  
+  
+  # your data trafos here
+  pe$measurementData <- measurementDataNew
+  
+  # Marcus Funktion only takes files, not data.frames as input
+  tf <- tempfile(fileext = "/petab/petab.yaml")
+  writePetab(pe, tf)
+  petab_files(tf)
+  pf <- petab_files(tf)
+  datalist <- getDataPEtabSBML(data = pf$measurementData, observables = pf$observables)$data
+  
+  # update pd
+  ## new data
+  pd_new <- copy(pd)
+  pd_new$pe <- pe
+  pd_new$dModAtoms$data <- datalist
+  ## new file paths
+  
+  projectDir <- file.path(.outputFolder, pdCopyName)
+  pd_new$filenameParts$.currentFolder <- getwd()
+  pd_new$filenameParts$.compiledFolder <- file.path(projectDir, "Compiled")
+  pd_new$filenameParts$.resultsFolder <- file.path(projectDir, "Results")
+  pd_new$filenameParts$.projectFolder <- projectDir
+  # pd_new$filenameParts$modelname <- basename(pdCopyName)
+  lapply(pd_new$filenameParts[c(".compiledFolder", ".resultsFolder")], function(x) dir.create(x, recursive = T))
+  
+  ## Copy everything to the correct places
+  
+  file.copy(file.path(oldCurrFolder, oldResultsFilePath), file.path(projectDir), recursive = T)
+  lapply(currCompFiled, function(i) file.copy(file.path(oldCompiledFilePath, i), file.path(projectDir, "Compiled")))
+  # old_wd <- getwd()
+  # setwd(file.path(projectDir, "Compiled"))
+  # setwd(old_wd)
+  lapply(
+    seq_along(currCompFiled),
+    function(i){
+      file.rename(
+        file.path(
+          projectDir, "Compiled", currCompFiled[i]
+        ),
+        file.path(
+          projectDir,"Compiled",newFileNames[i]
+        )
+      )
+    } 
+  )
+  # file.copy(file.path(pd$filenameParts$.currentFolder, pd$filenameParts$.compiledFolder), projectDir, recursive = T)
+  saveRDS(pd_new, pd_rdsfile(pd_new))
+  filePetabNew <- file.path(pd_new$filenameParts$.projectFolder, "petab")
+  writePetab(pd_new$pe, filePetabNew)
+
+  file.rename(
+    file.path(
+      # projectDir, "Compiled", newFileNames[grep("rds",newFileNames)]
+      projectDir, "Compiled", currCompFiled[grep("rds",newFileNames)]
+    ),
+    file.path(
+      projectDir,"Compiled","petab_indiv.rds"
+    )
+  )
+  # 
+  # file.remove(file.path(
+  #   projectDir, "Compiled", currCompFiled[grep("rds",currCompFiled)]
+  #   # projectDir, "Compiled", currCompFiled[grep("rds",newFileNames)]
+  # ))
+  
+  # Reimport
+  # debugonce()
+  pd_newest <- importPEtabSBML_indiv(filePetabNew,NFLAGcompile = 1, .compiledFolder = pd_new$filenameParts$.compiledFolder)
+  pd_newest
+}
 
 
 
