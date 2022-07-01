@@ -164,7 +164,7 @@ x <- odemodel(reactions,
 g <- Y(observables, f = reactions, condition = NULL,
        compile = F, modelname = "g")
 
-e <- Y(errors, f = c(as.eqnvec(reactions), observables_errormodel), states = observables_errormodel, 
+e <- Y(errors, f = c(as.eqnvec(reactions), observables[observables_errormodel]), states = observables_errormodel, 
        compile = F, modelname = "e", attach.input = FALSE)
 
 p0 <- P(trafo, modelname = "p")
@@ -199,8 +199,8 @@ obj <- Reduce("+", list(obj_data, obj_prior))
 
 # .. mstrust -----
 if(FALSE){
-  nrfits <- 10
-  nrcores <- 10
+  nrfits <- 2
+  nrcores <- 2
   out <- mstrust(objfun=obj, 
                  center=dMod::msParframe(pouter, n = nrfits, seed=47), 
                  studyname=modelname, 
