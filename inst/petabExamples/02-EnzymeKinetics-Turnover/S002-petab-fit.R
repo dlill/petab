@@ -25,7 +25,7 @@ center <- pepy_sample_parameter_startpoints(pd$pe, n_starts = 8)
 fits <- mstrust(pd$obj_data, center, paste0("fit", 1), 
                 fits = 4, iterlim = 1000, cores = 4, output = TRUE,
                 cautiousMode = TRUE)
-fits <- conveniencefunctions::cf_as.parframe(fits)
+fits <- cf_as.parframe(fits)
 plotValues(fits)
 dMod_saveMstrust(fits, ".", FLAGoverwrite = TRUE)
 unlink("fit", T)

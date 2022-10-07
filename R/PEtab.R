@@ -655,7 +655,6 @@ petab_parameterFormulaInjection = function(parameterId, parameterFormula, trafoT
 #'
 #' @examples
 #' # [ ] Todo
-#' # filename <- system.file("examples/petab/enyzmeKinetics", package = "conveniencefunctions")
 #' # readPetab(filename)
 petab <- function(
   model = NULL,
@@ -1590,14 +1589,13 @@ petab_getMeasurementParsScales <- function(measurementData,parameters) {
 #' @param ggCallback additional stuff to add to the ggplot, such as a call to [ggplot2::labs()] or scales
 #' @param FLAGmeanLine draw line connecting the means of groups defined by c("observableId", "time", "conditionId", names(aeslist)=
 #' @param FLAGfuture export asynchronously with the future package
-#' @param ... Arguments to [conveniencefunctions::cf_outputFigure()]
+#' @param ... Arguments to [cf_outputFigure()]
 #'
 #' @return ggplot
 #'
 #' @family plotting
 #'
 #' @importFrom ggforce n_pages facet_wrap_paginate
-#' @importFrom conveniencefunctions cf_outputFigure
 #' @importFrom cOde getSymbols
 #'
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
@@ -1775,7 +1773,7 @@ petab_plotData <- function(petab,
 #   selectedPoints <- selectedPoints[,list(datapointId = customdata)]
 #   selectedPoints <- unique(selectedPoints)
 #   if (!is.null(filename)) data.table::fwrite(selectedPoints, file = filename)
-#   if (NFLAGtribble) conveniencefunctions::cfoutput_MdTable(selectedPoints, NFLAGtribble = NFLAGtribble)
+#   if (NFLAGtribble) cfoutput_MdTable(selectedPoints, NFLAGtribble = NFLAGtribble)
 #   selectedPoints
 # }
 
@@ -1789,21 +1787,20 @@ petab_plotData <- function(petab,
 #' @param pe [petab()] object
 #' @param Ntruncate truncate pasted observables at this many characters
 #' @param FLAGincludedatasetId summarize per conditionId, datasetId and replicateId
-#' @param ... arguments going to [conveniencefunctions::cfoutput_MdTable()]
+#' @param ... arguments going to [cfoutput_MdTable()]
 #'
 #' @return prints table to console or writes it to disk
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family Overview Tables
-#' @importFrom conveniencefunctions cfoutput_MdTable
 petab_overviewObsPerCond <- function(pe, Ntruncate = 1000, FLAGincludedatasetId = TRUE, ...) {
   dco <- petab_joinDCO(pe)
   if ("conditionName" %in% names(dco)) dco[,`:=`(conditionName = conditionId)]
   bycols <- if (FLAGincludedatasetId) c("conditionId", "datasetId", "replicateId") else c("conditionId")
   dco <- dco[,list(observableId = paste0(sort(unique(observableId)), collapse = ",")), by = bycols]
   dco <- dco[,`:=`(observableId = substr(observableId, 1, Ntruncate))]
-  conveniencefunctions::cfoutput_MdTable(dco, ...)
+  cfoutput_MdTable(dco, ...)
 }
 
 
@@ -1842,7 +1839,6 @@ petab_overviewDCONames <- function(pe) {
 #' @md
 #' @family Overview Tables
 #' @importFrom yaml as.yaml
-#' @importFrom conveniencefunctions cfoutput_MdTable
 #'
 #' @examples
 #' petab_overview(petab_exampleRead("01", "pe"))
@@ -1851,7 +1847,7 @@ petab_overview <- function(pe, FLAGcolumns = TRUE, FLAGmetaInformation = TRUE, F
     cat("Available columns\n==================\n")
     pc <- petab_columns(pe)
     pc <- lapply(pc, function(x) paste0(x, collapse = ", "))
-    conveniencefunctions::cfoutput_MdTable(data.table(Table = names(pc), Columns = unlist(pc, F,F)), FLAGsummaryRow = FALSE)
+    cfoutput_MdTable(data.table(Table = names(pc), Columns = unlist(pc, F,F)), FLAGsummaryRow = FALSE)
   }
   if (FLAGmetaInformation) {
     cat("\n")

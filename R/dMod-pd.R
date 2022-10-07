@@ -67,7 +67,6 @@ initPd <- function(filenameParts, ...) {
 #' @family pd helpers
 #' @family parframe handling
 #' @importFrom dMod loadDLL
-#' @importFrom conveniencefunctions dMod_readProfiles dMod_readMstrust
 #' @examples
 readPd <- function(filename) {
   # 0 wd wrangling
@@ -97,13 +96,13 @@ readPd <- function(filename) {
   
   # Profiles
   path <- dirname(dirname(filename))
-  if (is.null(pd$result$profile) && dir.exists(dirname(conveniencefunctions::dMod_files(path)$profile)))
-    pd$result$profiles <- conveniencefunctions::dMod_readProfiles(path)
+  if (is.null(pd$result$profile) && dir.exists(dirname(dMod_files(path)$profile)))
+    pd$result$profiles <- dMod_readProfiles(path)
   
   # L1 - get L1 scan results
   path <- dirname(dirname(filename))
-  if (is.null(pd$result$L1) && dir.exists(dirname(conveniencefunctions::dMod_files(path)$L1)))
-    pd$result$L1 <- conveniencefunctions::dMod_readL1(path)
+  if (is.null(pd$result$L1) && dir.exists(dirname(dMod_files(path)$L1)))
+    pd$result$L1 <- dMod_readL1(path)
   # L1 - get unbiased models
   
   
@@ -363,11 +362,10 @@ pd_objtimes <- function(pd, N = 100) {
 #' @export
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
-#' @importFrom conveniencefunctions dMod_files
 #'
 #' @examples
 pd_profile_getParsNotYetProfiled <- function(pd, .outputFolder, FLAGreturnVector = FALSE) {
-  prof_available <- list.files(dirname(conveniencefunctions::dMod_files(.outputFolder, identifier = "1")$profile))
+  prof_available <- list.files(dirname(dMod_files(.outputFolder, identifier = "1")$profile))
   prof_available <- gsub("^profiles-","" ,prof_available)
   prof_available <- gsub(".rds$"     ,"" ,prof_available)
   
@@ -397,7 +395,6 @@ pd_profile_getParsNotYetProfiled <- function(pd, .outputFolder, FLAGreturnVector
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family parframe handling
-#' @importFrom conveniencefunctions pars2parframe
 #'
 #' @examples
 pd_updateEstPars <- function(pd, parsEst, FLAGupdatePE = TRUE, FLAGsavePd = FALSE) {
@@ -408,7 +405,7 @@ pd_updateEstPars <- function(pd, parsEst, FLAGupdatePE = TRUE, FLAGsavePd = FALS
     pd$pars[names(parsEst)] <- parsEst
   } else {
     pd$pars[names(parsEst)] <- parsEst
-    pd$result$base <- conveniencefunctions::pars2parframe(pd$pars, parameterSetId = "Base", obj = pd$obj)
+    pd$result$base <- pars2parframe(pd$pars, parameterSetId = "Base", obj = pd$obj)
   }
   
   if (FLAGupdatePE) {
@@ -422,7 +419,6 @@ pd_updateEstPars <- function(pd, parsEst, FLAGupdatePE = TRUE, FLAGsavePd = FALS
 
 #' Title
 #'
-#' @param conveniencefunctions
 #' @param pars2parframe
 #' @param pd
 #'
@@ -431,7 +427,6 @@ pd_updateEstPars <- function(pd, parsEst, FLAGupdatePE = TRUE, FLAGsavePd = FALS
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family parframe handling
-#' @importFrom conveniencefunctions pars2parframe
 #'
 #' @examples
 pd_parf_collectPars <- function(pd, parameterSetId = "base_obsParsFitted") {
@@ -460,14 +455,13 @@ pd_parf_collectPars <- function(pd, parameterSetId = "base_obsParsFitted") {
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family parframe handling
-#' @importFrom conveniencefunctions cf_parf_getStepRepresentatives
 #' @importFrom data.table as.data.table
 #' @importFrom dMod parframe
 #'
 #' @examples
 pd_parf_collectMstrust <- function(pd, fitrankRange = 1:15, tol = 1) {
   parf0 <- pd$result$mstrust[fitrankRange]
-  fitidxs = conveniencefunctions::cf_parf_getStepRepresentatives(parf0, tol = tol)
+  fitidxs = cf_parf_getStepRepresentatives(parf0, tol = tol)
   pars <- parf0[fitidxs]
   pars <- data.table::as.data.table(pars)
   pars[,`:=`(parameterSetId = paste0("step", step, ",", "rank", fitrank))]
@@ -557,7 +551,6 @@ pd_parf_collectL1 <- function(pd, rows = NULL) {
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family parframe handling
-#' @importFrom conveniencefunctions cf_parf_rbindlist
 pd_parf_collect <- function(pd,
                             opt.base =    pd_parf_opt.base(   include = TRUE , parameterSetId = "Base"),
                             opt.mstrust = pd_parf_opt.mstrust(include = TRUE , fitrankRange = 1:20, tol = 1),
@@ -583,7 +576,7 @@ pd_parf_collect <- function(pd,
     args <- c(list(pd = pd), opt.L1[setdiff(names(opt.L1), "include")])
     parf_L1 <- do.call(pd_parf_collectL1, args)}
   
-  parf <- conveniencefunctions::cf_parf_rbindlist(list(parf_base, parf_fit, parf_profile, parf_L1))
+  parf <- cf_parf_rbindlist(list(parf_base, parf_fit, parf_profile, parf_L1))
   
   # debatable
   parf <- parf[order(parf$value)]
@@ -656,13 +649,12 @@ pd_pars_getFixedOnBoundary <- function(pd, tol = 1e-2) {
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family pd fitting
-#' @importFrom conveniencefunctions dMod_files dMod_saveMstrust
 #' @importFrom dMod trust
 #'
 #' @examples
 pd_fitObsPars <- function(pd, FLAGoverwrite = FALSE, iterlim = 500) {
   .outputFolder <- dirname(pd$filenameParts$.compiledFolder)
-  fit_file <- conveniencefunctions::dMod_files(.outputFolder, "base_obsParsFitted")$mstrust
+  fit_file <- dMod_files(.outputFolder, "base_obsParsFitted")$mstrust
   if (!FLAGoverwrite && file.exists(fit_file)) {
     cat("FitObsPars: Previous parameters were loaded")
     return(readPd(pd_files(pd$filenameParts)$rdsfile))
@@ -681,7 +673,7 @@ pd_fitObsPars <- function(pd, FLAGoverwrite = FALSE, iterlim = 500) {
   fit <- dMod::trust(pd$obj, fit_par, 1,10, iterlim = iterlim, fixed = fit_fix, parlower = parlower, parupper = parupper, printIter = TRUE)
   fit$argument <- c(fit$argument, fit_fix)
   parf_base_obsParsFitted <- as.parframe(structure(list(fit), class = c("parlist", "list")))
-  conveniencefunctions::dMod_saveMstrust(fit = parf_base_obsParsFitted, path = file.path(.outputFolder), identifier = "base_obsParsFitted", FLAGoverwrite = FLAGoverwrite)
+  dMod_saveMstrust(fit = parf_base_obsParsFitted, path = file.path(.outputFolder), identifier = "base_obsParsFitted", FLAGoverwrite = FLAGoverwrite)
   
   readPd(pd_files(pd$filenameParts)$rdsfile)
 }
@@ -709,7 +701,7 @@ pd_fitObsPars <- function(pd, FLAGoverwrite = FALSE, iterlim = 500) {
 pd_fit <- function(pd, iterlim = 1000, printIter = TRUE, FLAGoverwrite = FALSE, ...) {
   .outputFolder <- dirname(pd$filenameParts$.compiledFolder)
   
-  fit_file <- conveniencefunctions::dMod_files(.outputFolder, "singleFit")$mstrust
+  fit_file <- dMod_files(.outputFolder, "singleFit")$mstrust
   if (!FLAGoverwrite && file.exists(fit_file)) {
     cat("FitObsPars: Previous parameters were loaded")
     return(readPd(pd_files(pd$filenameParts)$rdsfile))
@@ -727,7 +719,7 @@ pd_fit <- function(pd, iterlim = 1000, printIter = TRUE, FLAGoverwrite = FALSE, 
   
   fit$argument <- c(fit$argument, fit_fix)
   parf_base_fitted <- as.parframe(structure(list(fit), class = c("parlist", "list")))
-  conveniencefunctions::dMod_saveMstrust(fit = parf_base_fitted, path = file.path(.outputFolder), identifier = "singleFit", FLAGoverwrite = FLAGoverwrite)
+  dMod_saveMstrust(fit = parf_base_fitted, path = file.path(.outputFolder), identifier = "singleFit", FLAGoverwrite = FLAGoverwrite)
   
   pd <- readPd(pd_rdsfile(pd)) #don't print
 }
@@ -755,7 +747,7 @@ pd_fit <- function(pd, iterlim = 1000, printIter = TRUE, FLAGoverwrite = FALSE, 
 pd_fitMstrust <- function(pd, fits = 20, iterlim = 1000, printIter = TRUE, FLAGoverwrite = FALSE, ...) {
   .outputFolder <- dirname(pd$filenameParts$.compiledFolder)
   
-  fit_file <- conveniencefunctions::dMod_files(.outputFolder, "mstrust")$mstrust
+  fit_file <- dMod_files(.outputFolder, "mstrust")$mstrust
   if (!FLAGoverwrite && file.exists(fit_file)) {
     cat("FitObsPars: Previous parameters were loaded")
     return(readPd(pd_files(pd$filenameParts)$rdsfile))
@@ -770,7 +762,7 @@ pd_fitMstrust <- function(pd, fits = 20, iterlim = 1000, printIter = TRUE, FLAGo
   fit <- dMod::mstrust(objfun = pd$obj, center = center, studyname = "mstrust",
                        iterlim = iterlim, parlower = parlower, parupper = parupper, ...)
   fit <- cf_as.parframe(fit)
-  conveniencefunctions::dMod_saveMstrust(fit = fit, 
+  dMod_saveMstrust(fit = fit, 
                                          path = file.path(.outputFolder), identifier = "mstrust", 
                                          FLAGoverwrite = FLAGoverwrite)
   unlink("mstrust",T) # clean up logfiles in working directory
@@ -824,7 +816,7 @@ pd_mstrust <- function(pd, NFLAGsavePd = T, iterlim = 1000, nfits = 5, id) {
                        parupper = parupper)
   
   myframe <- as.parframe(out)
-  conveniencefunctions::dMod_saveMstrust(fit = myframe, path = .outputFolder, 
+  dMod_saveMstrust(fit = myframe, path = .outputFolder, 
                                          identifier = paste0(nfits, "fits"), FLAGoverwrite = TRUE)
   bestfit <- as.parvec(myframe, 1)
   
@@ -1020,7 +1012,6 @@ clusterStatusMessage <- function(FLAGjobDone, FLAGjobPurged, FLAGjobRecover) {
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family Cluster
-#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust check_clusterTimeStamp
 #' @importFrom dMod distributed_computing
 #'
 #' @examples
@@ -1035,7 +1026,7 @@ pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3,
   # .. General job handling -----
   jobnm <- paste0("mstrust_", identifier, "_", gsub("-","_",gsub("(S\\d+(-\\d+)?).*", "\\1", basename(.outputFolder))))
   
-  fileJobDone    <- conveniencefunctions::dMod_files(.outputFolder, identifier)[["mstrust"]]
+  fileJobDone    <- dMod_files(.outputFolder, identifier)[["mstrust"]]
   fileJobPurged  <- file.path(dirname(fileJobDone), paste0(".", jobnm, "jobPurged"))
   fileJobRecover <- file.path(paste0(jobnm, "_folder"), paste0(jobnm, ".R"))
   
@@ -1044,7 +1035,7 @@ pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3,
   FLAGjobRecover <- file.exists(fileJobRecover) | FLAGjobDone | FLAGjobPurged
   
   cat(clusterStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
-  if (!FLAGjobPurged) conveniencefunctions::check_clusterTimeStamp()
+  if (!FLAGjobPurged) check_clusterTimeStamp()
   
   # Assign Global variables: Important, in future, this might be a source of bugs, if other cluster-functions are written
   assign("n_startsPerNode",n_startsPerNode,.GlobalEnv)
@@ -1111,8 +1102,8 @@ pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3,
       fits <- fitlist
       fits <- fits[vapply(fits, is.list, TRUE)]
       class(fits) <- "parlist"
-      fits <- conveniencefunctions::cf_as.parframe(fits)
-      conveniencefunctions::dMod_saveMstrust(fit = fits, path = .outputFolder, 
+      fits <- cf_as.parframe(fits)
+      dMod_saveMstrust(fit = fits, path = .outputFolder, 
                                              identifier = identifier, FLAGoverwrite = TRUE)
       savedFits <- readRDS(fileJobDone)
       if (nrow(savedFits) != (n_startsPerNode * n_nodes)){
@@ -1151,7 +1142,6 @@ pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3,
 #' @md
 #' @family Cluster
 #' @importFrom dMod profile_pars_per_node
-#' @importFrom conveniencefunctions check_clusterTimeStamp
 #'
 #' @examples
 pd_cluster_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfixParsOnBoundary = TRUE, 
@@ -1180,7 +1170,7 @@ pd_cluster_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfi
   FLAGjobRecover <- file.exists(fileJobRecover) | FLAGjobDone | FLAGjobPurged
   
   cat(clusterStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
-  if (!FLAGjobPurged) conveniencefunctions::check_clusterTimeStamp()
+  if (!FLAGjobPurged) check_clusterTimeStamp()
   
   assign("profpars",profpars,.GlobalEnv)
   assign("var_list",var_list,.GlobalEnv)
@@ -1262,7 +1252,6 @@ pd_cluster_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfi
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family Cluster
-#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust cf_parf_metaNames0 check_clusterTimeStamp
 #' @importFrom dMod distributed_computing profile_pars_per_node
 #'
 #' @examples
@@ -1272,14 +1261,14 @@ pd_cluster_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log1
   # .. General job handling -----
   jobnm <- paste0("mstrust_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))
   
-  fileJobDone    <- conveniencefunctions::dMod_files(.outputFolder, identifier)$L1
+  fileJobDone    <- dMod_files(.outputFolder, identifier)$L1
   fileJobPurged  <- file.path(dirname(fileJobDone), paste0(".", jobnm, "jobPurged"))
   fileJobRecover <- file.path(paste0(jobnm, "_folder"), paste0(jobnm, ".R"))
   
   FLAGjobDone    <- file.exists(fileJobDone)
   FLAGjobPurged  <- file.exists(fileJobPurged)
   FLAGjobRecover <- file.exists(fileJobRecover) | FLAGjobDone | FLAGjobPurged
-  if (!FLAGjobPurged) conveniencefunctions::check_clusterTimeStamp()
+  if (!FLAGjobPurged) check_clusterTimeStamp()
   
   cat(clusterStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
   
@@ -1342,7 +1331,7 @@ pd_cluster_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log1
       fits <- list.files(file.path(paste0(jobnm, "_folder"),"results/"), "^L1.*R$", full.names = T) %>% lapply(source, local = TRUE) %>% lapply(function(x) x$value)
       fits <- lapply(fits, function(f) {data.table(as.data.table(f[setdiff(names(f), "argument")]), as.data.table(as.list(f$argument))) })
       fits <- rbindlist(fits)
-      fits <- cf_parframe(fits, metanames = conveniencefunctions::cf_parf_metaNames0$l1)
+      fits <- cf_parframe(fits, metanames = cf_parf_metaNames0$l1)
       dMod_saveL1(L1 = fits, path = .outputFolder, identifier = identifier, FLAGoverwrite = TRUE)
       
       return("Job done. # [ ] TODO You can check out the results by running `readPd` which will load the fit into pd$result$L1. Re-run this function once more to purge the job.")
@@ -1373,7 +1362,6 @@ pd_cluster_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log1
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family Cluster
-#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust cf_parf_metaNames0 check_clusterTimeStamp
 #' @importFrom dMod distributed_computing profile_pars_per_node
 #'
 #' @examples
@@ -1386,14 +1374,14 @@ pd_cluster_L1_mstrust <- function(pd, .outputFolder,
   # .. General job handling -----
   jobnm <- paste0("mstrust_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))
   
-  fileJobDone    <- conveniencefunctions::dMod_files(.outputFolder, identifier)$L1
+  fileJobDone    <- dMod_files(.outputFolder, identifier)$L1
   fileJobPurged  <- file.path(dirname(fileJobDone), paste0(".", jobnm, "jobPurged"))
   fileJobRecover <- file.path(paste0(jobnm, "_folder"), paste0(jobnm, ".R"))
   
   FLAGjobDone    <- file.exists(fileJobDone)
   FLAGjobPurged  <- file.exists(fileJobPurged)
   FLAGjobRecover <- file.exists(fileJobRecover) | FLAGjobDone | FLAGjobPurged
-  if (!FLAGjobPurged) conveniencefunctions::check_clusterTimeStamp()
+  if (!FLAGjobPurged) check_clusterTimeStamp()
   
   cat(clusterStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
   
@@ -1461,7 +1449,7 @@ pd_cluster_L1_mstrust <- function(pd, .outputFolder,
       fits <- list.files(file.path(paste0(jobnm, "_folder"),"results/"), "^L1.*R$", full.names = T) %>% lapply(source, local = TRUE) %>% lapply(function(x) x$value)
       fits <- lapply(fits, function(f) {data.table(as.data.table(f[setdiff(names(f), "argument")]), as.data.table(as.list(f$argument))) })
       fits <- rbindlist(fits, use.names = TRUE, fill = TRUE)
-      fits <- cf_parframe(fits, metanames = conveniencefunctions::cf_parf_metaNames0$l1)
+      fits <- cf_parframe(fits, metanames = cf_parf_metaNames0$l1)
       dMod_saveL1(L1 = fits, path = .outputFolder, identifier = identifier, FLAGoverwrite = TRUE)
       
       return("Job done. # [ ] TODO You can check out the results by running `readPd` which will load the fit into pd$result$L1. Re-run this function once more to purge the job.")
@@ -1493,7 +1481,6 @@ pd_cluster_L1_mstrust <- function(pd, .outputFolder,
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family Cluster
-#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust check_clusterTimeStamp
 #' @importFrom dMod distributed_computing
 #'
 #' @examples
@@ -1504,14 +1491,14 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
   # .. General job handling -----
   jobnm <- paste0("L1UB_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))
   
-  fileJobDone    <- conveniencefunctions::dMod_files(.outputFolder, paste0(identifier,1))[["mstrust"]]
+  fileJobDone    <- dMod_files(.outputFolder, paste0(identifier,1))[["mstrust"]]
   fileJobPurged  <- file.path(dirname(fileJobDone), paste0(".", jobnm, "jobPurged"))
   fileJobRecover <- file.path(paste0(jobnm, "_folder"), paste0(jobnm, ".R"))
   
   FLAGjobDone    <- file.exists(fileJobDone)
   FLAGjobPurged  <- file.exists(fileJobPurged)
   FLAGjobRecover <- file.exists(fileJobRecover) | FLAGjobDone | FLAGjobPurged
-  if (!FLAGjobPurged) conveniencefunctions::check_clusterTimeStamp()
+  if (!FLAGjobPurged) check_clusterTimeStamp()
   
   cat(clusterStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
   
@@ -1569,7 +1556,7 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
                      output = TRUE, cautiousMode = TRUE,
                      stats = FALSE,
                      parlower = parlower, parupper = parupper)
-      parf <- try(conveniencefunctions::cf_as.parframe(fit))
+      parf <- try(cf_as.parframe(fit))
       parf <- parframe(cbind(L1modelCandidate = node , parf), parameters = attr(parf, "parameters"))
       parf
       
@@ -1625,7 +1612,6 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family Cluster
-#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust check_clusterTimeStamp
 #' @importFrom dMod distributed_computing
 #'
 #' @examples
@@ -1636,14 +1622,14 @@ pd_cluster_L1_fitUnbiasedEachOnce <- function(pd, .outputFolder, n_startsPerNode
   # .. General job handling -----
   jobnm <- paste0("L1UB_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))
   
-  fileJobDone    <- conveniencefunctions::dMod_files(.outputFolder, identifier)[["mstrust"]]
+  fileJobDone    <- dMod_files(.outputFolder, identifier)[["mstrust"]]
   fileJobPurged  <- file.path(dirname(fileJobDone), paste0(".", jobnm, "jobPurged"))
   fileJobRecover <- file.path(paste0(jobnm, "_folder"), paste0(jobnm, ".R"))
   
   FLAGjobDone    <- file.exists(fileJobDone)
   FLAGjobPurged  <- file.exists(fileJobPurged)
   FLAGjobRecover <- file.exists(fileJobRecover) | FLAGjobDone | FLAGjobPurged
-  if (!FLAGjobPurged) conveniencefunctions::check_clusterTimeStamp()
+  if (!FLAGjobPurged) check_clusterTimeStamp()
   
   cat(clusterStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover), "\n")
   
@@ -1733,8 +1719,8 @@ pd_cluster_L1_fitUnbiasedEachOnce <- function(pd, .outputFolder, n_startsPerNode
       fits <- fitlist
       fits <- fits[vapply(fits, is.list, TRUE)]
       class(fits) <- "parlist"
-      fits <- conveniencefunctions::cf_as.parframe(fits)
-      conveniencefunctions::dMod_saveMstrust(fit = fits, path = .outputFolder, 
+      fits <- cf_as.parframe(fits)
+      dMod_saveMstrust(fit = fits, path = .outputFolder, 
                                              identifier = identifier, FLAGoverwrite = TRUE)
       
       return("Job done. You can check out the results by running `readPd` which will load the fit into pd$result$fits. Re-run this function once more to purge the job.")
@@ -1819,19 +1805,18 @@ pd_L1_getObjBounds <- function(pd,tol = 1e-4) {
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family L1
-#' @importFrom conveniencefunctions cfggplot cf_outputFigure
 pd_L1_plotDevianceVsLambda <- function(pd, ...) {
   d <- pd_L1_preparePlottingData(pd)
   warning("not the most intuitive plot - this shows deviation against parameter values of full model.
           Better use pd_L1_plotParValueVsLambda()")
-  pl <- conveniencefunctions::cfggplot(d, aes(lambdaL1, estDeviance, color = parameterId)) + 
+  pl <- cfggplot(d, aes(lambdaL1, estDeviance, color = parameterId)) + 
     facet_wrap(~parameterType + isL1Parameter, scales = "free") + 
     geom_line() + 
     scale_color_viridis_d() + 
     scale_x_log10() + 
     theme(legend.position = "bottom") + 
     geom_blank()
-  conveniencefunctions::cf_outputFigure(pl, ...)
+  cf_outputFigure(pl, ...)
 }
 
 #' Plot L1 Parameter values vs lambda
@@ -1845,15 +1830,14 @@ pd_L1_plotDevianceVsLambda <- function(pd, ...) {
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family L1
-#' @importFrom conveniencefunctions cfggplot cf_outputFigure
 pd_L1_plotParValueVsLambda <- function(pd, ggCallback = list(), ...) {
   d <- pd_L1_preparePlottingData(pd)
   d <- d[grep("L1_", parameterId)]
-  pl <- conveniencefunctions::cfggplot(d, aes(lambdaL1, estValue)) + 
+  pl <- cfggplot(d, aes(lambdaL1, estValue)) + 
     geom_line(aes(color = parameterId, group = parameterId)) +
     scale_x_log10()
   for (plx in ggCallback) pl <- pl + plx
-  conveniencefunctions::cf_outputFigure(pl, ...)
+  cf_outputFigure(pl, ...)
 }
 
 
@@ -1869,15 +1853,14 @@ pd_L1_plotParValueVsLambda <- function(pd, ggCallback = list(), ...) {
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family L1
-#' @importFrom conveniencefunctions cfggplot cf_outputFigure
 #'
 #' @examples
 pd_L1_plotIsConvergedVsLambda <- function(pd, ...) {
   d <- pd_L1_preparePlottingData(pd)
-  pl <- conveniencefunctions::cfggplot(unique(d[,list(isconverged = as.numeric(converged), lambdaL1)]), aes(lambdaL1, isconverged)) + 
+  pl <- cfggplot(unique(d[,list(isconverged = as.numeric(converged), lambdaL1)]), aes(lambdaL1, isconverged)) + 
     geom_point() + 
     scale_x_log10()
-  conveniencefunctions::cf_outputFigure(pl, ...)
+  cf_outputFigure(pl, ...)
 }
 
 #' Title
@@ -1890,7 +1873,6 @@ pd_L1_plotIsConvergedVsLambda <- function(pd, ...) {
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family L1
-#' @importFrom conveniencefunctions cfggplot cf_outputFigure
 #'
 #' @examples
 pd_L1_plotValueVsLambda <- function(pd, ...) {
@@ -1898,11 +1880,11 @@ pd_L1_plotValueVsLambda <- function(pd, ...) {
   dbounds <- pd_L1_getObjBounds(pd)
   dbounds <- unique(d[,list(value, lambdaL1)])[dbounds, on = "lambdaL1"]
   dbounds[,`:=`(valuePlot = min(value) + chis)]
-  pl <- conveniencefunctions::cfggplot() + 
+  pl <- cfggplot() + 
     geom_point(aes(lambdaL1, value), data = unique(d[,list(value, lambdaL1)])) + 
     geom_line(aes(lambdaL1, valuePlot), data = dbounds) + 
     scale_x_log10()
-  conveniencefunctions::cf_outputFigure(pl, ...)
+  cf_outputFigure(pl, ...)
 }
 
 #' Title
@@ -2107,7 +2089,6 @@ pd_L1_createPetabFromUnbiasedFit <- function(pd, L1modelId, filename = NULL) {
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family Plotting
-#' @importFrom conveniencefunctions cf_predict cfggplot cfgg_getAllAesthetics scale_color_cf cf_outputFigure
 #' @importFrom data.table setnames
 #' @importFrom ggforce n_pages
 #'
@@ -2176,7 +2157,7 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
   if (!is.null(opt.sim$predtimes)) pd$times <- opt.sim$predtimes
   simconds <- if (NFLAGsubsetType == 0) pd$pe$experimentalCondition else if (!mi && !NFLAGsubsetType%in%c(2,4)) dplot[eval(si)] else dplot
   simconds <- unique(simconds[,conditionId])
-  pplot <- conveniencefunctions::cf_predict(prd = pd$prd, times = pd$times, pars = parf, fixed = pd$fixed, conditions = simconds)
+  pplot <- cf_predict(prd = pd$prd, times = pd$times, pars = parf, fixed = pd$fixed, conditions = simconds)
   data.table::setnames(pplot, c("condition", "name", "value"), c("conditionId", "observableId", "measurement"))
   pplot[,`:=`(observableId=factor(observableId,  petab_plotHelpers_variableOrder(pd)))]
   pplot <- subsetPredictionToData(pplot, dplot, NFLAGsubsetType = NFLAGsubsetType)
@@ -2225,7 +2206,7 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
   }
   
   # .. Plot -----
-  pl <- conveniencefunctions::cfggplot()
+  pl <- cfggplot()
   if (FLAGmeanLine) { # Add first so the lines don't mask the points
     dmean <- petab_plotHelpers_meanMeasurementsValue(dplot, aeslist)
     aesmeanlist <- list(linetype = ~conditionId, group = ~conditionId)
@@ -2233,13 +2214,13 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
     aesmeanlist <- aesmeanlist[setdiff(names(aesmeanlist), "size")]
     pl <- pl + geom_line(do.call(aes_q, aesmeanlist), data = dmean, size = 0.1) # make size available as parameter
   }
-  if (nrow(dplot)) pl <- pl + geom_point(do.call(aes_q, aeslist[intersect(names(aeslist), conveniencefunctions::cfgg_getAllAesthetics()[["geom_point"]])]), data = dplot)
-  if (nrow(pplot)) pl <- pl + geom_line( do.call(aes_q, aeslist[intersect(names(aeslist), conveniencefunctions::cfgg_getAllAesthetics()[["geom_line"]])]) , data = pplot)
+  if (nrow(dplot)) pl <- pl + geom_point(do.call(aes_q, aeslist[intersect(names(aeslist), cfgg_getAllAesthetics()[["geom_point"]])]), data = dplot)
+  if (nrow(pplot)) pl <- pl + geom_line( do.call(aes_q, aeslist[intersect(names(aeslist), cfgg_getAllAesthetics()[["geom_line"]])]) , data = pplot)
   if (!is.null(pplotRibbon)) {
-    aesl <- aeslist[intersect(names(aeslist), conveniencefunctions::cfgg_getAllAesthetics()[["geom_ribbon"]])]
+    aesl <- aeslist[intersect(names(aeslist), cfgg_getAllAesthetics()[["geom_ribbon"]])]
     aesl <- aesl[setdiff(names(aesl), c("linetype", "lty", "y", "color", "colour"))]
     pl <- pl + geom_ribbon(do.call(aes_q, aesl), data = pplotRibbon, alpha = opt.gg$ribbonAlpha)}
-  pl <- pl + conveniencefunctions::scale_color_cf(aesthetics = c("color", "fill")) + 
+  pl <- pl + scale_color_cf(aesthetics = c("color", "fill")) + 
     facet_wrap_paginate(~observableId, nrow = nrow, ncol = ncol, scales = "free") + 
     scale_y_continuous(n.breaks = 5)
   for (plx in ggCallback) pl <- pl + plx
@@ -2248,7 +2229,7 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
   message("Plot has ", ggforce::n_pages(pl), " pages\n")
   
   # Output
-  conveniencefunctions::cf_outputFigure(pl = pl, ...)
+  cf_outputFigure(pl = pl, ...)
 }
 
 
@@ -2274,10 +2255,10 @@ pd_plot_compareParameters <- function(pd, parf,
   pt <- petab_getParameterType(pd$pe)
   p <- pt[p, on = "parameterId"]
   
-  pl <- conveniencefunctions::cfggplot(p, aes(parameterId, parameterValueEstScale)) +
-    conveniencefunctions::facet_wrap_paginate(~parameterType, nrow = nrow, ncol = ncol, scales = scales, page = page) +
+  pl <- cfggplot(p, aes(parameterId, parameterValueEstScale)) +
+    facet_wrap_paginate(~parameterType, nrow = nrow, ncol = ncol, scales = scales, page = page) +
     geom_col(aes(fill = parameterSetId), position = position_dodge2()) +
-    conveniencefunctions::scale_color_cf(aesthetics = c("fill", "color")) +
+    scale_color_cf(aesthetics = c("fill", "color")) +
     theme(axis.text.x = element_text(angle = 90))
   
   cf_outputFigure(pl, ...)
@@ -2334,7 +2315,7 @@ plotParameterComparison <- function(v1,v2, pe, filename, FLAGexcludeObsPars = TR
 #' @param i subset the data.table on their names c("parameterId", "parameterType", "fitrank", "step", "stepsize", 
 #'                                                "index", "value", "converged", "iterations", "estValue")
 #' @param ggCallback for plotting
-#' @param ... output to [conveniencefunctions::cf_outputFigure()]
+#' @param ... output to [cf_outputFigure()]
 #'
 #' @return ggplot
 #' @export
@@ -2342,7 +2323,6 @@ plotParameterComparison <- function(v1,v2, pe, filename, FLAGexcludeObsPars = TR
 #' @md
 #' @family plotting
 #' @importFrom data.table melt
-#' @importFrom conveniencefunctions cfggplot cf_outputFigure
 #'
 #' @examples
 pd_plotParsParallelLines <- function(pd, stepMax = 3, filename = NULL, i, ggCallback = NULL, ...) {
@@ -2365,7 +2345,7 @@ pd_plotParsParallelLines <- function(pd, stepMax = 3, filename = NULL, i, ggCall
   
   if (!mi) p <- p[eval(si)]
   
-  pl <- conveniencefunctions::cfggplot(p, aes(parameterId, estValue, group = fitrank, color = parameterType)) + 
+  pl <- cfggplot(p, aes(parameterId, estValue, group = fitrank, color = parameterType)) + 
     facet_grid(step~parameterType, scales = "free_x", space = "free_x") + 
     geom_point(alpha = 0.1) + 
     geom_line( alpha = 0.1) + 
@@ -2375,7 +2355,7 @@ pd_plotParsParallelLines <- function(pd, stepMax = 3, filename = NULL, i, ggCall
   
   for (plx in ggCallback) pl <- pl + plx
   
-  conveniencefunctions::cf_outputFigure(pl, filename, 
+  cf_outputFigure(pl, filename, 
                                         width = length(parameters) * 0.5 + 4, height = 21, units = "cm", ...)
   
   pl
@@ -2394,7 +2374,7 @@ pd_plotParsParallelLines <- function(pd, stepMax = 3, filename = NULL, i, ggCall
 #' @param i subset the data.table on their names c("parameterId", "parameterType", "fitrank", "step", "stepsize", 
 #'                                                "index", "value", "converged", "iterations", "estValue")
 #' @param ggCallback for plotting
-#' @param ... output to [conveniencefunctions::cf_outputFigure()]
+#' @param ... output to [cf_outputFigure()]
 #'
 #' @return ggplot
 #' @export
@@ -2402,7 +2382,6 @@ pd_plotParsParallelLines <- function(pd, stepMax = 3, filename = NULL, i, ggCall
 #' @md
 #' @family plotting
 #' @importFrom data.table melt
-#' @importFrom conveniencefunctions cfggplot cf_outputFigure
 #'
 #' @examples
 stepMax = 3
@@ -2439,7 +2418,7 @@ pd_plotParsParallelLines2 <- function(pd, stepMax = 3, filename = NULL, i, ggCal
   
   
   
-  pl <- conveniencefunctions::cfggplot(p, aes(parameterId, estValue, group = fitrank, color = step)) + 
+  pl <- cfggplot(p, aes(parameterId, estValue, group = fitrank, color = step)) + 
     facet_grid(~parameterType, scales = "free_x", space = "free_x") + 
     geom_point(aes(alpha = step)) + 
     scale_color_cf() + 
@@ -2455,7 +2434,7 @@ pd_plotParsParallelLines2 <- function(pd, stepMax = 3, filename = NULL, i, ggCal
   if (FLAGaddBase) pl <- pl + geom_line(alpha = 1, data = p[step == "0: 1"])
   for (plx in ggCallback) pl <- pl + plx
   
-  conveniencefunctions::cf_outputFigure(pl, filename, 
+  cf_outputFigure(pl, filename, 
                                         width = length(parameters) * 0.5 + 5, height = 16, units = "cm", ...)
   
   pl
@@ -2577,7 +2556,6 @@ petab_plotHelpers_parameterOrder <- function(pd) {
 #' @md
 #' @family plotting
 #' @importFrom dMod plotProfile
-#' @importFrom conveniencefunctions cfggplot scale_color_cf theme_cf
 #'
 #' @examples
 pd_plotProfile <- function(pd, ggCallback = NULL, nrow = 3, ncol = 4, ...) {
@@ -2599,7 +2577,7 @@ pd_plotProfile <- function(pd, ggCallback = NULL, nrow = 3, ncol = 4, ...) {
   
   dplot3 <- dplot[is.zero == TRUE & mode == "data"]
   
-  pl <- conveniencefunctions::cfggplot(dplot, aes(par, delta)) + 
+  pl <- cfggplot(dplot, aes(par, delta)) + 
     facet_wrap_paginate(~name, nrow = nrow, ncol = ncol, scales = "free_x") + 
     geom_hline(aes(yintercept = yinter), data = data.frame(yinter = c(0, 3.84)), lty = 2, size = 0.2, color = "grey80") +
     geom_point(data = dplot2, size = 3, color = cfcolors[2], alpha = 0.7) + 
@@ -2607,8 +2585,8 @@ pd_plotProfile <- function(pd, ggCallback = NULL, nrow = 3, ncol = 4, ...) {
     geom_point(data = dplot3, size = 2, color = cfcolors[1]) + 
     scale_size_manual(values = c(1,0.5, 0.5)) + 
     scale_y_continuous(breaks=c(0, 1, 2.7, 3.84), labels = c("0", "68% / 1   ", "90% / 2.71", "95% / 3.84"), limits = c(-1, 5)) +
-    conveniencefunctions::scale_color_cf() + 
-    conveniencefunctions::theme_cf(base_size = 9) + 
+    scale_color_cf() + 
+    theme_cf(base_size = 9) + 
     geom_blank()
   for (plx in ggCallback) pl <- pl + plx
   
@@ -2627,7 +2605,6 @@ pd_plotProfile <- function(pd, ggCallback = NULL, nrow = 3, ncol = 4, ...) {
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family plotting
-#' @importFrom conveniencefunctions cf_profile_prepareAffectedPaths
 #' 
 pd_plotProfilePaths <- function(profiles, tol = 1e-1, 
                                 FLAGnormalizeYParameters = TRUE,
@@ -2636,7 +2613,7 @@ pd_plotProfilePaths <- function(profiles, tol = 1e-1,
                                 ...
 ) {
   
-  dp <- conveniencefunctions::cf_profile_prepareAffectedPaths(profiles, tol = tol, FLAGnormalizeYParameters = FLAGnormalizeYParameters)
+  dp <- cf_profile_prepareAffectedPaths(profiles, tol = tol, FLAGnormalizeYParameters = FLAGnormalizeYParameters)
   dfit <- dp[cf_profile_getStartPar(profiles), on = c("PARAMETER1" = "PARAMETEROPT", PARVALUE1 = "PARVALUEOPT")]
   dfit <- dfit[!is.na(PARVALUE2)]
   dopt <- dp[cf_profile_getOptimum(profiles), on = c("PARAMETER1" = "PARAMETEROPT", PARVALUE1 = "PARVALUEOPT")]
@@ -2802,7 +2779,7 @@ pd_debug_p0 <- function(pd, ID = 1) {
       "x = pd$dModAtoms$fns$p0)", "\n", "y = c(names(pars_), names(fixed_))","\n",
       "setdiff(x,y) are MISSING in parameters\n"
   )
-  conveniencefunctions::compare(getParameters(pd$dModAtoms$fns$p0), c(names(pars_), names(fixed_)))
+  compare(getParameters(pd$dModAtoms$fns$p0), c(names(pars_), names(fixed_)))
   
   cat("------------ Parameter values ------------------------------------","\n")
   cat("------------ pars_ -------------","\n")

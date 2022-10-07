@@ -24,7 +24,6 @@ if (Sys.info()["sysname"] == "Windows") {
   devtools::install_url("https://sourceforge.net/projects/sbml/files/libsbml/5.18.0/stable/R%20interface/libSBML_5.18.0.tar.gz")
 }
 devtools::install_github("dkaschek/dMod"   )
-devtools::install_github("dlill/conveniencefunctions")
 devtools::install_github("dlill/petab")
 ```
 

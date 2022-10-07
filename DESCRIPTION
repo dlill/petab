@@ -9,12 +9,11 @@ Description: Convenient handling of petab problems in R.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Depends:
   data.table,
   ggplot2,
-  dMod, 
-  conveniencefunctions
+  dMod
 Imports:
   ggforce,
   dplyr,

@@ -2,7 +2,6 @@ library(petab)
 library(dMod)
 library(dplyr)
 library(stringr)
-library(conveniencefunctions)
 
 try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 

@@ -18,7 +18,7 @@ petab_overviewObsPerCond(
 
 \item{FLAGincludedatasetId}{summarize per conditionId, datasetId and replicateId}
 
-\item{...}{arguments going to \code{\link[conveniencefunctions:cfoutput_MdTable]{conveniencefunctions::cfoutput_MdTable()}}}
+\item{...}{arguments going to \code{\link[=cfoutput_MdTable]{cfoutput_MdTable()}}}
 }
 \value{
 prints table to console or writes it to disk

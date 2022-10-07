@@ -40,7 +40,6 @@ knechts <- c(paste0("knecht",c(1,2,3,5,6)), paste0("ruprecht",c(1,2,3)))
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family knecht
-#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust 
 #' @importFrom dMod distributed_computing
 #'
 #' @examples
@@ -58,7 +57,7 @@ pd_knecht_mstrust <- function(pd, .outputFolder, nStartsPerCore = 4,
   dir.create(jobnm, FALSE)
   setwd(jobnm)
   
-  fileJobDone    <- conveniencefunctions::dMod_files(.outputFolder, identifier)[["mstrust"]]
+  fileJobDone    <- dMod_files(.outputFolder, identifier)[["mstrust"]]
   fileJobPurged  <- file.path(dirname(fileJobDone), paste0(".", jobnm, "jobPurged"))
   fileJobRecover <- paste0(jobnm, "_1.R")
   
@@ -135,10 +134,10 @@ pd_knecht_mstrust <- function(pd, .outputFolder, nStartsPerCore = 4,
       })
       f <- f[sapply(f, function(x) !inherits(x, "try-error"))]
       f <- do.call(c, f)
-      try(conveniencefunctions::cf_as.parframe(f))
+      try(cf_as.parframe(f))
       fits <- f
       setwd(curwd)
-      conveniencefunctions::dMod_saveMstrust(fit = fits, path = .outputFolder, 
+      dMod_saveMstrust(fit = fits, path = .outputFolder, 
                                              identifier = identifier, FLAGoverwrite = TRUE)
       savedFits <- readRDS(fileJobDone)
       return("Job done")
@@ -287,7 +286,6 @@ pd_knecht_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfix
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family knecht
-#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust cf_parf_metaNames0 
 #' @importFrom dMod distributed_computing profile_pars_per_node
 #'
 #' @examples
@@ -297,7 +295,7 @@ pd_knecht_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log10
   # .. General job handling -----
   jobnm <- paste0("mstrust_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))
   
-  fileJobDone    <- conveniencefunctions::dMod_files(.outputFolder, identifier)$L1
+  fileJobDone    <- dMod_files(.outputFolder, identifier)$L1
   fileJobPurged  <- file.path(dirname(fileJobDone), paste0(".", jobnm, "jobPurged"))
   fileJobRecover <- file.path(paste0(jobnm, "_folder"), paste0(jobnm, ".R"))
   
@@ -365,7 +363,7 @@ pd_knecht_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log10
       fits <- list.files(file.path(paste0(jobnm, "_folder"),"results/"), "^L1.*R$", full.names = T) %>% lapply(source, local = TRUE) %>% lapply(function(x) x$value)
       fits <- lapply(fits, function(f) {data.table(as.data.table(f[setdiff(names(f), "argument")]), as.data.table(as.list(f$argument))) })
       fits <- rbindlist(fits)
-      fits <- cf_parframe(fits, metanames = conveniencefunctions::cf_parf_metaNames0$l1)
+      fits <- cf_parframe(fits, metanames = cf_parf_metaNames0$l1)
       dMod_saveL1(L1 = fits, path = .outputFolder, identifier = identifier, FLAGoverwrite = TRUE)
       
       return("Job done. # [ ] TODO You can check out the results by running `readPd` which will load the fit into pd$result$L1. Re-run this function once more to purge the job.")
@@ -396,7 +394,6 @@ pd_knecht_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log10
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family knecht
-#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust cf_parf_metaNames0 
 #' @importFrom dMod distributed_computing profile_pars_per_node
 #'
 #' @examples
@@ -409,7 +406,7 @@ pd_knecht_L1_mstrust <- function(pd, .outputFolder,
   # .. General job handling -----
   jobnm <- paste0("mstrust_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))
   
-  fileJobDone    <- conveniencefunctions::dMod_files(.outputFolder, identifier)$L1
+  fileJobDone    <- dMod_files(.outputFolder, identifier)$L1
   fileJobPurged  <- file.path(dirname(fileJobDone), paste0(".", jobnm, "jobPurged"))
   fileJobRecover <- file.path(paste0(jobnm, "_folder"), paste0(jobnm, ".R"))
   
@@ -482,7 +479,7 @@ pd_knecht_L1_mstrust <- function(pd, .outputFolder,
       fits <- list.files(file.path(paste0(jobnm, "_folder"),"results/"), "^L1.*R$", full.names = T) %>% lapply(source, local = TRUE) %>% lapply(function(x) x$value)
       fits <- lapply(fits, function(f) {data.table(as.data.table(f[setdiff(names(f), "argument")]), as.data.table(as.list(f$argument))) })
       fits <- rbindlist(fits)
-      fits <- cf_parframe(fits, metanames = conveniencefunctions::cf_parf_metaNames0$l1)
+      fits <- cf_parframe(fits, metanames = cf_parf_metaNames0$l1)
       dMod_saveL1(L1 = fits, path = .outputFolder, identifier = identifier, FLAGoverwrite = TRUE)
       
       return("Job done. # [ ] TODO You can check out the results by running `readPd` which will load the fit into pd$result$L1. Re-run this function once more to purge the job.")
@@ -514,7 +511,6 @@ pd_knecht_L1_mstrust <- function(pd, .outputFolder,
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family knecht
-#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust 
 #' @importFrom dMod distributed_computing
 #'
 #' @examples
@@ -525,7 +521,7 @@ pd_knecht_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerNo
   # .. General job handling -----
   jobnm <- paste0("L1UB_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))
   
-  fileJobDone    <- conveniencefunctions::dMod_files(.outputFolder, paste0(identifier,1))[["mstrust"]]
+  fileJobDone    <- dMod_files(.outputFolder, paste0(identifier,1))[["mstrust"]]
   fileJobPurged  <- file.path(dirname(fileJobDone), paste0(".", jobnm, "jobPurged"))
   fileJobRecover <- file.path(paste0(jobnm, "_folder"), paste0(jobnm, ".R"))
   
@@ -589,7 +585,7 @@ pd_knecht_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerNo
                      output = TRUE, cautiousMode = TRUE,
                      stats = FALSE,
                      parlower = parlower, parupper = parupper)
-      parf <- try(conveniencefunctions::cf_as.parframe(fit))
+      parf <- try(cf_as.parframe(fit))
       parf <- parframe(cbind(L1modelCandidate = node , parf), parameters = attr(parf, "parameters"))
       parf
       
@@ -644,7 +640,6 @@ pd_knecht_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerNo
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @family knecht
-#' @importFrom conveniencefunctions dMod_files cf_as.parframe dMod_saveMstrust 
 #' @importFrom dMod distributed_computing
 #'
 #' @examples
@@ -655,7 +650,7 @@ pd_knecht_L1_fitUnbiasedEachOnce <- function(pd, .outputFolder, n_startsPerNode 
   # .. General job handling -----
   jobnm <- paste0("L1UB_", identifier, "_", gsub("(S\\d+).*", "\\1", basename(.outputFolder)))
   
-  fileJobDone    <- conveniencefunctions::dMod_files(.outputFolder, identifier)[["mstrust"]]
+  fileJobDone    <- dMod_files(.outputFolder, identifier)[["mstrust"]]
   fileJobPurged  <- file.path(dirname(fileJobDone), paste0(".", jobnm, "jobPurged"))
   fileJobRecover <- file.path(paste0(jobnm, "_folder"), paste0(jobnm, ".R"))
   
@@ -750,8 +745,8 @@ pd_knecht_L1_fitUnbiasedEachOnce <- function(pd, .outputFolder, n_startsPerNode 
       fits <- fitlist
       fits <- fits[vapply(fits, is.list, TRUE)]
       class(fits) <- "parlist"
-      fits <- conveniencefunctions::cf_as.parframe(fits)
-      conveniencefunctions::dMod_saveMstrust(fit = fits, path = .outputFolder, 
+      fits <- cf_as.parframe(fits)
+      dMod_saveMstrust(fit = fits, path = .outputFolder, 
                                              identifier = identifier, FLAGoverwrite = TRUE)
       
       return("Job done. You can check out the results by running `readPd` which will load the fit into pd$result$fits. Re-run this function once more to purge the job.")

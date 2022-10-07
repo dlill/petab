@@ -26,7 +26,7 @@ Can be overriden by aeslist}
 
 \item{ggCallback}{additional stuff to add to the ggplot, such as a call to \code{\link[ggplot2:labs]{ggplot2::labs()}} or scales}
 
-\item{...}{Arguments to \code{\link[conveniencefunctions:cf_outputFigure]{conveniencefunctions::cf_outputFigure()}}}
+\item{...}{Arguments to \code{\link[=cf_outputFigure]{cf_outputFigure()}}}
 
 \item{FLAGfuture}{export asynchronously with the future package}
 }

@@ -70,7 +70,6 @@
 
 library(libSBML)
 devtools::load_all("~/Promotion/Promotion/Projects/petab")
-# library(conveniencefunctions)
 #' .. Eqnlist and objects -----
 equationList <- NULL
 equationList <- addReaction(equationList, from = "E + S", to = "ES", rate = "(kon)*E*S",

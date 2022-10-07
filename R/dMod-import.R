@@ -1947,7 +1947,6 @@ pdIndiv_getBaseScales <- function(cg, scalesOuter) {
 #' @md
 #' @importFrom dMod repar as.parframe
 #' @importFrom cOde getSymbols
-#' @importFrom conveniencefunctions dMod_saveMstrust
 #'
 #' @export
 importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml",
@@ -2255,7 +2254,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
   # parf_base <- dMod::parframe(data.frame(parameterSetId = "Base", value = value_base, index = 1, converged = FALSE, iterations = 1, pd$pars),parameters = names(pd$pars)) 
   # old solution
   parf_base <- dMod::as.parframe(structure(list(list(value = value_base, index = 1, converged = FALSE, iterations = 1, argument = pd$pars)), class = c("parlist", "list")))
-  conveniencefunctions::dMod_saveMstrust(parf_base, dirname(dirname(rdsfile)), identifier = "base", FLAGoverwrite = TRUE)
+  dMod_saveMstrust(parf_base, dirname(dirname(rdsfile)), identifier = "base", FLAGoverwrite = TRUE)
   
   # return pd
   readPd(rdsfile)

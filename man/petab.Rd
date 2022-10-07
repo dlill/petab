@@ -33,7 +33,6 @@ Collector function for petab files
 }
 \examples{
 # [ ] Todo
-# filename <- system.file("examples/petab/enyzmeKinetics", package = "conveniencefunctions")
 # readPetab(filename)
 }
 \author{
