@@ -1014,6 +1014,7 @@ clusterStatusMessage <- function(FLAGjobDone, FLAGjobPurged, FLAGjobRecover) {
 #' @param n_nodes 
 #' @param id 
 #' @param type 
+#' @param n_cores 
 #'
 #' @return Characters
 #' @export
@@ -1024,7 +1025,7 @@ clusterStatusMessage <- function(FLAGjobDone, FLAGjobPurged, FLAGjobRecover) {
 #' @importFrom dMod distributed_computing
 #'
 #' @examples
-pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3, n_nodes = 10, 
+pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3, n_nodes = 10, n_cores = 64,
                                identifier = "mstrust", FLAGforcePurge = FALSE, opt.parameter_startpoints = "sample",
                                passwdEnv = NULL, machine = "cluster") {
   if (is.null(pd)) {
@@ -1073,7 +1074,7 @@ pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3,
       
       mstrust(objfun = pd$obj, center = center, studyname = paste0("fit", seed),
               fixed = pd$fixed,
-              rinit = 0.1, rmax = 10, cores = 16,
+              rinit = 0.1, rmax = 10, cores = n_cores,
               iterlim = 500, 
               optmethod = "trust", 
               output = TRUE, cautiousMode = TRUE,
@@ -1081,7 +1082,7 @@ pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3,
               parlower = parlower, parupper = parupper)
     },
     jobname = jobnm, 
-    partition = "single", cores = 16, nodes = 1, walltime = "12:00:00",
+    partition = "single", cores = n_cores, nodes = 1, walltime = "12:00:00",
     ssh_passwd = passwdEnv, machine = machine, 
     var_values = NULL, no_rep = n_nodes, 
     recover = FLAGjobRecover,
@@ -1141,6 +1142,7 @@ pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3,
 #'   Therefore, if those parameters were not fixed, one potentially not start from the "optimum"
 #' @param profpars I suggest to use either 1. names(pd$pars) or 2. hard code the result 
 #'   from [pd_profile_getParsNotYetProfiled()]
+#' @param n_cores cores for the cluster to use per node
 #'
 #' @return
 #' @export
@@ -1151,7 +1153,7 @@ pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3,
 #' @importFrom conveniencefunctions check_clusterTimeStamp
 #'
 #' @examples
-pd_cluster_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfixParsOnBoundary = TRUE, 
+pd_cluster_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfixParsOnBoundary = TRUE, n_cores = 64,
                                profpars = names(pd$pars),
                                passwdEnv = Sys.getenv("hurensohn"), machine = "cluster") {
   # Fix pars which went to boundary
@@ -1195,11 +1197,11 @@ pd_cluster_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfi
                  stepControl = list(limit = 100, min = log10(1.005), stepsize = log10(1.005)),
                  optControl = list(iterlim = 20),
                  cautiousMode = TRUE,
-                 cores = 16,
+                 cores = n_cores,
                  path = file.path("~", paste0(jobnm, "_folder")))
     },
     jobname = jobnm, 
-    partition = "single", cores = 16, nodes = 1, walltime = "12:00:00",
+    partition = "single", cores = n_cores, nodes = 1, walltime = "12:00:00",
     ssh_passwd = passwdEnv, machine = machine, 
     var_values = var_list, no_rep = NULL, 
     recover = FLAGjobRecover,
@@ -1253,6 +1255,7 @@ pd_cluster_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfi
 #' @param n_nodes 
 #' @param id 
 #' @param type 
+#' @param n_cores 
 #'
 #' @return Characters
 #' @export
@@ -1263,7 +1266,7 @@ pd_cluster_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfi
 #' @importFrom dMod distributed_computing profile_pars_per_node
 #'
 #' @examples
-pd_cluster_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log10(0.0001), log10(100), length.out = n_nodes*16-1)), 
+pd_cluster_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log10(0.0001), log10(100), length.out = n_nodes*16-1)), n_cores = 64, 
                           identifier = "L1", FLAGforcePurge = FALSE,
                           passwdEnv = Sys.getenv("hurensohn"), machine = "cluster") {
   # .. General job handling -----
@@ -1314,7 +1317,7 @@ pd_cluster_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log1
       })
     },
     jobname = jobnm, 
-    partition = "single", cores = 16, nodes = 1, walltime = "12:00:00",
+    partition = "single", cores = n_cores, nodes = 1, walltime = "12:00:00",
     ssh_passwd = passwdEnv, machine = machine, 
     var_values = var_list, no_rep = NULL, 
     recover = FLAGjobRecover,
@@ -1364,6 +1367,7 @@ pd_cluster_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log1
 #' @param n_nodes 
 #' @param id 
 #' @param type 
+#' @param n_cores 
 #'
 #' @return Characters
 #' @export
@@ -1374,7 +1378,7 @@ pd_cluster_L1 <- function(pd, .outputFolder, n_nodes = 6, lambdas = 10^(seq(log1
 #' @importFrom dMod distributed_computing
 #'
 #' @examples
-pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, 
+pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_cores = 64, 
                                                  identifier = "L1UB", FLAGforcePurge = FALSE,
                                                  passwdEnv = Sys.getenv("hurensohn"), machine = "cluster") {
   
@@ -1441,7 +1445,7 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
       
       fit <- mstrust(objfun = pd$obj, center = center, studyname = paste0("fit", node),
                      fixed = pd$fixed,
-                     rinit = 0.1, rmax = 10, cores = 16,
+                     rinit = 0.1, rmax = 10, cores = n_cores,
                      iterlim = 500, 
                      optmethod = "trust", 
                      output = TRUE, cautiousMode = TRUE,
@@ -1450,7 +1454,7 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
       try(conveniencefunctions::cf_as.parframe(fit))
     },
     jobname = jobnm, 
-    partition = "single", cores = 16, nodes = 1, walltime = "12:00:00",
+    partition = "single", cores = n_cores, nodes = 1, walltime = "12:00:00",
     ssh_passwd = passwdEnv, machine = machine, 
     var_values = var_list, 
     recover = FLAGjobRecover,
@@ -1493,6 +1497,7 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
 #' @param n_nodes 
 #' @param id 
 #' @param type 
+#' @param n_cores  
 #'
 #' @return Characters
 #' @export
@@ -1503,7 +1508,7 @@ pd_cluster_L1_fitUnbiasedEachMstrust <- function(pd, .outputFolder, n_startsPerN
 #' @importFrom dMod distributed_computing
 #'
 #' @examples
-pd_cluster_L1_fitUnbiasedEachOnce <- function(pd, .outputFolder, n_startsPerNode = 16*3, 
+pd_cluster_L1_fitUnbiasedEachOnce <- function(pd, .outputFolder, n_startsPerNode = 16*3, n_cores= 64, 
                                               identifier = "L1UBSingle", FLAGforcePurge = FALSE,
                                               passwdEnv = Sys.getenv("hurensohn"), machine = "cluster") {
   
@@ -1570,7 +1575,7 @@ pd_cluster_L1_fitUnbiasedEachOnce <- function(pd, .outputFolder, n_startsPerNode
         
         # trust(objfun = pd$obj, center = pd$pars, studyname = paste0("fit", node),
         #       fixed = pd$fixed,
-        #       rinit = 0.1, rmax = 10, cores = 16,
+        #       rinit = 0.1, rmax = 10, cores = n_cores,
         #       iterlim = 500, 
         #       optmethod = "trust", 
         #       output = TRUE, cautiousMode = TRUE,
@@ -1579,7 +1584,7 @@ pd_cluster_L1_fitUnbiasedEachOnce <- function(pd, .outputFolder, n_startsPerNode
       })
     },
     jobname = jobnm, 
-    partition = "single", cores = 16, nodes = 1, walltime = "12:00:00",
+    partition = "single", cores = n_cores, nodes = 1, walltime = "12:00:00",
     ssh_passwd = passwdEnv, machine = machine, 
     var_values = var_list, 
     recover = FLAGjobRecover,
