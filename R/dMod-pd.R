@@ -57,6 +57,7 @@ initPd <- function(filenameParts, ...) {
 #' Read a pd and load dlls
 #'
 #' @param filename
+#' @param currFitName name of the current mstrust fit
 #'
 #' @return
 #' @export
@@ -69,7 +70,7 @@ initPd <- function(filenameParts, ...) {
 #' @importFrom dMod loadDLL
 #' @importFrom conveniencefunctions dMod_readProfiles dMod_readMstrust
 #' @examples
-readPd <- function(filename) {
+readPd <- function(filename, currFitName = "mstrust") {
   # 0 wd wrangling
   wd <- getwd()
   on.exit({setwd(wd)})
@@ -92,7 +93,13 @@ readPd <- function(filename) {
   files <- list.files(path, "mstrustList.*\\.rds", full.names = TRUE)
   for (f in files) {
     identifier <- gsub("mstrustList-|\\.rds", "", basename(f))
-    if (is.null(pd$result[[identifier]])) pd$result[[identifier]] <- readRDS(f)
+    
+    if (identifier == currFitName) {
+      pd$result[["mstrust"]] <- readRDS(f)
+    } else {
+      if (is.null(pd$result[[identifier]])) pd$result[[identifier]] <- readRDS(f)
+    }
+    
   }
   
   # Profiles
@@ -1015,6 +1022,7 @@ clusterStatusMessage <- function(FLAGjobDone, FLAGjobPurged, FLAGjobRecover) {
 #' @param id 
 #' @param type 
 #' @param n_cores 
+#' @param FLAGreturnPartialResults set to \code{TRUE} if you want to get results even if not all fits are finished
 #'
 #' @return Characters
 #' @export
@@ -1025,9 +1033,9 @@ clusterStatusMessage <- function(FLAGjobDone, FLAGjobPurged, FLAGjobRecover) {
 #' @importFrom dMod distributed_computing
 #'
 #' @examples
-pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3, n_nodes = 10, n_cores = 64,
+pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3, n_nodes = 10, n_cores = 64, use_dModCenter = FALSE,
                                identifier = "mstrust", FLAGforcePurge = FALSE, opt.parameter_startpoints = "sample",
-                               passwdEnv = NULL, machine = "cluster") {
+                               passwdEnv = NULL, machine = "cluster", FLAGreturnPartialResults = FALSE, FLAGgetResultsAgain = FALSE) {
   if (is.null(pd)) {
     stop("'pd' needs to be defined")
   }
@@ -1048,6 +1056,8 @@ pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3,
   
   # Assign Global variables: Important, in future, this might be a source of bugs, if other cluster-functions are written
   assign("n_startsPerNode",n_startsPerNode,.GlobalEnv)
+  assign("use_dModCenter",use_dModCenter,.GlobalEnv)
+  assign("n_cores",n_cores,.GlobalEnv)
   assign("opt.parameter_startpoints",opt.parameter_startpoints,.GlobalEnv)
   
   # Start mstrust job
@@ -1059,12 +1069,17 @@ pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3,
       seed <- as.numeric(Sys.getenv('SLURM_ARRAY_TASK_ID')) + 1
       FLAGincludeCurrent <- seed == 1
       
-      if (identical(opt.parameter_startpoints, "sample")){
-        center <- pepy_sample_parameter_startpoints(pd$pe, n_starts = n_startsPerNode, seed = seed, 
-                                                    FLAGincludeCurrent = FLAGincludeCurrent)
-      } else {
-        center <- opt.parameter_startpoints
+      if (use_dModCenter == TRUE) {# Python on the cluster is a source of errors, use dMod center instead.
+        center <- dMod::msParframe(pd$pars, n = n_startsPerNode, seed=seed)
+      }else {
+        if (identical(opt.parameter_startpoints, "sample")){
+          center <- pepy_sample_parameter_startpoints(pd$pe, n_starts = n_startsPerNode, seed = seed, 
+                                                      FLAGincludeCurrent = FLAGincludeCurrent)
+        } else {
+          center <- opt.parameter_startpoints
+        }
       }
+
       parlower <- petab_getParameterBoundaries(pd$pe, "lower")
       parupper <- petab_getParameterBoundaries(pd$pe, "upper")
       
@@ -1097,19 +1112,61 @@ pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3,
     return("Job was purged")
   }
   # .. Get results -----
-  if (!FLAGjobDone & !FLAGjobPurged) {
+  if (!FLAGjobDone & !FLAGjobPurged | FLAGgetResultsAgain == TRUE) {
     if (job$check()) {
       Sys.sleep(1) # avoid being blocked
       job$get()
-      fitlist  <- if (exists("cluster_result")) do.call(c, cluster_result) else {NULL
-        #cf_dMod_rescueFits()
-        #   fitlist <- list.files(file.path(paste0(jobnm, "_folder"), "results","fit"), "\\.Rda$", recursive = TRUE, full.names = TRUE)
-        #   fitlist <- lapply(fitlist, function(x) try(local(load(x))))
+      if (exists("cluster_result")) {
+        fitlist <- do.call(c, cluster_result)
+      } else {
+        fitlist <- NULL
       }
       fits <- fitlist
       fits <- fits[vapply(fits, is.list, TRUE)]
       class(fits) <- "parlist"
       fits <- conveniencefunctions::cf_as.parframe(fits)
+      conveniencefunctions::dMod_saveMstrust(fit = fits, path = .outputFolder, 
+                                             identifier = identifier, FLAGoverwrite = TRUE)
+      savedFits <- readRDS(fileJobDone)
+      if (nrow(savedFits) != (n_startsPerNode * n_nodes)){
+        return("Job done, but some fits had errors. You can check out the results by running `readPd` which will load the fit into pd$result$fits. Re-run this function once more to purge the job.")
+      } else cat("Job done and all went fine.\n")
+    } else if (FLAGreturnPartialResults == TRUE) {
+      cat(" Returning partial results...\n")
+      Sys.sleep(1) # avoid being blocked
+      try(job$get(),silent = TRUE)
+      fitFolderList <- list.dirs(file.path(paste0(jobnm, "_folder"), "results"), recursive = F)
+      fitFilesList <- do.call(
+        c,
+        lapply(
+          fitFolderList,
+          function(i) {
+            list.files(i, "\\.Rda$", recursive = TRUE, full.names = TRUE)
+          }
+        )
+      )
+      fitFilesList <- fitFilesList[!grepl("parameterList.Rda", fitFilesList)]
+      # fitlist <- lapply(fitlist, function(x) try(local(load(x))))
+      # fitlist <- do.call(rbind, lapply(fitFilesList, function(x) try(as.parframe(parlist((readRDS(x)))))))
+      
+      fits <- lapply(fitFilesList, function(x) try((((readRDS(x))))))
+      
+      # fits <- fitlist[order(fitlist$value)]
+      # t <- lapply(fitFilesList, function(x) try(as.parframe(parlist((readRDS(x))))))
+      
+      # test <- parlist((readRDS(fitFilesList[1])))
+      # test %>% as.parframe()
+      # 
+      # fits <- fitlist
+      # fits <- fits[vapply(fits, is.list, TRUE)]
+      # class(fits) <- "parlist"
+      # debugonce(cf_as.parframe)
+      # fits <- fits[vapply(fits, is.list, TRUE)]
+      # class(fits) <- "parlist"
+      fits <- conveniencefunctions::cf_as.parframe(fits)
+      
+      cat(nrow(fits), " of ", (n_startsPerNode * n_nodes), " total fits are done.\n")
+      # debugonce(dMod_saveMstrust)
       conveniencefunctions::dMod_saveMstrust(fit = fits, path = .outputFolder, 
                                              identifier = identifier, FLAGoverwrite = TRUE)
       savedFits <- readRDS(fileJobDone)
@@ -1836,6 +1893,7 @@ L1_getModelCandidates <- function(L1Scan) {
 #' @param ncol 
 #' @param opt.sim 
 #' @param opt.gg 
+#' @param FLAGuseErrorbars
 #' @param ... 
 #'
 #' @return ggplot
@@ -1865,25 +1923,86 @@ L1_getModelCandidates <- function(L1Scan) {
 #' height = 21
 #' scale = 1
 #' units = "cm"
-pd_predictAndPlot2 <- function(pd, pe = pd$pe,
-                               i,j,
-                               opt.base = pd_parf_opt.base(),
-                               opt.mstrust = pd_parf_opt.mstrust(),
-                               opt.profile = pd_parf_opt.profile(FALSE),
-                               opt.L1 = pd_parf_opt.L1(FALSE),
-                               parf = NULL,
-                               NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2, strict_cutTimes = 3,keepInternal_cutTimes = 3)["strict_cutTimes"],
-                               FLAGsummarizeProfilePredictions = TRUE,
-                               FLAGmeanLine = FALSE,
-                               nrow = 4, ncol = 5,
-                               aeslist = petab_plotHelpers_aeslist(),
-                               ggCallback = list(),
-                               opt.sim = list(Ntimes_gt5ParSetIds = 100, predtimes = NULL),
-                               opt.gg = list(ribbonAlpha = 0.2), # would be nice to put this into opt.profile or maybe opt.gg?
-                               FLAGreturnPlotData = FALSE,
-                               ...
+pd_predictAndPlot2 <- function(
+    pd,
+    pe = pd$pe,
+    i,j,
+    opt.base = pd_parf_opt.base(),
+    opt.mstrust = pd_parf_opt.mstrust(),
+    opt.profile = pd_parf_opt.profile(FALSE),
+    opt.L1 = pd_parf_opt.L1(FALSE),
+    parf = NULL,
+    FLAGuseErrorbars = FALSE,
+    FLAGuseErrorModelRibbon = FALSE,
+    FlagPlotLog = TRUE,
+    NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2, strict_cutTimes = 3,keepInternal_cutTimes = 3)["strict_cutTimes"],
+    FLAGsummarizeProfilePredictions = TRUE,
+    FLAGmeanLine = FALSE,
+    FLAGmeanPoints = FALSE,
+    nrow = 4, ncol = 5,
+    aeslist = petab_plotHelpers_aeslist(),
+    ggCallback = list(),
+    opt.sim = list(Ntimes_gt5ParSetIds = 100, predtimes = NULL),
+    opt.gg = list(ribbonAlpha = 0.2), # would be nice to put this into opt.profile or maybe opt.gg?
+    FLAGreturnPlotData = FALSE,
+    sqrtX = F,
+    plotIDs = F,
+    ...
 ) {
   
+  if (F) {
+    {
+      pd = pd
+      pe = pd$pe
+      NFLAGsubsetType = 1
+      opt.base = pd_parf_opt.base(FALSE)
+      opt.mstrust = pd_parf_opt.mstrust(fitrankRange = 1:3)
+      opt.profile = pd_parf_opt.profile(FALSE)
+      opt.L1 = pd_parf_opt.L1(FALSE)
+      opt.sim = list(Ntimes_gt5ParSetIds = 100, predtimes = NULL)
+      opt.gg = list(ribbonAlpha = 0.2)
+      parf = NULL
+      filename = file.path(currentFitPlotpath, "001-mstrust.pdf")
+      FLAGmeanLine = FALSE
+      FLAGmeanPoints = TRUE
+      aeslist = petab_plotHelpers_aeslist()
+      ggCallback = list(
+        theme(
+          plot.title = element_text(hjust = 0.5, color="black", size=18, face="bold"),
+          axis.title.x = element_text(size=14, face="bold"),
+          axis.title.y = element_text(size=14, face="bold"),
+          axis.text=element_text(size=12, color = "black"),
+          strip.text.x = element_text(size = 14, face = "bold"), # remove axis labels of facet plots
+          axis.line = element_line(colour="black"),
+          #legend.title = element_text("Gas6 [ug/ml]"),
+          legend.position = "bottom"
+        ),
+        scale_color_manual(values = myColors),
+        labs(caption = captionText),
+        facet_wrap_paginate(~observableId, nrow = 1, ncol = 1, scales = "free")
+      )
+      nrow = 4
+      ncol = 5
+      # width = 29.7, height = 21, scale = 1, units = "cm"
+      # height = 7
+      # width = 7.5
+      # scale = 1
+      # unit = 'in'
+      # title = ""
+      parf = NULL
+      mi <- T
+      si <- NULL
+      mj <- T
+      sj <- NULL
+      FLAGsummarizeProfilePredictions = F
+      FLAGuseErrorbars = F
+      FLAGuseErrorModelRibbon = T
+      FLAGreturnPlotData = F
+      FlagPlotLog = T
+      sqrtX = T
+      plotIDs = T
+    }
+  }
   
   # .. Catch i (see petab_mutateDCO for more ideas) -----
   mi <- missing(i)
@@ -1894,7 +2013,10 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
   # .. Data -----
   # observableTransformation
   dplot <- petab_joinDCO(pe)
-  dplot[,`:=`(measurement = eval(parse(text = paste0(observableTransformation, "(", measurement, ")")))), by = 1:nrow(dplot)]
+  if (FlagPlotLog == TRUE) {
+    dplot[,`:=`(measurement = eval(parse(text = paste0(observableTransformation, "(", measurement, ")")))), by = 1:nrow(dplot)]
+  }
+  
   dplot[,`:=`(observableId=factor(observableId, petab_plotHelpers_variableOrder(pd)))]
   
   # .. Prediction -----
@@ -1948,6 +2070,27 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
     if (!is.null(pplotRibbon)) pplotRibbon[,eval(sj)]
   }
   
+  meandplot <- copy(dplot)
+  meandplot <- meandplot[, `:=`(datapointId = NULL, biologicalReplicate = NULL, gel = NULL, date = NULL, replicateId = NULL, datasetId = NULL)]
+  meandplot <- meandplot[, measurement := mean(measurement) , by = list(observableId, conditionId, time)] %>% unique
+  
+  meandplot[, noiseParameters := 10^as.numeric(as.data.frame(parf[1])[noiseParameters]), by =  1:nrow(meandplot)]
+  
+  
+  if(FlagPlotLog == TRUE) {
+    
+  } else {
+    logtrafos = c("log10" = "10^", "log2" = "2^", "log" = "exp")
+    currTrafo <- unique(dplot$observableTransformation)
+    if(length(currTrafo)>1) stop("\nmultiple observableTransformation, manual scaling needed\n")
+    pplot[,`:=`(measurement = eval(parse(text = paste0(logtrafos[currTrafo][[1]], "(", measurement, ")")))), by =1:nrow(pplot)]
+  }
+  
+  if (sqrtX == TRUE) {
+    dplot[, time := sqrt(time)]
+    pplot[, time := sqrt(time)]
+  }
+  
   # HACK: Return data, don't plot. Is this nice? Think about it.
   # Probably best to make a dedicated plotting function which takes this list as input
   if (FLAGreturnPlotData) {
@@ -1963,7 +2106,29 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
     aesmeanlist <- aesmeanlist[setdiff(names(aesmeanlist), "size")]
     pl <- pl + geom_line(do.call(aes_q, aesmeanlist), data = dmean, size = 0.1) # make size available as parameter
   }
-  if (nrow(dplot)) pl <- pl + geom_point(do.call(aes_q, aeslist[intersect(names(aeslist), conveniencefunctions::cfgg_getAllAesthetics()[["geom_point"]])]), data = dplot)
+  if (nrow(dplot)) {
+    if (FLAGmeanPoints == TRUE) {
+      usePointData <- meandplot
+      pl <- pl + geom_point(
+        do.call(
+          aes_q,
+          aeslist[intersect(names(aeslist), conveniencefunctions::cfgg_getAllAesthetics()[["geom_point"]])]
+        ),
+        data = usePointData,
+        shape = 16
+      )
+    } else {
+      usePointData <- dplot
+      pl <- pl + geom_point(
+        do.call(
+          aes_q,
+          aeslist[intersect(names(aeslist), conveniencefunctions::cfgg_getAllAesthetics()[["geom_point"]])]
+        ),
+        data = usePointData,
+        shape = 1
+      )
+    }
+  } 
   if (nrow(pplot)) pl <- pl + geom_line( do.call(aes_q, aeslist[intersect(names(aeslist), conveniencefunctions::cfgg_getAllAesthetics()[["geom_line"]])]) , data = pplot)
   if (!is.null(pplotRibbon)) {
     aesl <- aeslist[intersect(names(aeslist), conveniencefunctions::cfgg_getAllAesthetics()[["geom_ribbon"]])]
@@ -1972,6 +2137,118 @@ pd_predictAndPlot2 <- function(pd, pe = pd$pe,
   pl <- pl + conveniencefunctions::scale_color_cf(aesthetics = c("color", "fill")) + 
     facet_wrap_paginate(~observableId, nrow = nrow, ncol = ncol, scales = "free") + 
     scale_y_continuous(n.breaks = 5)
+  
+  if (FLAGuseErrorbars == TRUE){
+    if (FLAGmeanPoints == TRUE) {
+      useErrorbarData <- meandplot
+    } else {
+      useErrorbarData <- dplot
+    }
+    pl <- pl + geom_errorbar(data = useErrorbarData, aes(x = time, ymin = measurement - as.numeric(noiseParameters), ymax = measurement + as.numeric(noiseParameters), color = conditionId,width = 0.0))
+  }
+  if (FLAGuseErrorModelRibbon == TRUE) {
+    warning("\nnote: current implementation only one fixed noise parameter per target as error model!\n")
+    params <- data.table(t(as.data.frame(parf[1])))
+    params[, observableId := names(as.data.frame(parf[1]))]
+    params <- params[grep("noiseParameter1", observableId)]
+    params[, observableId := str_remove_all(observableId, "noiseParameter1_")]
+    params[,cellline :=  str_split(observableId, "_")[[1]][3], by =1:nrow(params)]
+    params[,observableId :=  paste(str_split(observableId, "_")[[1]][1:2], collapse = "_"), by =1:nrow(params)]
+    
+    
+    setnames(params,"V1","noiseParameters")
+    # setkey(params, observableId)
+    # setkey(pplot, observableId)
+    pplot[,cellline := str_split(conditionId, "_")[[1]][1], by = 1:nrow(pplot)]
+    pplot_baxk = copy(pplot)
+    
+    params <- params[cellline %in% unique(pplot$cellline)]
+    
+    pplot <- pplot[params, on = c("observableId", "cellline")]
+    # params[,noiseParameters := as.numeric(noiseParameters)]
+    pplot[, `:=`(measurement = as.numeric(measurement), noiseParameters = as.numeric(noiseParameters))]
+    if(FlagPlotLog == TRUE) {
+      logtrafos = c("log10" = "10^", "log2" = "2^", "log" = "exp")
+      currTrafo <- unique(dplot$observableTransformation)
+      currInvTrafo <- logtrafos[currTrafo][[1]]
+      
+      pplot[, `:=`(lower = measurement - noiseParameters, upper = measurement + noiseParameters) ]
+      
+      # pplot[
+      #   ,
+      #   `:=`(
+      #     lower = eval(
+      #       parse(
+      #         text = paste0(currTrafo, "(", currInvTrafo,"(",measurement, ") - ", currInvTrafo, "(",noiseParameters,"))")
+      #       )
+      #     ),
+      #     upper = eval(
+      #       parse(
+      #         text = paste0(currTrafo, "(", currInvTrafo,"(",measurement, ") + ", currInvTrafo, "(",noiseParameters,"))")
+      #       )
+      #     )
+      #     ),
+      #   by = 1:nrow(pplot)
+      #   ]
+    } else {
+      logtrafos = c("log10" = "10^", "log2" = "2^", "log" = "exp")
+      currTrafo <- unique(dplot$observableTransformation)
+      if(length(currTrafo)>1) stop("\nmultiple observableTransformation, manual scaling needed\n")
+      
+      pplot[
+        ,
+        `:=`(
+          noiseParameters = as.numeric(eval(
+            parse(
+              text = paste0(logtrafos[currTrafo][[1]], "(", noiseParameters, ")")
+            )
+          )
+          )
+        ),
+        by =1:nrow(pplot)
+      ]
+      
+      pplot[, `:=`(lower = measurement - noiseParameters, upper = measurement + noiseParameters)]
+    }
+    
+    pl <- pl+ geom_ribbon(
+      data = pplot,
+      mapping = aes(
+        x = time,
+        ymin = lower,
+        ymax = upper,
+        fill = conditionId,
+        group = conditionId
+      ),
+      alpha = 0.1
+    ) #+ guides(fill = "none")
+  }
+  
+  # remove legend of parameterSetId, if only one exists
+  pl <- pl + guides(linetype = "none")
+  
+  
+  if (FlagPlotLog == TRUE) {
+    pl <- pl + ylab(paste0("measurement [",currTrafo,"]"))
+  } else {
+    pl <- pl + ylab(paste0("measurement"))
+  }
+  if (sqrtX == TRUE) {
+    pl <- pl + xlab("sqrt[time]")
+  }
+  
+  if (plotIDs == TRUE) {
+    pl <- pl + ggrepel::geom_text_repel(
+      data = dplot,
+      aes(
+        x= time, 
+        y = measurement, 
+        label = datapointId
+      ), 
+      color = "grey", size = 2
+    )
+  }
+  
   for (plx in ggCallback) pl <- pl + plx
   
   # .. Print paginate message so user doesnt forget about additional pages -----

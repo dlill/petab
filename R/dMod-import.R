@@ -1927,6 +1927,7 @@ pdIndiv_getBaseScales <- function(cg, scalesOuter) {
 #' @param TestCases TRUE to load feature test cases
 #' @param path2TestCases path to feature test case folder
 #' @param compile if FALSE, g, ODEmodel and err are loaded from .RData (if present) and compilation time is saved
+#' @param currFitName name of the current mstrust fit
 #'
 #' @details Objects such as model equations, parameters or data are automatically assigned to the following standard variables and written to your current working directory (via <<-):
 #' reactions, observables, errors, g, x, p0, err, obj, mydata, ODEmodel, condition.grid, trafoL, pouter, times.
@@ -1956,7 +1957,8 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
                                   .compiledFolder = file.path("CompiledObjects"),
                                   NFLAGcompile = c(Auto = 3, Recompile = 0, RebuildGrids = 1, LoadPrevious = 2)[3],
                                   SFLAGbrowser = c("0None", "1Beginning", "2BuildGrids", "3Compilation", "4CollectList",
-                                                   "5Scales", "6ParameterFormulaInjection")[1]
+                                                   "5Scales", "6ParameterFormulaInjection")[1],
+                                  currFitName = "mstrust"
 )
 {
   if (grepl(SFLAGbrowser,"1Beginning")) browser()
@@ -1990,16 +1992,16 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
   }
   
   if(NFLAGcompile > 0) {
-    pd <- readPd(rdsfile)
+    pd <- readPd(rdsfile, currFitName)
     if (NFLAGcompile == 2) return(pd)
   }
   
   if(NFLAGcompile == 0) {
     .resultsFolder <- filenameParts$.resultsFolder
     results <- list.files(.resultsFolder, recursive = TRUE)
-    if (any(grepl("mstrust.rds|profile|L1", results))) {
+    if (any(grepl(paste0(currFitName, ".rds|profile|L1|"), results))) {
       cat(paste0("Deleting the following results: ", 
-                 paste0(grep("mstrust.rds|profile|L1", results, value = TRUE), collapse = ",\n")))
+                 paste0(grep(paste0(currFitName, ".rds|profile|L1"), results, value = TRUE), collapse = ",\n")))
       if (readline(" Are you sure? (type yes)") != "yes") stop("import stopped")}
     unlink(.resultsFolder,recursive = TRUE)
   }
@@ -2297,7 +2299,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
   conveniencefunctions::dMod_saveMstrust(parf_base, dirname(dirname(rdsfile)), identifier = "base", FLAGoverwrite = TRUE)
   
   # return pd
-  readPd(rdsfile)
+  readPd(rdsfile, currFitName)
 }
 
 # .. pd_parameterNames -----

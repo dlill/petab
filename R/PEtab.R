@@ -2497,10 +2497,13 @@ pe_L1_createL1Problem <- function(pe, parameterId_base, conditionSpecL1_referenc
 #' @importFrom blotIt alignReplicates
 
 petab_alignReplicates <- function(
-  pe,
-  i_subset,
-  returnBlotItResult = FALSE,
-  ...
+    pe,
+    i_subset,
+    returnBlotItResult = FALSE,
+    plotBlotItPlots = FALSE,
+    plotBlotItPaths = ".",
+    plotSuffix = "",
+    ...
 ) {
   dco <- petab_joinDCO(pe)
   setnames(dco, "observableId", "name")
@@ -2522,11 +2525,105 @@ petab_alignReplicates <- function(
     dco <- dco[eval(si)]
   }
   
-  
+
   blotitResult <- blotIt::alignReplicates(
     data = dco,
     ...
   )
+  
+  if(plotBlotItPlots == TRUE) {
+    if(!dir.exists(plotBlotItPaths)) dir.create(plotBlotItPaths)
+    
+    
+    # PLOT A: original Data and Prediction ------------------------------------
+    
+    plotA <- blotIt::plotIt(
+      inputList = blotitResult,
+      plotPoints = 'original',
+      plotLine = 'prediction'
+    )
+    
+    plotA <- plotA 
+    
+    for (i in c("free", "fixed")) {
+      for (j in c("single", "grid")) {
+        if(j == "single") {
+          num = 1
+        } else {
+          num = 3
+        }
+        cf_outputFigure(
+          pl = plotA+ facet_wrap_paginate(~ name * biological, scales = i, nrow = num, ncol = num),
+          file = file.path(plotBlotItPaths, paste0(plotSuffix, "plotA_",i,"_",j,".pdf")),
+          height = 14, width = 16, scale = 1, unit = 'in',
+          title = "",
+          FLAGFuture =T
+        )
+      }
+    }
+    
+    
+    # PLOT B: scaled data and aligned -----------------------------------------
+    
+    plotB <- blotIt::plotIt(
+      inputList = blotitResult,
+      plotPoints = 'scaled',
+      plotLine = 'aligned'
+    )
+    
+    
+    for (i in c("free", "fixed")) {
+      for (j in c("single", "grid")) {
+        if(j == "single") {
+          num = 1
+        } else {
+          num = 3
+        }
+        cf_outputFigure(
+          pl = plotB+ facet_wrap_paginate(~ name * biological, scales = i, nrow = num, ncol = num),
+          file = file.path(plotBlotItPaths, paste0(plotSuffix, "plotB_",i,"_",j,".pdf")),
+          height = 14, width = 16, scale = 1, unit = 'in',
+          title = "",
+          FLAGFuture =T
+        )
+      }
+    }
+    
+    
+    
+    # PLOT C: aligned aligned -------------------------------------------------
+    
+    plotC <- blotIt::plotIt(
+      inputList = blotitResult,
+      plotPoints = 'aligned',
+      plotLine = 'aligned'
+    )
+    
+    for (i in c("free", "fixed")) {
+      for (j in c("single", "grid")) {
+        if(j == "single") {
+          num = 1
+        } else {
+          num = 3
+        }
+        cf_outputFigure(
+          pl = plotC+ facet_wrap_paginate(~ name * biological, scales = i, nrow = num, ncol = num),
+          file = file.path(plotBlotItPaths, paste0(plotSuffix, "plotC_",i,"_",j,".pdf")),
+          height = 14, width = 16, scale = 1, unit = 'in',
+          title = "",
+          FLAGFuture =T
+        )
+      }
+    }
+    
+    
+    
+    
+    
+    
+    
+  }
+  
   if (returnBlotItResult == TRUE) {
     return(blotitResult)
   }
