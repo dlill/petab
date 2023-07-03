@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level2/version4" level="2" version="4">
+  <model id="Model">
+    <listOfUnitDefinitions>
+      <unitDefinition id="time">
+        <listOfUnits>
+          <unit kind="second" exponent="1" scale="0" multiplier="60"/>
+        </listOfUnits>
+      </unitDefinition>
+    </listOfUnitDefinitions>
+    <listOfCompartments>
+      <compartment id="cytoplasm" size="1"/>
+    </listOfCompartments>
+    <listOfSpecies>
+      <species id="R1" name="R1" compartment="cytoplasm" initialAmount="1"/>
+      <species id="R2" name="R2" compartment="cytoplasm" initialAmount="1"/>
+      <species id="R1R2" name="R1R2" compartment="cytoplasm" initialAmount="1"/>
+      <species id="ERK" name="ERK" compartment="cytoplasm" initialAmount="1"/>
+      <species id="pERK" name="pERK" compartment="cytoplasm" initialAmount="1"/>
+      <species id="ligand" name="ligand" compartment="cytoplasm" initialAmount="1"/>
+    </listOfSpecies>
+    <listOfParameters>
+      <parameter id="k1" value="0.1"/>
+      <parameter id="k2" value="0.325"/>
+      <parameter id="k3" value="0.55"/>
+      <parameter id="k4" value="0.775"/>
+      <parameter id="k5" value="1"/>
+    </listOfParameters>
+    <listOfInitialAssignments>
+      <initialAssignment symbol="pERK">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <divide/>
+            <apply>
+              <times/>
+              <ci> ERK </ci>
+              <ci> k5 </ci>
+              <ci> k_ratio </ci>
+            </apply>
+            <ci> k5 </ci>
+          </apply>
+        </math>
+      </initialAssignment>
+      <initialAssignment symbol="k4">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <times/>
+            <ci> k5 </ci>
+            <ci> k_ratio </ci>
+          </apply>
+        </math>
+      </initialAssignment>
+    </listOfInitialAssignments>
+    <listOfReactions>
+      <reaction id="ligandinducedR1R2formationNISS" reversible="false">
+        <listOfReactants>
+          <speciesReference species="R1" stoichiometry="1"/>
+          <speciesReference species="R2" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="R1R2" stoichiometry="1"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference species="ligand"/>
+        </listOfModifiers>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> k1 </ci>
+              <ci> R1 </ci>
+              <ci> R2 </ci>
+              <ci> ligand </ci>
+              <ci> cytoplasm </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="R1R2decayNISS" reversible="false">
+        <listOfReactants>
+          <speciesReference species="R1R2" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="R1" stoichiometry="1"/>
+          <speciesReference species="R2" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> k2 </ci>
+              <ci> R1R2 </ci>
+              <ci> cytoplasm </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="ERKtopERKNISS" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ERK" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="pERK" stoichiometry="1"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference species="R1R2"/>
+        </listOfModifiers>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> k3 </ci>
+              <ci> ERK </ci>
+              <ci> R1R2 </ci>
+              <ci> cytoplasm </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="ERKtopERKbasal" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ERK" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="pERK" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> k4 </ci>
+              <ci> ERK </ci>
+              <ci> cytoplasm </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="pERKtoERK" reversible="false">
+        <listOfReactants>
+          <speciesReference species="pERK" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ERK" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> k5 </ci>
+              <ci> pERK </ci>
+              <ci> cytoplasm </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="stimulationNISS" reversible="false">
+        <listOfProducts>
+          <speciesReference species="ligand" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <cn type="integer"> 0 </cn>
+              <ci> cytoplasm </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+    </listOfReactions>
+  </model>
+</sbml>

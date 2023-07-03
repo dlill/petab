@@ -74,15 +74,15 @@ petab_create_parameter_df <- function(pe, observableParameterScale = "log10", pr
   if (!is.null(pfl)) {
     
     trafo_pars <- setdiff(cOde::getSymbols(pfl$parameterFormula), par$parameterId)
-    par_tr <- petab_parameters(parameterId = trafo_pars,
-                               parameterName = trafo_pars,
-                               nominalValue =  1,
-                               estimate = 1,
-                               parameterScale = attr(pfl, "generalScale")
-    )
-    
-    # Append par_tr
-    par <- data.table::rbindlist(list(par, par_tr))
+    if(length(trafo_pars)){
+      par_tr <- petab_parameters(parameterId = trafo_pars,
+                                 parameterName = trafo_pars,
+                                 nominalValue =  1,
+                                 estimate = 1,
+                                 parameterScale = attr(pfl, "generalScale"))
+      # Append par_tr
+      par <- data.table::rbindlist(list(par, par_tr))
+    }
   }
   
   # Parameters from experimentalConditions

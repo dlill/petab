@@ -1,0 +1,15 @@
+format_version: 1.0
+parameter_file: parameters_Model.tsv
+problems:
+- condition_files:
+  - experimentalCondition_Model.tsv
+  measurement_files:
+  - measurementData_Model.tsv
+  observable_files:
+  - observables_Model.tsv
+  sbml_files:
+  - model_Model.xml
+  visualization_files:
+  - ~
+meta_file: ~
+metaInformation_file: ~

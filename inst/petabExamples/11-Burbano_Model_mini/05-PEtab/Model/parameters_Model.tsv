@@ -1,0 +1,17 @@
+parameterId	parameterName	parameterScale	lowerBound	upperBound	nominalValue	estimate	initializationPriorType	initializationPriorParameters	objectivePriorType	objectivePriorParameters
+ERK	ERK	log	6.14e-06	162754.8	3.86211595499914	1	parameterScaleUniform	-1;1	parameterScaleNormal	-1;12
+R1	R1	log	6.14e-06	162754.8	0.962459541366551	1	parameterScaleUniform	-1;1	parameterScaleNormal	-1;12
+R1R2	R1R2	lin	6.14e-06	162754.8	0	0	parameterScaleUniform	-1;1	parameterScaleNormal	-1;12
+R2	R2	log	6.14e-06	162754.8	0.962459541370634	1	parameterScaleUniform	-1;1	parameterScaleNormal	-1;12
+k1_C2	k1_C2	log	6.14e-06	162754.8	0.949842196257243	1	parameterScaleUniform	-1;1	parameterScaleNormal	-1;12
+k1_C3	k1_C3	log	6.14e-06	162754.8	1.75299619648012	1	parameterScaleUniform	-1;1	parameterScaleNormal	-1;12
+k2_C2	k2_C2	log	6.14e-06	162754.8	0.795124958223788	1	parameterScaleUniform	-1;1	parameterScaleNormal	-1;12
+k2_C3	k2_C3	log	6.14e-06	162754.8	5.03942724219551	1	parameterScaleUniform	-1;1	parameterScaleNormal	-1;12
+k3	k3	log	6.14e-06	162754.8	1.5122619103765	1	parameterScaleUniform	-1;1	parameterScaleNormal	-1;12
+k5	k5	log	6.14e-06	162754.8	0.0740377618963333	1	parameterScaleUniform	-1;1	parameterScaleNormal	-1;12
+k_ratio	k_ratio	log	6.14e-06	162754.8	0.030787648882127	1	parameterScaleUniform	-1;1	parameterScaleNormal	-1;12
+ligand	ligand	lin	6.14e-06	162754.8	0	0	parameterScaleUniform	-1;1	parameterScaleNormal	-1;12
+offset_pERK	offset_pERK	log	6.14e-06	162754.8	9.83166502502671	1	parameterScaleUniform	-1;1	parameterScaleNormal	-1;12
+scale_pERK_C1	scale_pERK_C1	log	6.14e-06	162754.8	0.850808144358542	1	parameterScaleUniform	-1;1	parameterScaleNormal	-1;12
+scale_pERK_C2	scale_pERK_C2	log	6.14e-06	162754.8	4.94285332291011	1	parameterScaleUniform	-1;1	parameterScaleNormal	-1;12
+scale_pERK_C3	scale_pERK_C3	log	6.14e-06	162754.8	8.97715739482568	1	parameterScaleUniform	-1;1	parameterScaleNormal	-1;12

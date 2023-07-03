@@ -1,0 +1,25 @@
+observableId	preequilibrationConditionId	simulationConditionId	measurement	time	observableParameters	noiseParameters	datasetId	replicateId	datapointId	lloq
+ERK_total		C1	3.98107170553497	0	8.44e-05	0.05	dataset1	1	8	-Inf
+pERK_obs		C1	10.1817250019594	0	scale_pERK_C1;offset_pERK		dataset2	1	1	-Inf
+pERK_obs		C1	10.0171839694636	2	scale_pERK_C1;offset_pERK		dataset2	1	2	-Inf
+pERK_obs		C1	9.55226765793129	5	scale_pERK_C1;offset_pERK		dataset2	1	3	-Inf
+pERK_obs		C1	10.1437434672937	10	scale_pERK_C1;offset_pERK		dataset2	1	4	-Inf
+pERK_obs		C1	9.98708422815419	15	scale_pERK_C1;offset_pERK		dataset2	1	5	-Inf
+pERK_obs		C1	9.96419102646941	20	scale_pERK_C1;offset_pERK		dataset2	1	6	-Inf
+pERK_obs		C1	9.66701686279172	40	scale_pERK_C1;offset_pERK		dataset2	1	7	-Inf
+ERK_total		C2	3.98107170553497	0	8.44e-05	0.05	dataset1	1	16	-Inf
+pERK_obs		C2	10.5292361919693	0	scale_pERK_C2;offset_pERK		dataset3	1	9	-Inf
+pERK_obs		C2	21.1732984085371	2	scale_pERK_C2;offset_pERK		dataset3	1	10	-Inf
+pERK_obs		C2	26.1262302564154	5	scale_pERK_C2;offset_pERK		dataset3	1	11	-Inf
+pERK_obs		C2	33.0162453343314	10	scale_pERK_C2;offset_pERK		dataset3	1	12	-Inf
+pERK_obs		C2	29.2168277603986	15	scale_pERK_C2;offset_pERK		dataset3	1	13	-Inf
+pERK_obs		C2	26.2345455301346	20	scale_pERK_C2;offset_pERK		dataset3	1	14	-Inf
+pERK_obs		C2	22.2830440585666	40	scale_pERK_C2;offset_pERK		dataset3	1	15	-Inf
+ERK_total		C3	3.98107170553497	0	8.44e-05	0.05	dataset1	1	24	-Inf
+pERK_obs		C3	10.8224066717064	0	scale_pERK_C3;offset_pERK		dataset4	1	17	-Inf
+pERK_obs		C3	25.0890342951421	2	scale_pERK_C3;offset_pERK		dataset4	1	18	-Inf
+pERK_obs		C3	33.9075245410457	5	scale_pERK_C3;offset_pERK		dataset4	1	19	-Inf
+pERK_obs		C3	39.0284110241844	10	scale_pERK_C3;offset_pERK		dataset4	1	20	-Inf
+pERK_obs		C3	38.5501542603258	15	scale_pERK_C3;offset_pERK		dataset4	1	21	-Inf
+pERK_obs		C3	37.6066417749141	20	scale_pERK_C3;offset_pERK		dataset4	1	22	-Inf
+pERK_obs		C3	38.9675348132959	40	scale_pERK_C3;offset_pERK		dataset4	1	23	-Inf
