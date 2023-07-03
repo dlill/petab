@@ -711,18 +711,26 @@ getConditionsSBML <- function(conditions,data, observables_file, FLAGnormalImpor
     # avoid warning if not all conditions are observed
   } else mycondition.grid <- condition.grid_orig
   
+  # fill up NAs of observable parameters for observables that are only measured in a subset of conditions 
+  for(col in 1:ncol(mycondition.grid)){
+    if(any(is.na(mycondition.grid[,col]))){
+      colpar <- setdiff(unique(mycondition.grid[,col]), NA)
+      if(length(colpar)==1) mycondition.grid[,col] <- colpar
+    }
+  }
   
   # Error parameters: Need to cover the four cases
   # 1. err = noiseParameter1_obs, noiseParameter1_obs = c(1)              => No columns in condition.grid
   # 2. err = noiseParameter1_obs, noiseParameter1_obs = c("sigma1")       => Need Column in condition.grid
   # 3. err = noiseParameter1_obs * obs, noiseParameter1_obs = c(1)        => Need Column in condition.grid
   # 4. err = noiseParameter1_obs * obs, noiseParameter1_obs = c("sigma1") => Need Column in condition.grid
+  
   # Check if noise parameters need to be generated or the error model is simply "sigma"
-  err_simple <- !is.na(as.numeric(myobservables$noiseFormula)) | myobservables$noiseFormula == paste0("noiseParameter1_", myobservables$observableId)
+  err_simple <- suppressWarnings(any(!is.na(as.numeric(as.character(myobservables$noiseFormula))))) | myobservables$noiseFormula == paste0("noiseParameter1_", myobservables$observableId)
   # Check if there are any symbolic error parameters
   err_symbols <- getSymbols(mydata$noiseParameters)
   # generate columns for noiseParameters
-  if((FLAGnormalImport && is.character(mydata$noiseParameters)) | (any(!err_simple) | length(err_symbols) > 0) & !is.null(mydata$noiseParameters))
+  if((FLAGnormalImport && suppressWarnings(any(!is.na(as.numeric(as.character(myobservables$noiseFormula)))))) | (any(!err_simple) | length(err_symbols) > 0) & !is.null(mydata$noiseParameters))
   {
     if(exists("mycondition.grid")) {condition.grid_orig <- mycondition.grid}
     condition.grid_noise <- data.frame(conditionId = condis_obs)
@@ -962,6 +970,7 @@ getObservablesSBML <- function(observables){
   obsFormula <- myobs$observableFormula %>% as.character()
   obsFormula[which(myobs$observableTransformation=="log")] <- paste0("log(", obsFormula[which(myobs$observableTransformation=="log")], ")")
   obsFormula[which(myobs$observableTransformation=="log10")] <- paste0("log10(", obsFormula[which(myobs$observableTransformation=="log10")], ")")
+  obsFormula[which(myobs$observableTransformation=="log2")] <- paste0("log2(", obsFormula[which(myobs$observableTransformation=="log2")], ")")
   names(obsFormula) <- obsNames
   observables <- obsFormula %>% as.eqnvec()
   
