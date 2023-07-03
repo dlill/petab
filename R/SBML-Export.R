@@ -116,7 +116,7 @@ getSpeciesInfo <- function(equationList = NULL, parameterFormulaList = NULL, par
     
     # include info from parameterFormulaList
     sInfo[, initialAmount := as.character(initialAmount)]
-    for (d in parameterFormulaList$parameterId){ sInfo[speciesName == d, initialAmount := parameterFormulaList[parameterId == d]$parameterFormula] }
+    for (d in parameterFormulaList$parameterId){ sInfo[speciesName == d, initialAmount := str_replace_all(parameterFormulaList[parameterId == d]$parameterFormula, "\\*\\*", "^")]}
     
     # split in sym and num
     sInfo[, type := if_else(suppressWarnings(is.na(as.numeric(initialAmount))), "sym", "num")]
@@ -217,6 +217,7 @@ getReactionInfo <- function(equationList, parInfo = getParInfo(equationList)) {
   
   re[,`:=`(reactionName = gsub(" ", "", Description))]
   if(any(str_detect(re$reactionName, "\\("))) re[,`:=`(reactionName = gsub("\\(|\\)", "", reactionName))]
+  if(any(str_detect(re$reactionName, "-"))) re[,`:=`(reactionName = gsub("-", "", reactionName))]
   re[,`:=`(parName  = lapply(Rate,    function(x)  setdiff(cOde::getSymbols(x), equationList$states)))]
   re[,`:=`(parValue = lapply(parName, function(pn) parInfo[parName %in% pn, parValue]))]
   re[,`:=`(parUnit  = lapply(parName, function(pn) parInfo[parName %in% pn, parUnit]))]
