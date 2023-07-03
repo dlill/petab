@@ -73,6 +73,9 @@ petab_dModmodel2PE <- function(ODEmodel,
     if(str_detect(obs, "log10\\(")){
       formula <- c(formula, gsub(" ", "", substr(obs,7,length(strsplit(obs, "")[[1]])-1)))
       obsscale <- c(obsscale, "log10")
+    } else if (str_detect(obs, "log2\\(")){
+      formula <- c(formula, gsub(" ", "", substr(obs,6,length(strsplit(obs, "")[[1]])-1)))
+      obsscale <- c(obsscale, "log2")
     } else if (str_detect(obs, "log\\(")){
       formula <- c(formula, gsub(" ", "", substr(obs,5,length(strsplit(obs, "")[[1]])-1)))
       obsscale <- c(obsscale, "log")
@@ -116,8 +119,11 @@ petab_dModmodel2PE <- function(ODEmodel,
                              observableFormula = formula, 
                              observableTransformation = obsscale)
   
-  if(!is.null(errormodel)) pe_ob[noiseformula, ":=" (noiseFormula = i.noiseFormula, 
-                                                     noiseDistribution = "normal"), on = .(observableId)]
+  # insert specific noise formula/parameters when error model is used
+  # insert standard nomenclature when errors are defined in measurement table
+  if(!is.null(errormodel)) {pe_ob[noiseformula, ":=" (noiseFormula = i.noiseFormula, 
+                                                      noiseDistribution = "normal"), on = .(observableId)]
+  } else pe_ob[,noiseFormula := paste0("noiseParameter1_", observableId)] 
   
   
   cat("Writing measurements ...\n")
@@ -196,7 +202,8 @@ petab_dModmodel2PE <- function(ODEmodel,
     pe_me[observableParameters == d, datasetId := paste0("dataset", count)]
     count <- count + 1
   }
-  
+  # add datasetId for observables on absolute scale without observable parameters
+  pe_me[is.na(observableParameters), datasetId := paste0("dataset", count)]
   
   cat("Initialize PE ...\n")
   pe <- petab(model = pe_mo,
@@ -387,6 +394,13 @@ petab_getParameterFormulaList <- function(trafoInfo){
 petab_getParameterFixedList <- function(trafoInfo){
   
   pfl <- trafoInfo[suppressWarnings(!is.na(as.numeric(parameterFormula)))]
+  
+  # transform fixed values to lin scale
+  pfl[, parameterFormula := as.numeric(parameterFormula)]
+  pfl[, parameterFormula := ifelse(trafoScale == "log", exp(parameterFormula),
+                                   ifelse(trafoScale == "log10", 10^(parameterFormula),
+                                          ifelse(trafoScale == "log2", 2^(parameterFormula), parameterFormula)))]
+  
   trafoDF <- pfl[, list(parameterId, parameterValue = parameterFormula)]
   trafoDF
 }
