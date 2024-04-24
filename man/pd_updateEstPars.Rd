@@ -9,9 +9,6 @@ pd_updateEstPars(pd, parsEst, FLAGupdatePE = TRUE, FLAGsavePd = FALSE)
 \arguments{
 \item{FLAGupdatePE}{}
 }
-\value{
-
-}
 \description{
 Update parameters
 }

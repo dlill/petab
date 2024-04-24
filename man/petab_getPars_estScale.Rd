@@ -9,9 +9,6 @@ petab_getPars_estScale(pe)
 \arguments{
 \item{pe}{}
 }
-\value{
-
-}
 \description{
 Get parameters on outer scale
 }

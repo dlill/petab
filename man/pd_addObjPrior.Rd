@@ -11,9 +11,6 @@ pd_addObjPrior(pd, parameters, FLAGuseNominalValueAsCenter)
 
 \item{parameters}{}
 }
-\value{
-
-}
 \description{
 Title
 }

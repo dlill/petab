@@ -31,11 +31,6 @@ initPd(filenameParts, ...)
 
 \item{pdInfo}{}
 }
-\value{
-
-
-
-}
 \description{
 Title
 }

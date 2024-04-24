@@ -9,9 +9,6 @@ petab_combine_measurementData(md1, md2)
 \arguments{
 \item{md2}{}
 }
-\value{
-
-}
 \description{
 Title
 }

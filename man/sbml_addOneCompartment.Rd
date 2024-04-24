@@ -43,7 +43,5 @@ Other SBML export:
 }
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
-
-Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }
 \concept{SBML export}

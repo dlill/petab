@@ -1,4 +1,4 @@
-devtools::load_all("~/Promotion/Promotion/Projects/petab")
+# devtools::load_all("~/Promotion/Promotion/Projects/petab")
 library(petab)
 # try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 
@@ -29,7 +29,9 @@ speciesInfo <- data.table(tibble::tribble(
 # unitInfo is left as the default getUnitInfo(): If you need other units, you need to add them
 
 eventList <- eventlist(var = "ES", time = 20, value = 0, root = NA, method = "replace")
-eventList <- addEvent(eventList, var = "ES", time = 50, value = "addES", root = NA, method = "replace")
+# eventList <- addEvent(eventList, var = "ES", time = 30, value = 10, root = NA, method = "replace") # 
+eventList <- addEvent(eventList, var = "ES", time = 50, value = "addES", root = NA, method = "replace") # "addES"
+# eventList <- addEvent(eventList, var = "ES", time = 70, value = 70, root = NA, method = "replace") # "addES"
 
 parInfo <- data.table(tibble::tribble(
   ~parName, ~parValue, ~parUnit,
@@ -55,6 +57,7 @@ pred <- rbind(pred,pred,pred)
 pred[,`:=`(value = exp(log(value) + rnorm(length(value), sd = sigma)))]
 pred[,`:=`(name = paste0("obs", name))]
 cfggplot(pred, aes(time, value)) + geom_point() + facet_wrap(~name, scales = "free")
+
 # -------------------------------------------------------------------------#
 # Export Petab ----
 # -------------------------------------------------------------------------#
@@ -75,6 +78,8 @@ pe_me <- petab_measurementData(observableId = pred$name,
                                datasetId = "data1",
                                replicateId = rep(1:3, each = nrow(pred)/3),
                                preequilibrationConditionId = NA_character_)
+
+
 # .. error model -----
 pe_ob[,`:=`(noiseFormula = paste0("noiseParameter1_", observableId))]
 pe_me[,`:=`(noiseParameters = paste0("sigma_", observableId))]

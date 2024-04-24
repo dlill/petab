@@ -9,9 +9,6 @@ sbml_validateSBML(sbmlDoc)
 \arguments{
 \item{sbmlDoc}{}
 }
-\value{
-
-}
 \description{
 From libSBML example
 }

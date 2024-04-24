@@ -22,9 +22,6 @@ pd_fitMstrust(
 
 \item{...}{other arguments going to dMod::mstrust}
 }
-\value{
-
-}
 \description{
 Run a mstrust locally
 }

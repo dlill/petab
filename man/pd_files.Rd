@@ -9,9 +9,6 @@ pd_files(filenameParts)
 \arguments{
 \item{type}{}
 }
-\value{
-
-}
 \description{
 Title
 }

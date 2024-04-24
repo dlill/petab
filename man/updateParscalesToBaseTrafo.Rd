@@ -11,9 +11,6 @@ updateParscalesToBaseTrafo(scales_outer, est.grid)
 
 \item{parscales}{setNames(PETABPars$parameterScale, PETABPars$parameterId)}
 }
-\value{
-
-}
 \description{
 Rename parscales to the names needed in the base trafo
 }

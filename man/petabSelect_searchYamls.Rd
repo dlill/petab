@@ -11,9 +11,6 @@ petabSelect_searchYamls(path, pattern)
 
 \item{pattern}{}
 }
-\value{
-
-}
 \description{
 List yaml files in subdirectories based on a pattern
 }

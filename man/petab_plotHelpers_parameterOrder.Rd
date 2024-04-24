@@ -9,9 +9,6 @@ petab_plotHelpers_parameterOrder(pd)
 \arguments{
 \item{pd}{}
 }
-\value{
-
-}
 \description{
 Title
 }

@@ -9,9 +9,6 @@
 \arguments{
 \item{reportYaml}{}
 }
-\value{
-
-}
 \description{
 Title
 }

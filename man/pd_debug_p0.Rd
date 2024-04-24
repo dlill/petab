@@ -9,9 +9,6 @@ pd_debug_p0(pd, ID = 1)
 \arguments{
 \item{ID}{}
 }
-\value{
-
-}
 \description{
 Mainly to have the code accessible
 }

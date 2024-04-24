@@ -11,9 +11,6 @@ indiv2classic_getFasterVersion(pd, NFLAGcompile = 1)
 
 \item{NFLAGcompile}{recompile the parameter trafo of pdc?}
 }
-\value{
-
-}
 \description{
 Get the faster version of classic and indiv
 }

@@ -4,13 +4,10 @@
 \alias{readPd}
 \title{Read a pd and load dlls}
 \usage{
-readPd(filename)
+readPd(filename, currFitName = "mstrust")
 }
 \arguments{
-\item{filename}{}
-}
-\value{
-
+\item{currFitName}{name of the current mstrust fit}
 }
 \description{
 Read a pd and load dlls

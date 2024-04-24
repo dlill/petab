@@ -9,9 +9,6 @@ writePd(pd)
 \arguments{
 \item{pd}{}
 }
-\value{
-
-}
 \description{
 Title
 }

@@ -9,14 +9,8 @@ petab_combine_parameters(p1, p2)
 \arguments{
 \item{p2}{}
 }
-\value{
-
-}
 \description{
 Title
-}
-\examples{
-
 }
 \seealso{
 Other Combine petabs: 

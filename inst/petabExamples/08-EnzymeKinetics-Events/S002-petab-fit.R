@@ -1,20 +1,21 @@
-# library(petab)
-devtools::load_all("~/Promotion/Promotion/Projects/petab")
+library(petab)
+# devtools::load_all("~/Promotion/Promotion/Projects/petab")
 try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
 # -------------------------------------------------------------------------#
 # Create enzyme kinetics model and data ----
 # -------------------------------------------------------------------------#
-pd <- importPEtabSBML_indiv("petab/petab.yaml", NFLAGcompile = 0, .compiledFolder = "Compiled", SFLAGbrowser = "0")
+pd <- importPEtabSBML_indiv("petab/petab.yaml", NFLAGcompile = 0, .compiledFolder = "Compiled", SFLAGbrowser = 0)
 
 pd_predictAndPlot2(pd)
 
 pd_fit(pd)
 pd <- readPd(pd_files(pd$filenameParts)$rdsfile)
-pd_predictAndPlot2(pd)
-
+P <- pd_predictAndPlot2(pd, FlagPlotLog = F)
+print(P)
 
 # # Test model
 # pred <- pd$prd(seq(0,100), pd$pars)
+# pd$obj_data(pd$pars)
 # pd$obj_data(pd$pars)
 # 
 # # Test fitting

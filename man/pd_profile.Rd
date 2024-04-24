@@ -22,9 +22,6 @@ pd_profile(
 
 \item{profpars}{}
 }
-\value{
-
-}
 \description{
 Title
 }

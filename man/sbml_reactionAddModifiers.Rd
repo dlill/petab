@@ -11,9 +11,6 @@ sbml_reactionAddModifiers(reaction, modifiers)
 
 \item{products}{list(name = c("a", "b"), stoichiometry = c(1,2))}
 }
-\value{
-
-}
 \description{
 Title
 }

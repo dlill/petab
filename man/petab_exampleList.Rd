@@ -6,9 +6,6 @@
 \usage{
 petab_exampleList()
 }
-\value{
-
-}
 \description{
 List all available examples
 }

@@ -15,9 +15,6 @@ sbml_kineticLawAddParameters(kl, parName, parValue, unitName)
 
 \item{unitName}{}
 }
-\value{
-
-}
 \description{
 Title
 }

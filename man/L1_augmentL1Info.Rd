@@ -9,9 +9,6 @@ L1_augmentL1Info(l1)
 \arguments{
 \item{l1}{pe$meta$L1}
 }
-\value{
-
-}
 \description{
 Title
 }

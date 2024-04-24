@@ -17,9 +17,6 @@ pd_plot_compareParameters(
 \arguments{
 \item{parf}{}
 }
-\value{
-
-}
 \description{
 Plot multiple parameter vectors in parf as barplots next to each other
 }

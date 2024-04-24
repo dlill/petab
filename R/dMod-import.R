@@ -1927,7 +1927,8 @@ pdIndiv_getBaseScales <- function(cg, scalesOuter) {
 #' @param TestCases TRUE to load feature test cases
 #' @param path2TestCases path to feature test case folder
 #' @param compile if FALSE, g, ODEmodel and err are loaded from .RData (if present) and compilation time is saved
-#' @param currFitName name of the current mstrust fit
+#' @param currFitName name of the current mstrust fit,
+#' @param FLAGuseNominalValueAsCenter if set to TRUE, the nominal value is used as a prior center
 #'
 #' @details Objects such as model equations, parameters or data are automatically assigned to the following standard variables and written to your current working directory (via <<-):
 #' reactions, observables, errors, g, x, p0, err, obj, mydata, ODEmodel, condition.grid, trafoL, pouter, times.
@@ -1958,7 +1959,9 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
                                   NFLAGcompile = c(Auto = 3, Recompile = 0, RebuildGrids = 1, LoadPrevious = 2)[3],
                                   SFLAGbrowser = c("0None", "1Beginning", "2BuildGrids", "3Compilation", "4CollectList",
                                                    "5Scales", "6ParameterFormulaInjection")[1],
-                                  currFitName = "mstrust"
+                                  currFitName = "mstrust",
+                                  FLAGuseNominalValueAsCenter = FALSE,
+                                  rev = ""
 )
 {
   if (grepl(SFLAGbrowser,"1Beginning")) browser()
@@ -1972,7 +1975,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
   files         <- petab_files(filename)
   filenameParts <- list(modelname = modelname, .currentFolder = mywd, .compiledFolder = .compiledFolder, 
                         type = "indiv", petabYaml = if(grepl("yaml", filename)) filename else NULL,
-                        .resultsFolder = file.path(dirname(.compiledFolder), "Results"),
+                        .resultsFolder = file.path(dirname(.compiledFolder), "Results",rev),
                         .projectFolder = dirname(.compiledFolder)
   )
   rdsfile       <- pd_files(filenameParts)$rdsfile
@@ -1999,11 +2002,11 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
   if(NFLAGcompile == 0) {
     .resultsFolder <- filenameParts$.resultsFolder
     results <- list.files(.resultsFolder, recursive = TRUE)
-    if (any(grepl(paste0(currFitName, ".rds|profile|L1|"), results))) {
+    if (any(grepl(paste0(currFitName, ".rds|profile|L1"), results))) {
       cat(paste0("Deleting the following results: ", 
                  paste0(grep(paste0(currFitName, ".rds|profile|L1"), results, value = TRUE), collapse = ",\n")))
       if (readline(" Are you sure? (type yes)") != "yes") stop("import stopped")}
-    unlink(.resultsFolder,recursive = TRUE)
+    unlink(file.path(.resultsFolder, results[grep(paste0(currFitName, ".rds|profile|L1|test.txt"), results)]),recursive = F)
   }
   
   # check this for some coming versions before deprecating
@@ -2191,12 +2194,12 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
     
     p1 <- dMod::Id()
     if (length(trafoInjected)){
-      cat("Compiling pInjected\n")
+      cat("Compiling pInjected (p1)\n")
       p1 <- dMod::P(trafoInjected, compile = TRUE, modelname = paste0("PInjected_", modelname),
                     attach.input = TRUE)
     }
     
-    cat("Compiling p\n")
+    cat("Compiling p (p0)\n")
     p0 <- dMod::P(trafo, compile = TRUE, modelname = paste0("P_", modelname))
     setwd(mywd)
     
@@ -2281,7 +2284,7 @@ importPEtabSBML_indiv <- function(filename = "enzymeKinetics/enzymeKinetics.yaml
   
   
   # High level prediction function
-  pd <- pdIndiv_rebuildPrdObj(pd = pd,Nobjtimes = 100)
+  pd <- pdIndiv_rebuildPrdObj(pd = pd,Nobjtimes = 100, FLAGuseNominalValueAsCenter = FLAGuseNominalValueAsCenter)
   
   
   # .. Save and return -----

@@ -9,9 +9,6 @@ petab_setPars_estScale(pe, parsEst)
 \arguments{
 \item{parsEst}{}
 }
-\value{
-
-}
 \description{
 Title
 }

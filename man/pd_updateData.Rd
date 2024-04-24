@@ -5,6 +5,8 @@
 \title{Title}
 \usage{
 pd_updateData(pd, measurementDataNew, .outputFolder, pdCopyName = "pd_1000")
+
+pd_updateData(pd, measurementDataNew, .outputFolder, pdCopyName = "pd_1000")
 }
 \arguments{
 \item{pd}{a pd}
@@ -15,10 +17,9 @@ pd_updateData(pd, measurementDataNew, .outputFolder, pdCopyName = "pd_1000")
 
 \item{pdCopyName}{}
 }
-\value{
-
-}
 \description{
+Title
+
 Title
 }
 \examples{
@@ -26,8 +27,16 @@ Title
 pd <- petab_exampleRead("04", "pd")
 pd$filenameParts$.projectFolder <- dirname(pd$filenameParts$.compiledFolder)
 measurementDataNew <- copy(pd$pe$measurementData)[,`:=`(measurement = exp(log(measurement) + rnorm(.N, 0, .05)))]
+pd_updateData(pd, measurementDataNew, ".", pdCopyName = "pd_1000")
+
+pd <- petab_exampleRead("04", "pd")
+pd$filenameParts$.projectFolder <- dirname(pd$filenameParts$.compiledFolder)
+measurementDataNew <- copy(pd$pe$measurementData)[,`:=`(measurement = exp(log(measurement) + rnorm(.N, 0, .05)))]
 }
 \seealso{
+Other simulation of data: 
+\code{\link{subsetPredictionToData}()}
+
 Other simulation of data: 
 \code{\link{subsetPredictionToData}()}
 }

@@ -9,9 +9,6 @@ writePetab(pe, filename = "petab/model")
 \arguments{
 \item{filename}{}
 }
-\value{
-
-}
 \description{
 Title
 }

@@ -15,9 +15,6 @@ sbml_addOneEvent(model, eventSpecies, eventTrigger, eventFormula)
 
 \item{eventFormula}{}
 }
-\value{
-
-}
 \description{
 Rather generic already with eventTrigger and eventFormula,
 but I don't know if import can handle anything else but "replace"-events at the moment

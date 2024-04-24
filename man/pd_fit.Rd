@@ -15,9 +15,6 @@ pd_fit(pd, iterlim = 1000, printIter = TRUE, FLAGoverwrite = FALSE, ...)
 
 \item{...}{other arguments going to trust}
 }
-\value{
-
-}
 \description{
 Run a fit only for observation parameters
 }

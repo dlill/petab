@@ -14,9 +14,6 @@ subsetPredictionToData(
 \arguments{
 \item{NFLAGsubsetType}{}
 }
-\value{
-
-}
 \description{
 Subset predictions to observables and conditions observed in data
 }

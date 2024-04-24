@@ -9,9 +9,6 @@ readPetab(filename)
 \arguments{
 \item{path}{}
 }
-\value{
-
-}
 \description{
 Read PEtab files
 }

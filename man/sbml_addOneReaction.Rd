@@ -36,9 +36,6 @@ sbml_addOneReaction(
 
 \item{parUnit}{}
 }
-\value{
-
-}
 \description{
 Title
 }

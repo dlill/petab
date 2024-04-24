@@ -15,9 +15,6 @@ sbml_addOneParameter(model, parName, parValue, parUnit)
 
 \item{speciesInitialAmount}{}
 }
-\value{
-
-}
 \description{
 Title
 }

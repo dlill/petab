@@ -13,9 +13,6 @@ petab_combine_experimentalCondition(
 \arguments{
 \item{ec2}{}
 }
-\value{
-
-}
 \description{
 Title
 }

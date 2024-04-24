@@ -9,6 +9,7 @@ pd_cluster_L1(
   .outputFolder,
   n_nodes = 6,
   lambdas = 10^(seq(log10(1e-04), log10(100), length.out = n_nodes * 16 - 1)),
+  n_cores = 64,
   identifier = "L1",
   FLAGforcePurge = FALSE,
   passwdEnv = Sys.getenv("hurensohn"),
@@ -21,6 +22,8 @@ pd_cluster_L1(
 \item{.outputFolder}{}
 
 \item{n_nodes}{}
+
+\item{n_cores}{}
 
 \item{n_startsPerNode}{}
 

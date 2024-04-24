@@ -14,9 +14,6 @@ pdIndiv_updateControls(
 \arguments{
 \item{objtimes}{}
 }
-\value{
-
-}
 \description{
 Quickly set "controls" amd update all high-level functions
 }

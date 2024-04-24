@@ -14,9 +14,6 @@ indiv2Classic_compileTrafo(
 
 \item{.compiledFolder}{Folder for compiled objects}
 }
-\value{
-
-}
 \description{
 Compile classic trafo
 }

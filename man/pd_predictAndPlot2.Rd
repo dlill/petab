@@ -14,10 +14,14 @@ pd_predictAndPlot2(
   opt.profile = pd_parf_opt.profile(FALSE),
   opt.L1 = pd_parf_opt.L1(FALSE),
   parf = NULL,
+  FLAGuseErrorbars = FALSE,
+  FLAGuseErrorModelRibbon = FALSE,
+  FlagPlotLog = TRUE,
   NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2, strict_cutTimes = 3,
     keepInternal_cutTimes = 3)["strict_cutTimes"],
   FLAGsummarizeProfilePredictions = TRUE,
   FLAGmeanLine = FALSE,
+  FLAGmeanPoints = FALSE,
   nrow = 4,
   ncol = 5,
   aeslist = petab_plotHelpers_aeslist(),
@@ -25,6 +29,11 @@ pd_predictAndPlot2(
   opt.sim = list(Ntimes_gt5ParSetIds = 100, predtimes = NULL),
   opt.gg = list(ribbonAlpha = 0.2),
   FLAGreturnPlotData = FALSE,
+  sqrtX = F,
+  plotIDs = F,
+  simplestErrorModel = T,
+  nameOrder = NULL,
+  FLAGplotMaxIndicators = FALSE,
   ...
 )
 }

@@ -13,9 +13,6 @@ petab_combine_observables(
 \arguments{
 \item{o2}{}
 }
-\value{
-
-}
 \description{
 Title
 }

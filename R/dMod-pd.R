@@ -94,10 +94,11 @@ readPd <- function(filename, currFitName = "mstrust") {
   for (f in files) {
     identifier <- gsub("mstrustList-|\\.rds", "", basename(f))
     
+    if (is.null(pd$result[[identifier]])) pd$result[[identifier]] <- readRDS(f)
     if (identifier == currFitName) {
       pd$result[["mstrust"]] <- readRDS(f)
-    } else {
-      if (is.null(pd$result[[identifier]])) pd$result[[identifier]] <- readRDS(f)
+    # } else {
+    #   if (is.null(pd$result[[identifier]])) pd$result[[identifier]] <- readRDS(f)
     }
     
   }
@@ -261,7 +262,7 @@ pdIndiv_updateControls <- function(pd,
 #' @importFrom dMod P_indiv PRD_indiv normL2_indiv objtimes controls
 #'
 #' @examples
-pdIndiv_rebuildPrdObj <- function(pd, Nobjtimes = 100) {
+pdIndiv_rebuildPrdObj <- function(pd, Nobjtimes = 100, FLAGuseNominalValueAsCenter = FALSE) {
   
   # Rebuild p
   p <- dMod::P_indiv((pd$dModAtoms$fns$p1 * pd$dModAtoms$fns$p0), pd$dModAtoms$gridlist$est.grid, pd$dModAtoms$gridlist$fix.grid)
@@ -278,7 +279,7 @@ pdIndiv_rebuildPrdObj <- function(pd, Nobjtimes = 100) {
                            est.grid = pd$dModAtoms$gridlist$est.grid,
                            fix.grid = pd$dModAtoms$gridlist$fix.grid,
                            times = tobj)
-  obj_prior <- petab_createObjPrior(pd$pe)
+  obj_prior <- petab_createObjPrior(pd$pe, FLAGuseNominalValueAsCenter = FLAGuseNominalValueAsCenter)
   
   # Update p, prd and obj_data obj_prior
   pd$p        <- p
@@ -759,7 +760,7 @@ pd_fit <- function(pd, iterlim = 1000, printIter = TRUE, FLAGoverwrite = FALSE, 
 #' @importFrom dMod trust
 #'
 #' @examples
-pd_fitMstrust <- function(pd, fits = 20, iterlim = 1000, printIter = TRUE, FLAGoverwrite = FALSE, ...) {
+pd_fitMstrust <- function(pd, fits = 20, iterlim = 1000, printIter = TRUE, FLAGoverwrite = FALSE, use_dModCenter = TRUE,useSeed = 1, ...) {
   .outputFolder <- dirname(pd$filenameParts$.compiledFolder)
   
   fit_file <- conveniencefunctions::dMod_files(.outputFolder, "mstrust")$mstrust
@@ -768,10 +769,16 @@ pd_fitMstrust <- function(pd, fits = 20, iterlim = 1000, printIter = TRUE, FLAGo
     return(readPd(pd_files(pd$filenameParts)$rdsfile))
   }
   
+  if (use_dModCenter == TRUE) {
+    center <- dMod::msParframe(pd$pars, n = fits, seed=1)
+  }else{
+    center <- pepy_sample_parameter_startpoints(pd$pe, n_starts = fits, 
+                                                seed = useSeed, 
+                                                FLAGincludeCurrent = TRUE)
+  }
   
-  center <- pepy_sample_parameter_startpoints(pd$pe, n_starts = fits, 
-                                              seed = 1, 
-                                              FLAGincludeCurrent = TRUE)
+  
+  
   parlower <- petab_getParameterBoundaries(pd$pe, "lower")
   parupper <- petab_getParameterBoundaries(pd$pe, "upper")
   fit <- dMod::mstrust(objfun = pd$obj, center = center, studyname = "mstrust",
@@ -782,7 +789,7 @@ pd_fitMstrust <- function(pd, fits = 20, iterlim = 1000, printIter = TRUE, FLAGo
                                          FLAGoverwrite = FLAGoverwrite)
   unlink("mstrust",T) # clean up logfiles in working directory
   pd <- readPd(pd_rdsfile(pd)) #don't print
-}
+} 
 
 
 #' Run mstrust
@@ -1033,15 +1040,19 @@ clusterStatusMessage <- function(FLAGjobDone, FLAGjobPurged, FLAGjobRecover) {
 #' @importFrom dMod distributed_computing
 #'
 #' @examples
-pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3, n_nodes = 10, n_cores = 64, use_dModCenter = FALSE,
-                               identifier = "mstrust", FLAGforcePurge = FALSE, opt.parameter_startpoints = "sample",
-                               passwdEnv = NULL, machine = "cluster", FLAGreturnPartialResults = FALSE, FLAGgetResultsAgain = FALSE) {
+pd_cluster_mstrust <- function(
+    pd = NULL, .outputFolder, n_startsPerNode = 16*3, n_nodes = 10, n_cores = 64, use_dModCenter = FALSE,
+    identifier = "mstrust", FLAGforcePurge = FALSE, opt.parameter_startpoints = "sample",
+    passwdEnv = NULL, machine = "cluster", FLAGreturnPartialResults = FALSE, FLAGgetResultsAgain = FALSE,
+    iterlim = 500, walltime = "12:00:00",
+    jobname = "", FLAGcautiousMode = TRUE, FLAGoutput = FALSE, FLAGreturnAllResults = TRUE
+) {
   if (is.null(pd)) {
     stop("'pd' needs to be defined")
   }
   
   # .. General job handling -----
-  jobnm <- paste0("mstrust_", identifier, "_", gsub("-","_",gsub("(S\\d+(-\\d+)?).*", "\\1", basename(.outputFolder))))
+  jobnm <- paste0("mstrust_", gsub("(S[0-9-]+-[0-9]+).*", "\\1", basename(jobname)),"_",identifier, "_", gsub("-","_",gsub("(S\\d+(-\\d+)?).*", "\\1", basename(.outputFolder))))
   
   fileJobDone    <- conveniencefunctions::dMod_files(.outputFolder, identifier)[["mstrust"]]
   fileJobPurged  <- file.path(dirname(fileJobDone), paste0(".", jobnm, "jobPurged"))
@@ -1059,16 +1070,34 @@ pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3,
   assign("use_dModCenter",use_dModCenter,.GlobalEnv)
   assign("n_cores",n_cores,.GlobalEnv)
   assign("opt.parameter_startpoints",opt.parameter_startpoints,.GlobalEnv)
+  assign("iterlim", iterlim, .GlobalEnv)
+  assign("walltime", walltime, .GlobalEnv)
+  assign("FLAGcautiousMode",FLAGcautiousMode,.GlobalEnv)
+  assign("FLAGoutput",FLAGoutput,.GlobalEnv)
+  assign("FLAGreturnAllResults",FLAGreturnAllResults,.GlobalEnv)
   
   # Start mstrust job
   file.copy(file.path(pd$filenameParts$.currentFolder, pd$filenameParts$.compiledFolder, "/"), ".", recursive = TRUE)
   job <- dMod::distributed_computing(
     {
       loadDLL(pd$obj_data);
-      
-      seed <- as.numeric(Sys.getenv('SLURM_ARRAY_TASK_ID')) + 1
+      SLURM_JOB_ID <- as.numeric(Sys.getenv('SLURM_JOB_ID'))
+      # SLURM_ARRAY_TASK_ID <- as.numeric(Sys.getenv('SLURM_ARRAY_TASK_ID'))
+      # SLURM_ARRAY_JOB_ID <- as.numeric(Sys.getenv('SLURM_ARRAY_JOB_ID'))
+      # SLURM_ARRAY_TASK_COUNT <- as.numeric(Sys.getenv('SLURM_ARRAY_TASK_COUNT'))
+      # exportDT <- data.table(
+      #   SLURM_JOB_ID = SLURM_JOB_ID,
+      #   SLURM_ARRAY_TASK_ID = SLURM_ARRAY_TASK_ID,
+      #   SLURM_ARRAY_JOB_ID = SLURM_ARRAY_JOB_ID,
+      #   SLURM_ARRAY_TASK_COUNT = SLURM_ARRAY_TASK_COUNT
+      # )
+      # seed <- (SLURM_ARRAY_JOB_ID + SLURM_ARRAY_TASK_ID)
+      seed <- (SLURM_JOB_ID)
+      set.seed(seed)
       FLAGincludeCurrent <- seed == 1
       
+      
+      # write.csv2(exportDT, file = paste0(jobname,'_', node_ID,'_',seed, '_seed.csv'))
       if (use_dModCenter == TRUE) {# Python on the cluster is a source of errors, use dMod center instead.
         center <- dMod::msParframe(pd$pars, n = n_startsPerNode, seed=seed)
       }else {
@@ -1079,7 +1108,7 @@ pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3,
           center <- opt.parameter_startpoints
         }
       }
-
+      
       parlower <- petab_getParameterBoundaries(pd$pe, "lower")
       parupper <- petab_getParameterBoundaries(pd$pe, "upper")
       
@@ -1090,18 +1119,19 @@ pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3,
       mstrust(objfun = pd$obj, center = center, studyname = paste0("fit", seed),
               fixed = pd$fixed,
               rinit = 0.1, rmax = 10, cores = n_cores,
-              iterlim = 500, 
+              iterlim = iterlim, 
               optmethod = "trust", 
-              output = TRUE, cautiousMode = TRUE,
+              output = FLAGoutput, cautiousMode = FLAGcautiousMode,
               stats = FALSE, 
               parlower = parlower, parupper = parupper)
     },
     jobname = jobnm, 
-    partition = "single", cores = n_cores, nodes = 1, walltime = "12:00:00",
+    partition = "single", cores = n_cores, nodes = 1, walltime = walltime,
     ssh_passwd = passwdEnv, machine = machine, 
     var_values = NULL, no_rep = n_nodes, 
     recover = FLAGjobRecover,
-    compile = F
+    compile = F,
+    returnAll = FLAGreturnAllResults
   )
   unlink(list.files(".", "\\.o$|\\.so$|\\.c$|\\.rds$"))
   
@@ -1212,7 +1242,11 @@ pd_cluster_mstrust <- function(pd = NULL, .outputFolder, n_startsPerNode = 16*3,
 #' @examples
 pd_cluster_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfixParsOnBoundary = TRUE, n_cores = 64,
                                profpars = names(pd$pars),
-                               passwdEnv = Sys.getenv("hurensohn"), machine = "cluster") {
+                               passwdEnv = NULL, machine = "helix", FLAGreturnPartialResults = FALSE, FLAGgetResultsAgain = FALSE,
+                               walltime = "36:00:00",
+                               jobname = "",
+                               n_profilesPerNode = 64,
+                               FLAGcautiousMode = TRUE) {
   # Fix pars which went to boundary
   if (FLAGfixParsOnBoundary){
     fixed_boundary <- pd_pars_getFixedOnBoundary(pd, tol = 1e-2)
@@ -1222,10 +1256,10 @@ pd_cluster_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfi
   
   # .. Set up job -----
   cat("* use 5 digit identifier instead of 3\n")
-  cat("* use fitrank in identifier")
-  jobnm <- paste0("profile_", gsub("(S[0-9-]+-[0-9]+).*", "\\1", basename(.outputFolder)))
+  cat("* use fitrank in identifier\n")
+  jobnm <- paste0("profile_", gsub("(S[0-9-]+-[0-9]+).*", "\\1", basename(jobname)),"_", gsub("(S[0-9-]+-[0-9]+).*", "\\1", basename(.outputFolder)))
   
-  var_list <- dMod::profile_pars_per_node(profpars, 16)
+  var_list <- dMod::profile_pars_per_node(profpars, n_profilesPerNode)
   
   fileJobDone   <- dMod_files(.outputFolder, profpars[1])$profile
   fileJobPurged <- file.path(dirname(dMod_files(.outputFolder)$profile), ".jobPurged")
@@ -1241,6 +1275,10 @@ pd_cluster_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfi
   assign("profpars",profpars,.GlobalEnv)
   assign("var_list",var_list,.GlobalEnv)
   assign("jobnm",jobnm,.GlobalEnv)
+  assign("n_cores",n_cores,.GlobalEnv)
+  assign("walltime",walltime,.GlobalEnv)
+  assign("FLAGcautiousMode",FLAGcautiousMode,.GlobalEnv)
+  
   file.copy(file.path(pd$filenameParts$.currentFolder, pd$filenameParts$.compiledFolder, "/"), ".", recursive = TRUE)
   
   job <- distributed_computing(
@@ -1252,13 +1290,13 @@ pd_cluster_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfi
                  method = "optimize",
                  algoControl = list(gamma = 0.5, reoptimize = TRUE, correction = 0.5),
                  stepControl = list(limit = 100, min = log10(1.005), stepsize = log10(1.005)),
-                 optControl = list(iterlim = 20),
-                 cautiousMode = TRUE,
+                 optControl = list(iterlim = 500),
+                 cautiousMode = FLAGcautiousMode,
                  cores = n_cores,
                  path = file.path("~", paste0(jobnm, "_folder")))
     },
     jobname = jobnm, 
-    partition = "single", cores = n_cores, nodes = 1, walltime = "12:00:00",
+    partition = "single", cores = n_cores, nodes = 1, walltime = walltime,
     ssh_passwd = passwdEnv, machine = machine, 
     var_values = var_list, no_rep = NULL, 
     recover = FLAGjobRecover,
@@ -1947,6 +1985,10 @@ pd_predictAndPlot2 <- function(
     FLAGreturnPlotData = FALSE,
     sqrtX = F,
     plotIDs = F,
+    simplestErrorModel = T,
+    nameOrder = NULL,
+    FLAGplotMaxIndicators = FALSE,
+    useErrormodel = FALSE,
     ...
 ) {
   
@@ -1954,12 +1996,12 @@ pd_predictAndPlot2 <- function(
     {
       pd = pd
       pe = pd$pe
-      NFLAGsubsetType = 1
+      NFLAGsubsetType = 0
       opt.base = pd_parf_opt.base(FALSE)
       opt.mstrust = pd_parf_opt.mstrust(fitrankRange = 1:3)
       opt.profile = pd_parf_opt.profile(FALSE)
       opt.L1 = pd_parf_opt.L1(FALSE)
-      opt.sim = list(Ntimes_gt5ParSetIds = 100, predtimes = NULL)
+      # opt.sim = list(Ntimes_gt5ParSetIds = 100, predtimes = seq(1,300, length.out = 600))
       opt.gg = list(ribbonAlpha = 0.2)
       parf = NULL
       filename = file.path(currentFitPlotpath, "001-mstrust.pdf")
@@ -1977,7 +2019,7 @@ pd_predictAndPlot2 <- function(
           #legend.title = element_text("Gas6 [ug/ml]"),
           legend.position = "bottom"
         ),
-        scale_color_manual(values = myColors),
+        # scale_color_manual(values = myColors),
         labs(caption = captionText),
         facet_wrap_paginate(~observableId, nrow = 1, ncol = 1, scales = "free")
       )
@@ -1998,9 +2040,14 @@ pd_predictAndPlot2 <- function(
       FLAGuseErrorbars = F
       FLAGuseErrorModelRibbon = T
       FLAGreturnPlotData = F
-      FlagPlotLog = T
-      sqrtX = T
+      FlagPlotLog = F
+      sqrtX = F
       plotIDs = T
+      simplestErrorModel = T
+      nameOrder = nameOrder
+      rm(i)
+      rm(j)
+      FLAGplotMaxIndicators = T
     }
   }
   
@@ -2010,10 +2057,19 @@ pd_predictAndPlot2 <- function(
   mj <- missing(j)
   sj <- substitute(j)
   
+  if (FLAGplotMaxIndicators == TRUE) {
+    if (is.null(opt.sim$predtimes)){
+      opt.sim$predtimes = seq(min(pd$pe$measurementData$time),max(pd$pe$measurementData$time), length.out = 500)
+    }
+  }
   # .. Data -----
   # observableTransformation
   dplot <- petab_joinDCO(pe)
   if (FlagPlotLog == TRUE) {
+    if (FLAGuseErrorbars == T) {
+      dplot[,`:=`(noiseParameters = as.numeric(noiseParameters)/measurement), by =1:nrow(dplot)]
+    }
+    
     dplot[,`:=`(measurement = eval(parse(text = paste0(observableTransformation, "(", measurement, ")")))), by = 1:nrow(dplot)]
   }
   
@@ -2025,7 +2081,9 @@ pd_predictAndPlot2 <- function(
     pd$times <- pd_predtimes(pd, N = opt.sim$Ntimes_gt5ParSetIds)
     if (!opt.profile$include) cat("Predicting for more than 5 parameter sets. Are you sure?")
   }
-  if (!is.null(opt.sim$predtimes)) pd$times <- opt.sim$predtimes
+  if (!is.null(opt.sim$predtimes)) {
+    pd$times <- opt.sim$predtimes
+  }
   simconds <- if (NFLAGsubsetType == 0) pd$pe$experimentalCondition else if (!mi && !NFLAGsubsetType%in%c(2,4)) dplot[eval(si)] else dplot
   simconds <- unique(simconds[,conditionId])
   pplot <- conveniencefunctions::cf_predict(prd = pd$prd, times = pd$times, pars = parf, fixed = pd$fixed, conditions = simconds)
@@ -2070,26 +2128,147 @@ pd_predictAndPlot2 <- function(
     if (!is.null(pplotRibbon)) pplotRibbon[,eval(sj)]
   }
   
-  meandplot <- copy(dplot)
-  meandplot <- meandplot[, `:=`(datapointId = NULL, biologicalReplicate = NULL, gel = NULL, date = NULL, replicateId = NULL, datasetId = NULL)]
-  meandplot <- meandplot[, measurement := mean(measurement) , by = list(observableId, conditionId, time)] %>% unique
+  # meandplot <- copy(dplot)
+  # 
+  # meandplot <- meandplot[, `:=`(datapointId = NULL, biologicalReplicate = NULL, gel = NULL, date = NULL, replicateId = NULL, datasetId = NULL)]
+  # meandplot <- meandplot[, measurement := mean(measurement) , by = list(observableId, conditionId, time)] %>% unique
+  # 
+  # meandplot[, noiseParameters := 10^as.numeric(as.data.frame(parf[1])[noiseParameters]), by =  1:nrow(meandplot)]
+  # if (FLAGuseErrorModelRibbon == T) {
+  if (useErrormodel == TRUE) {
+    if (nrow(dplot)>0) {
+      means <- copy(dplot)
+      means <- means[,list(observableId, time,measurement,conditionId, observableTransformation,noiseParameters)]
+      means[, noiseParameters := as.numeric(as.data.frame(parf[1])[noiseParameters]), by =  1:nrow(means)]
+      means <- unique(means[, measurement := mean(measurement), by =c("time","observableId", "conditionId")])
+    } else {
+      means <- NA
+    }
+  } else {
+    means <- copy(dplot)
+  }
   
-  meandplot[, noiseParameters := 10^as.numeric(as.data.frame(parf[1])[noiseParameters]), by =  1:nrow(meandplot)]
+  
+  
+  
+  # evaluate errormodel (scatchy) -------------------------------------------
+  if (FLAGuseErrorModelRibbon == T) {
+    warning("\nnote: current implementation only one fixed noise parameter per target as error model!\n")
+    if(simplestErrorModel == T) { #simple errormodel
+      params <- data.table(t(as.data.frame(parf[1])))
+      params[, observableId := names(as.data.frame(parf[1]))]
+      params <- params[grep("noiseParameter1", observableId)]
+      params[, observableId := str_remove_all(observableId, "noiseParameter1_")]
+      # params[,cellline :=  str_split(observableId, "_")[[1]][3], by =1:nrow(params)]
+      # params[,observableId :=  paste(str_split(observableId, "_")[[1]][1:2], collapse = "_"), by =1:nrow(params)]
+      
+      params <- params[observableId %in% unique(dplot$observableId)]
+      
+      setnames(params,"V1","noiseParameters")
+      # setkey(params, observableId)
+      # setkey(pplot, observableId)
+      # pplot[,cellline := str_split(conditionId, "_")[[1]][1], by = 1:nrow(pplot)]
+      pplot_baxk = copy(pplot)
+      
+      # params <- params[cellline %in% unique(pplot$cellline)]
+      
+      
+      paramsVec <- params$noiseParameters
+      names(paramsVec) <- params$observableId
+      
+      pplot[, noiseParameters := fifelse(observableId %in% names(paramsVec), paramsVec[observableId], "0"), by= 1:nrow(pplot)]
+      
+      # pplot <- pplot[params, on = c("observableId")]
+    } else {
+      params <- data.table(t(as.data.frame(parf[1])))
+      params[, observableId := names(as.data.frame(parf[1]))]
+      params <- params[grep("noiseParameter1", observableId)]
+      params[, observableId := str_remove_all(observableId, "noiseParameter1_")]
+      params[,cellline :=  str_split(observableId, "_")[[1]][3], by =1:nrow(params)]
+      params[,observableId :=  paste(str_split(observableId, "_")[[1]][1:2], collapse = "_"), by =1:nrow(params)]
+      
+      params <- params[observableId %in% unique(dplot$observableId)]
+      
+      setnames(params,"V1","noiseParameters")
+      # setkey(params, observableId)
+      # setkey(pplot, observableId)
+      pplot[,cellline := str_split(conditionId, "_")[[1]][1], by = 1:nrow(pplot)]
+      pplot_baxk = copy(pplot)
+      
+      params <- params[cellline %in% unique(pplot$cellline)]
+      
+      paramsVec <- params$noiseParameters
+      names(paramsVec) <- params$observableId
+      
+      pplot[, noiseParameters := fifelse(observableId %in% names(paramsVec), paramsVec[observableId], "0"), by= 1:nrow(pplot)]
+      
+      # pplot <- pplot[params, on = c("observableId", "cellline")]
+    }
+    
+    pplot[, `:=`(measurement = as.numeric(measurement), noiseParameters = as.numeric(noiseParameters))]
+    
+    notObservedStates <- setdiff(unique(as.character(pplot[,observableId])), unique(as.character(dplot[,observableId])))
+    
+    pplot[observableId %in% notObservedStates, noiseParameters := 0]
+  }
+  
   
   
   if(FlagPlotLog == TRUE) {
-    
+    logtrafos = c("log10" = "10^", "log2" = "2^", "log" = "exp", "lin" = "1*")
+    currTrafo <- unique(dplot$observableTransformation)
   } else {
-    logtrafos = c("log10" = "10^", "log2" = "2^", "log" = "exp")
+    logtrafos = c("log10" = "10^", "log2" = "2^", "log" = "exp", "lin" = "1*")
     currTrafo <- unique(dplot$observableTransformation)
     if(length(currTrafo)>1) stop("\nmultiple observableTransformation, manual scaling needed\n")
     pplot[,`:=`(measurement = eval(parse(text = paste0(logtrafos[currTrafo][[1]], "(", measurement, ")")))), by =1:nrow(pplot)]
+    # means[,`:=`(noiseParameters = eval(parse(text = paste0(logtrafos[currTrafo][[1]], "(", noiseParameters, ")")))), by =1:nrow(means)]
+    if (FLAGuseErrorModelRibbon == T){
+      pplot[,`:=`(noiseParameters = eval(parse(text = paste0(logtrafos[currTrafo][[1]], "(", noiseParameters, ")")))), by =1:nrow(pplot)]
+    }
+    
   }
   
   if (sqrtX == TRUE) {
     dplot[, time := sqrt(time)]
     pplot[, time := sqrt(time)]
   }
+  
+  if (!is.null(nameOrder)){
+    dplot[,observableId := factor(observableId, levels = nameOrder)]
+    pplot[,observableId := factor(observableId, levels = nameOrder)]
+    # if (FLAGuseErrorModelRibbon == TRUE) {
+    means[,observableId := factor(observableId, levels = nameOrder)]
+    # }
+    
+  }
+  
+  if (FLAGplotMaxIndicators  == TRUE) {
+    vlineData <- pplot[, list(conditionId, GAS6, TGFb, time, observableId, measurement)]
+    # vlineData[,measurement := 10^measurement]
+    
+    vlineData[, max := max(measurement) ,by = list(observableId, conditionId)]
+    vlineData <- vlineData[measurement == max, list(conditionId, time, observableId, measurement)]
+    
+    conds <- unique(vlineData$conditionId)
+    obs <- unique(vlineData$observableId)
+    
+    for (l in conds) {
+      for (m in obs) {
+        if (F) {
+          l <- conds[1]
+          m <- obs[1]
+        }
+        if(nrow(unique(vlineData[conditionId == l & observableId == m])) > 1) {
+          vlineData <- vlineData[!(conditionId == l & observableId == m)]
+        }
+      }
+    }
+    
+    # vlineData[measurement == max(measurement),list(conditionId, observableId, time, measurement) ,by = list(observableId, conditionId)]
+  }
+  
+  
   
   # HACK: Return data, don't plot. Is this nice? Think about it.
   # Probably best to make a dedicated plotting function which takes this list as input
@@ -2108,7 +2287,7 @@ pd_predictAndPlot2 <- function(
   }
   if (nrow(dplot)) {
     if (FLAGmeanPoints == TRUE) {
-      usePointData <- meandplot
+      usePointData <- means
       pl <- pl + geom_point(
         do.call(
           aes_q,
@@ -2140,83 +2319,19 @@ pd_predictAndPlot2 <- function(
   
   if (FLAGuseErrorbars == TRUE){
     if (FLAGmeanPoints == TRUE) {
-      useErrorbarData <- meandplot
+      useErrorbarData <- means
     } else {
       useErrorbarData <- dplot
     }
     pl <- pl + geom_errorbar(data = useErrorbarData, aes(x = time, ymin = measurement - as.numeric(noiseParameters), ymax = measurement + as.numeric(noiseParameters), color = conditionId,width = 0.0))
   }
   if (FLAGuseErrorModelRibbon == TRUE) {
-    warning("\nnote: current implementation only one fixed noise parameter per target as error model!\n")
-    params <- data.table(t(as.data.frame(parf[1])))
-    params[, observableId := names(as.data.frame(parf[1]))]
-    params <- params[grep("noiseParameter1", observableId)]
-    params[, observableId := str_remove_all(observableId, "noiseParameter1_")]
-    params[,cellline :=  str_split(observableId, "_")[[1]][3], by =1:nrow(params)]
-    params[,observableId :=  paste(str_split(observableId, "_")[[1]][1:2], collapse = "_"), by =1:nrow(params)]
-    
-    
-    setnames(params,"V1","noiseParameters")
-    # setkey(params, observableId)
-    # setkey(pplot, observableId)
-    pplot[,cellline := str_split(conditionId, "_")[[1]][1], by = 1:nrow(pplot)]
-    pplot_baxk = copy(pplot)
-    
-    params <- params[cellline %in% unique(pplot$cellline)]
-    
-    pplot <- pplot[params, on = c("observableId", "cellline")]
-    # params[,noiseParameters := as.numeric(noiseParameters)]
-    pplot[, `:=`(measurement = as.numeric(measurement), noiseParameters = as.numeric(noiseParameters))]
-    if(FlagPlotLog == TRUE) {
-      logtrafos = c("log10" = "10^", "log2" = "2^", "log" = "exp")
-      currTrafo <- unique(dplot$observableTransformation)
-      currInvTrafo <- logtrafos[currTrafo][[1]]
-      
-      pplot[, `:=`(lower = measurement - noiseParameters, upper = measurement + noiseParameters) ]
-      
-      # pplot[
-      #   ,
-      #   `:=`(
-      #     lower = eval(
-      #       parse(
-      #         text = paste0(currTrafo, "(", currInvTrafo,"(",measurement, ") - ", currInvTrafo, "(",noiseParameters,"))")
-      #       )
-      #     ),
-      #     upper = eval(
-      #       parse(
-      #         text = paste0(currTrafo, "(", currInvTrafo,"(",measurement, ") + ", currInvTrafo, "(",noiseParameters,"))")
-      #       )
-      #     )
-      #     ),
-      #   by = 1:nrow(pplot)
-      #   ]
-    } else {
-      logtrafos = c("log10" = "10^", "log2" = "2^", "log" = "exp")
-      currTrafo <- unique(dplot$observableTransformation)
-      if(length(currTrafo)>1) stop("\nmultiple observableTransformation, manual scaling needed\n")
-      
-      pplot[
-        ,
-        `:=`(
-          noiseParameters = as.numeric(eval(
-            parse(
-              text = paste0(logtrafos[currTrafo][[1]], "(", noiseParameters, ")")
-            )
-          )
-          )
-        ),
-        by =1:nrow(pplot)
-      ]
-      
-      pplot[, `:=`(lower = measurement - noiseParameters, upper = measurement + noiseParameters)]
-    }
-    
     pl <- pl+ geom_ribbon(
       data = pplot,
       mapping = aes(
         x = time,
-        ymin = lower,
-        ymax = upper,
+        ymin = measurement - noiseParameters,
+        ymax = measurement + noiseParameters,
         fill = conditionId,
         group = conditionId
       ),
@@ -2224,8 +2339,7 @@ pd_predictAndPlot2 <- function(
     ) #+ guides(fill = "none")
   }
   
-  # remove legend of parameterSetId, if only one exists
-  pl <- pl + guides(linetype = "none")
+  
   
   
   if (FlagPlotLog == TRUE) {
@@ -2248,8 +2362,38 @@ pd_predictAndPlot2 <- function(
       color = "grey", size = 2
     )
   }
+  if (FLAGplotMaxIndicators == TRUE) {
+    pl <- pl +
+      geom_vline(
+        data = vlineData,
+        mapping = aes(
+          color = conditionId,
+          xintercept = time
+        ),
+        linetype = "dashed") +
+      ggrepel::geom_text_repel(
+        data = vlineData,
+        aes(
+          x = time,
+          y = 0,
+          label = paste0('Tmax = ', round(time, digits = 3)),
+          color = conditionId
+        ),
+        hjust = 0,
+        vjust = 1,
+        show.legend = FALSE
+      )
+  }
+  
+  # remove legend of parameterSetId, if only one exists
+  if (nrow(parf) <2) {
+    pl <- pl + guides(linetype = "none")
+  }
+  
   
   for (plx in ggCallback) pl <- pl + plx
+  
+  
   
   # .. Print paginate message so user doesnt forget about additional pages -----
   message("Plot has ", ggforce::n_pages(pl), " pages\n")
@@ -2257,6 +2401,8 @@ pd_predictAndPlot2 <- function(
   # Output
   conveniencefunctions::cf_outputFigure(pl = pl, ...)
 }
+
+
 
 
 
@@ -2448,7 +2594,7 @@ pd_plotParsParallelLines2 <- function(pd, stepMax = 3, filename = NULL, i, ggCal
           panel.grid.major.x = element_line(color="grey95")
     ) + 
     labs(color = "step:n")
-    geom_blank()
+  geom_blank()
   # Hack to draw lines in order: best step on top
   for (sx in sort(unique(p$step),decreasing = TRUE)) pl <- pl + geom_line(aes(alpha = step), data = p[step == sx])
   for (plx in ggCallback) pl <- pl + plx
@@ -3039,7 +3185,7 @@ pd_updateData <- function(pd, measurementDataNew, .outputFolder, pdCopyName = "p
   saveRDS(pd_new, pd_rdsfile(pd_new))
   filePetabNew <- file.path(pd_new$filenameParts$.projectFolder, "petab")
   writePetab(pd_new$pe, filePetabNew)
-
+  
   file.rename(
     file.path(
       # projectDir, "Compiled", newFileNames[grep("rds",newFileNames)]

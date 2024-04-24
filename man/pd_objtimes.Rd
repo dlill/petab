@@ -9,9 +9,6 @@ pd_objtimes(pd, N = 100)
 \arguments{
 \item{N}{}
 }
-\value{
-
-}
 \description{
 Wrapper around predtimes
 }

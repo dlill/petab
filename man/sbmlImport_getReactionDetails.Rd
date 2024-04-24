@@ -13,9 +13,6 @@ sbmlImport_getReactionDetails(m, reaction, compartments)
 
 \item{compartments}{names of compartments}
 }
-\value{
-
-}
 \description{
 import reactions and adjust by means of compartments
 }

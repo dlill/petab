@@ -11,9 +11,6 @@ sbml_reactionAddReactants(reaction, reactants)
 
 \item{speciesNames}{}
 }
-\value{
-
-}
 \description{
 Title
 }

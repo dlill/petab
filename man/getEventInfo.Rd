@@ -18,4 +18,3 @@ Title
 \author{
 Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 }
-\concept{}

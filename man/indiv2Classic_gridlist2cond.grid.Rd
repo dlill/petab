@@ -9,9 +9,6 @@ indiv2Classic_gridlist2cond.grid(gridlist)
 \arguments{
 \item{gridlist}{gridlist}
 }
-\value{
-
-}
 \description{
 Title
 }

@@ -2,7 +2,48 @@
 % Please edit documentation in R/dMod-pd.R
 \name{pd_tests}
 \alias{pd_tests}
-\title{Some tests}
+\title{#' @export(pd_updateDataOLD)
+pd_updateDataOLD <- function(pd, measurementDataNew, .outputFolder, pdCopyName = "pd_1000") {
+  pe <- copy(pd$pe)
+  # your data trafos here
+  pe$measurementData <- measurementDataNew
+  
+  # Marcus Funktion only takes files, not data.frames as input
+  tf <- tempfile(fileext = "/petab/petab.yaml")
+  writePetab(pe, tf)
+  petab_files(tf)
+  pf <- petab_files(tf)
+  datalist <- getDataPEtabSBML(data = pf$measurementData, observables = pf$observables)$data
+  
+  # update pd
+  ## new data
+  pd$pe <- pe
+  pd$dModAtoms$data <- datalist
+  
+  
+  ## original paths
+  filenamePartsOrig <- pd$filenameParts
+  
+  ## new file paths
+  
+  projectDir <- file.path(.outputFolder, pdCopyName)
+  pd$filenameParts$.currentFolder <- getwd()
+  pd$filenameParts$.compiledFolder <- file.path(projectDir, "Compiled")
+  pd$filenameParts$.resultsFolder <- file.path(projectDir, "Results")
+  pd$filenameParts$.projectFolder <- projectDir
+  lapply(pd$filenameParts[c(".compiledFolder", ".resultsFolder")], function(x) dir.create(x, recursive = T))
+  
+  ## Copy everything to the correct places
+  file.copy(file.path(filenamePartsOrig$.currentFolder, filenamePartsOrig$.compiledFolder), projectDir, recursive = T)
+  saveRDS(pd, pd_rdsfile(pd))
+  filePetabNew <- file.path(pd$filenameParts$.projectFolder, "petab")
+  writePetab(pd$pe, filePetabNew)
+  
+  # Reimport
+  pd <- importPEtabSBML_indiv(filePetabNew,NFLAGcompile = 1, .compiledFolder = pd$filenameParts$.compiledFolder)
+  pd
+}
+Some tests}
 \usage{
 pd_tests(
   pd,
@@ -14,9 +55,47 @@ pd_tests(
 \arguments{
 \item{cn}{}
 }
-\value{
-
-}
 \description{
+#' @export(pd_updateDataOLD)
+pd_updateDataOLD <- function(pd, measurementDataNew, .outputFolder, pdCopyName = "pd_1000") {
+  pe <- copy(pd$pe)
+  # your data trafos here
+  pe$measurementData <- measurementDataNew
+  
+  # Marcus Funktion only takes files, not data.frames as input
+  tf <- tempfile(fileext = "/petab/petab.yaml")
+  writePetab(pe, tf)
+  petab_files(tf)
+  pf <- petab_files(tf)
+  datalist <- getDataPEtabSBML(data = pf$measurementData, observables = pf$observables)$data
+  
+  # update pd
+  ## new data
+  pd$pe <- pe
+  pd$dModAtoms$data <- datalist
+  
+  
+  ## original paths
+  filenamePartsOrig <- pd$filenameParts
+  
+  ## new file paths
+  
+  projectDir <- file.path(.outputFolder, pdCopyName)
+  pd$filenameParts$.currentFolder <- getwd()
+  pd$filenameParts$.compiledFolder <- file.path(projectDir, "Compiled")
+  pd$filenameParts$.resultsFolder <- file.path(projectDir, "Results")
+  pd$filenameParts$.projectFolder <- projectDir
+  lapply(pd$filenameParts[c(".compiledFolder", ".resultsFolder")], function(x) dir.create(x, recursive = T))
+  
+  ## Copy everything to the correct places
+  file.copy(file.path(filenamePartsOrig$.currentFolder, filenamePartsOrig$.compiledFolder), projectDir, recursive = T)
+  saveRDS(pd, pd_rdsfile(pd))
+  filePetabNew <- file.path(pd$filenameParts$.projectFolder, "petab")
+  writePetab(pd$pe, filePetabNew)
+  
+  # Reimport
+  pd <- importPEtabSBML_indiv(filePetabNew,NFLAGcompile = 1, .compiledFolder = pd$filenameParts$.compiledFolder)
+  pd
+}
 Some tests
 }

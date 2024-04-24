@@ -9,9 +9,6 @@ petab_plotHelpers_meanMeasurementsValue(dplot, aeslist)
 \arguments{
 \item{aeslist}{}
 }
-\value{
-
-}
 \description{
 Title
 }

@@ -13,9 +13,6 @@ clusterStatusMessage(FLAGjobDone, FLAGjobPurged, FLAGjobRecover)
 
 \item{FLAGjobRecover}{}
 }
-\value{
-
-}
 \description{
 Title
 }

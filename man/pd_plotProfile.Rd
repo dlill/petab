@@ -13,9 +13,6 @@ pd_plotProfile(pd, ggCallback = NULL, nrow = 3, ncol = 4, ...)
 
 \item{base_size}{}
 }
-\value{
-
-}
 \description{
 Title
 }

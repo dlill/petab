@@ -15,9 +15,6 @@ sbml_addOneSpecies(model, speciesName, compName, initialAmount)
 
 \item{speciesInitialAmount}{}
 }
-\value{
-
-}
 \description{
 Title
 }

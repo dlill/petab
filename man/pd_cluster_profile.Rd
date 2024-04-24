@@ -9,6 +9,7 @@ pd_cluster_profile(
   .outputFolder,
   FLAGforcePurge = FALSE,
   FLAGfixParsOnBoundary = TRUE,
+  n_cores = 64,
   profpars = names(pd$pars),
   passwdEnv = Sys.getenv("hurensohn"),
   machine = "cluster"
@@ -25,11 +26,10 @@ pd_cluster_profile(
 use for reoptimization. A bit heuristic, but \code{\link[dMod:profile]{dMod::profile()}} does not support boundaries.
 Therefore, if those parameters were not fixed, one potentially not start from the "optimum"}
 
+\item{n_cores}{cores for the cluster to use per node}
+
 \item{profpars}{I suggest to use either 1. names(pd$pars) or 2. hard code the result
 from \code{\link[=pd_profile_getParsNotYetProfiled]{pd_profile_getParsNotYetProfiled()}}}
-}
-\value{
-
 }
 \description{
 Will profile the parameters stored in pd$pars

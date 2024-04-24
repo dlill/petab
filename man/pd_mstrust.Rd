@@ -9,9 +9,6 @@ pd_mstrust(pd, NFLAGsavePd = T, iterlim = 1000, nfits = 5, id)
 \arguments{
 \item{NFLAGsavePd}{3 as an option doesn't make sense hre}
 }
-\value{
-
-}
 \description{
 Run mstrust
 }

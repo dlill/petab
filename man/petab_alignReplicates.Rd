@@ -4,13 +4,36 @@
 \alias{petab_alignReplicates}
 \title{Use alignReplicates from bloIt on a PEtab}
 \usage{
-petab_alignReplicates(pe, i_subset, ...)
+petab_alignReplicates(
+  pe,
+  i_subset,
+  returnBlotItResult = FALSE,
+  plotBlotItPlots = FALSE,
+  plotBlotItPaths = ".",
+  plotSuffix = "",
+  FacetLabels = c("simple", "full")[1],
+  plotHeight = 14,
+  plotWidth = 16,
+  plotScale = 1,
+  plotSizeUnit = "in",
+  ...
+)
 }
 \arguments{
 \item{pe}{petab}
 
 \item{i_subset}{optional parameter for subsetting the dco with the i
 parameter of data.table}
+
+\item{FacetLabels}{parameter given to \link{blotIt::plotIt}}
+
+\item{plotHeight}{plot height}
+
+\item{plotWidth}{plot width}
+
+\item{plotScale}{plot scale, the highter the number the smaler the plot elements will be}
+
+\item{plotSizeUnit}{unit for 'plotHeight' and 'plotWidth'}
 
 \item{...}{parameters for \link{blotIt::alignReplicates}}
 }

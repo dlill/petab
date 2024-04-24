@@ -8,6 +8,7 @@ pd_cluster_L1_fitUnbiasedEachMstrust(
   pd,
   .outputFolder,
   n_startsPerNode = 16 * 3,
+  n_cores = 64,
   identifier = "L1UB",
   FLAGforcePurge = FALSE,
   passwdEnv = Sys.getenv("hurensohn"),
@@ -20,6 +21,8 @@ pd_cluster_L1_fitUnbiasedEachMstrust(
 \item{.outputFolder}{}
 
 \item{n_startsPerNode}{}
+
+\item{n_cores}{}
 
 \item{n_nodes}{}
 

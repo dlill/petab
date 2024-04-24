@@ -11,9 +11,6 @@ indiv2Classic_trafo(trafo, cg)
 
 \item{cg}{output of \code{\link[=indiv2Classic_gridlist2cond.grid]{indiv2Classic_gridlist2cond.grid()}}}
 }
-\value{
-
-}
 \description{
 Title
 }

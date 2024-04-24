@@ -2487,6 +2487,11 @@ pe_L1_createL1Problem <- function(pe, parameterId_base, conditionSpecL1_referenc
 #' @param pe petab
 #' @param i_subset optional parameter for subsetting the dco with the i
 #' parameter of data.table
+#' @param FacetLabels parameter given to \link{blotIt::plotIt}
+#' @param plotHeight plot height
+#' @param plotWidth plot width
+#' @param plotScale plot scale, the highter the number the smaler the plot elements will be
+#' @param plotSizeUnit unit for 'plotHeight' and 'plotWidth'
 #' @param ... parameters for \link{blotIt::alignReplicates}
 #'
 #' @return [petab()] with scaled replicates
@@ -2503,12 +2508,21 @@ petab_alignReplicates <- function(
     plotBlotItPlots = FALSE,
     plotBlotItPaths = ".",
     plotSuffix = "",
+    FacetLabels = c("simple", "full")[1],
+    plotHeight = 14,
+    plotWidth = 16, 
+    plotScale = 1, 
+    plotSizeUnit = "in", 
+    useDataset = c("scaled", "aligned")[1],
     ...
 ) {
   dco <- petab_joinDCO(pe)
   setnames(dco, "observableId", "name")
   # setnames(dco, "TGFb", "dose")
   setnames(dco, "measurement", "value")
+  if (!(useDataset %in% c("scaled", "aligned"))){
+    stop("'useDataset' must either be 'scaled' or 'aligned'.\n")
+  }
   
   if ( !("datapointId" %in% names(dco))) {
     stop(
@@ -2525,7 +2539,8 @@ petab_alignReplicates <- function(
     dco <- dco[eval(si)]
   }
   
-
+  
+  
   blotitResult <- blotIt::alignReplicates(
     data = dco,
     ...
@@ -2540,7 +2555,8 @@ petab_alignReplicates <- function(
     plotA <- blotIt::plotIt(
       inputList = blotitResult,
       plotPoints = 'original',
-      plotLine = 'prediction'
+      plotLine = 'prediction',
+      FacetLabels = FacetLabels
     )
     
     plotA <- plotA 
@@ -2555,7 +2571,7 @@ petab_alignReplicates <- function(
         cf_outputFigure(
           pl = plotA+ facet_wrap_paginate(~ name * biological, scales = i, nrow = num, ncol = num),
           file = file.path(plotBlotItPaths, paste0(plotSuffix, "plotA_",i,"_",j,".pdf")),
-          height = 14, width = 16, scale = 1, unit = 'in',
+          height = plotHeight, width = plotWidth, scale = plotScale, unit = plotSizeUnit,
           title = "",
           FLAGFuture =T
         )
@@ -2568,7 +2584,8 @@ petab_alignReplicates <- function(
     plotB <- blotIt::plotIt(
       inputList = blotitResult,
       plotPoints = 'scaled',
-      plotLine = 'aligned'
+      plotLine = 'aligned',
+      FacetLabels = FacetLabels
     )
     
     
@@ -2582,7 +2599,7 @@ petab_alignReplicates <- function(
         cf_outputFigure(
           pl = plotB+ facet_wrap_paginate(~ name * biological, scales = i, nrow = num, ncol = num),
           file = file.path(plotBlotItPaths, paste0(plotSuffix, "plotB_",i,"_",j,".pdf")),
-          height = 14, width = 16, scale = 1, unit = 'in',
+          height = plotHeight, width = plotWidth, scale = plotScale, unit = plotSizeUnit,
           title = "",
           FLAGFuture =T
         )
@@ -2596,7 +2613,8 @@ petab_alignReplicates <- function(
     plotC <- blotIt::plotIt(
       inputList = blotitResult,
       plotPoints = 'aligned',
-      plotLine = 'aligned'
+      plotLine = 'aligned',
+      FacetLabels = FacetLabels
     )
     
     for (i in c("free", "fixed")) {
@@ -2609,7 +2627,7 @@ petab_alignReplicates <- function(
         cf_outputFigure(
           pl = plotC+ facet_wrap_paginate(~ name * biological, scales = i, nrow = num, ncol = num),
           file = file.path(plotBlotItPaths, paste0(plotSuffix, "plotC_",i,"_",j,".pdf")),
-          height = 14, width = 16, scale = 1, unit = 'in',
+          height = plotHeight, width = plotWidth, scale = plotScale, unit = plotSizeUnit,
           title = "",
           FLAGFuture =T
         )
@@ -2624,17 +2642,151 @@ petab_alignReplicates <- function(
     
   }
   
+  
+  
+  
+  
+  
   if (returnBlotItResult == TRUE) {
     return(blotitResult)
   }
+  # select dataset ----
+  
+  
+  
+  cat("Use ",useDataset, " dataset.\n")
   
   pe_export <- copy(pe)
   
   # Update measurementData
-  blotit_values <- data.table(blotitResult$scaled)
-  blotit_values <- blotit_values[,list(value = value, IDs = datapointId)]
+  if (useDataset == "scaled") {
+    blotit_values <- data.table(blotitResult$scaled)
+    blotit_values <- blotit_values[,list(value = value, IDs = datapointId, scaledNames = name)]
+    
+    # pe_export$measurementData[,measurement := blotit_values[IDs == datapointId,]$value, by = seq_len(nrow(pe_export$measurementData)) ]
+    pe_export$measurementData[
+      ,
+      `:=`(
+        measurement = blotit_values[IDs == datapointId,]$value,
+        observableId = blotit_values[IDs == datapointId,]$scaledNames
+      ),
+      by = seq_len(nrow(pe_export$measurementData)) ]
+  } else {
+    blotit_values <- data.table(blotitResult$aligned)
+    # blotit_values <- blotit_values[,list(value = value, scaledNames = name, sigma = sigma)]
+    currMeas <- copy(pe_export$measurementData)
+    currMeas[
+      ,
+      `:=`(
+        measurement = NA,
+        replicateId = NA,
+        datapointId = NA
+      )
+    ]
+    
+    newCondIds <- 4:which(names(blotit_values) == "value")-1
+    newCondNames <- names(blotit_values)[newCondIds]
+    nowConditionPattern <- paste(names(blotit_values)[newCondIds], collapse = "_")
+    
+    blotit_values[
+      ,
+      `:=`(
+        simulationConditionId = do.call(paste,c(.SD, sep= "_"))
+      ),
+      .SDcols=newCondIds
+    ]
+    
+    blotit_values[
+      ,
+      `:=`(
+        observableParameters=paste0(name,"_scale;",name,"_offset")#,
+        # datasetId = NA,
+        # replicateId = NA,
+        # datapointId = NA,
+        # lloq = -Inf
+      )
+    ]
+    
+    # warn if the observable parameters have changed and print the old and new ones ----
+    observableParamsOld <- dco$observableParameters %>% unique()
+    observableParamsNew <- blotit_values$observableParameters %>% unique()
+    
+    if (setequal(observableParamsOld, observableParamsNew) == FALSE) {
+      warning(
+        "\n\nATTENTION!\nThe observable parameters have changed!\n\nThe old parameters were:\n",
+        paste(observableParamsOld, collapse = ", "), ".\n\nThe new parameters are:\n",
+        paste(observableParamsNew, collapse = ", "), "."
+      )
+    }
+    
+    
+    
+    
+    exportTable <- data.table(
+      observableId = blotit_values$name,
+      preequilibrationConditionId = NA,
+      simulationConditionId = blotit_values$simulationConditionId,
+      measurement = blotit_values$value,
+      time = blotit_values$time,
+      observableParameters = blotit_values$observableParameters,
+      noiseParameters = blotit_values$sigma,
+      datasetId = NA,
+      # replicateId = "NA",
+      datapointId = NA,
+      lloq = -Inf
+      
+    )
+    
+    # newExpCondTable <- unique(
+    #   data.table(
+    #     conditionId = blotit_values$simulationConditionId,
+    #     conditionName = blotit_values$simulationConditionId,
+    #   )
+    # )
+    
+    condMap <- unique(dco[,c("conditionId", ..newCondNames)])
+    
+    
+    
+    condMap[
+      ,
+      conditionName := do.call(paste,c(.SD, sep= "_")),
+      .SDcols=-1
+    ]
+    mapVector <- condMap$conditionName
+    names(mapVector) <- condMap$conditionId
+    
+    newExpCondTable <- copy(pe_export$experimentalCondition)
+    
+    newExpCondTable[
+      ,
+      new := mapVector[conditionId],
+      by = seq(nrow(newExpCondTable))
+    ]
+    newExpCondTable <- newExpCondTable[!is.na(new)]
+    newExpCondTable[, conditionId := new]
+    newExpCondTable[, new := NULL]
+    
+    # newExpCondTable[
+    #   ,
+    #   `:=`(
+    #     conditionId = do.call(paste,c(.SD, sep= "_")),
+    #     conditionName = do.call(paste,c(.SD, sep= "_"))
+    #   ),
+    #   .SDcols=newCondIds
+    # ]
+    
+    pe_export$experimentalCondition <- newExpCondTable
+    
+    pe_export$parameters <- pe_export$parameters[!(grepl("noiseParameter",parameterId))]
+    
+    pe_export$measurementData <- exportTable
+    pe_export$meta$metaInformation$experimentalCondition$conditionId$pattern <- nowConditionPattern
+    pe_export$meta$metaInformation$measurementData$replicateId$pattern <- NULL
+    
+  }
   
-  pe_export$measurementData[,measurement := blotit_values[IDs == datapointId,]$value, by = seq_len(nrow(pe_export$measurementData)) ]
+  
   
   return(pe_export)
 }

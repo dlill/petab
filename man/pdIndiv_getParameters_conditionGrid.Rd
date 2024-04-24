@@ -9,9 +9,6 @@ pdIndiv_getParameters_conditionGrid(x)
 \arguments{
 \item{x}{}
 }
-\value{
-
-}
 \description{
 Title
 }

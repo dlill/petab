@@ -9,9 +9,6 @@ sanitizePowers(rate)
 \arguments{
 \item{rate}{}
 }
-\value{
-
-}
 \description{
 Sanitize pow(x,y) equations
 }

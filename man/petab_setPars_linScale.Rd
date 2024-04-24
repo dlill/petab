@@ -9,9 +9,6 @@ petab_setPars_linScale(pe, parsLin)
 \arguments{
 \item{parsLin}{}
 }
-\value{
-
-}
 \description{
 Title
 }

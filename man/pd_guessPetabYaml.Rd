@@ -9,9 +9,6 @@ pd_guessPetabYaml(pd)
 \arguments{
 \item{pd}{}
 }
-\value{
-
-}
 \description{
 Title
 }

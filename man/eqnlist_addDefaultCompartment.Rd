@@ -11,9 +11,6 @@ eqnlist_addDefaultCompartment(equationList, compName)
 
 \item{el}{}
 }
-\value{
-
-}
 \description{
 Title
 }

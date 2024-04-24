@@ -17,9 +17,6 @@ sbml_reactionAddKineticLaw(reaction, equation, parName, parValue, parUnit)
 
 \item{parUnit}{}
 }
-\value{
-
-}
 \description{
 Title
 }

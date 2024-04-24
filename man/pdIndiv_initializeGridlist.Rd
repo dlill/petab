@@ -9,9 +9,6 @@ pdIndiv_initializeGridlist(mycondition.grid)
 \arguments{
 \item{mycondition.grid}{}
 }
-\value{
-
-}
 \description{
 Title
 }

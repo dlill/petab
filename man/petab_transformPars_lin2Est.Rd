@@ -9,9 +9,6 @@ petab_transformPars_lin2Est(pe, parsLin)
 \arguments{
 \item{parsLin}{}
 }
-\value{
-
-}
 \description{
 Title
 }

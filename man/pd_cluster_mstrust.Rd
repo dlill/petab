@@ -9,11 +9,15 @@ pd_cluster_mstrust(
   .outputFolder,
   n_startsPerNode = 16 * 3,
   n_nodes = 10,
+  n_cores = 64,
+  use_dModCenter = FALSE,
   identifier = "mstrust",
   FLAGforcePurge = FALSE,
   opt.parameter_startpoints = "sample",
   passwdEnv = NULL,
-  machine = "cluster"
+  machine = "cluster",
+  FLAGreturnPartialResults = FALSE,
+  FLAGgetResultsAgain = FALSE
 )
 }
 \arguments{
@@ -24,6 +28,10 @@ pd_cluster_mstrust(
 \item{n_startsPerNode}{}
 
 \item{n_nodes}{}
+
+\item{n_cores}{}
+
+\item{FLAGreturnPartialResults}{set to \code{TRUE} if you want to get results even if not all fits are finished}
 
 \item{id}{}
 

@@ -18,9 +18,6 @@ petab_plotHelpers_aeslist(
 \arguments{
 \item{...}{}
 }
-\value{
-
-}
 \description{
 Title
 }
