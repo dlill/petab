@@ -1030,6 +1030,7 @@ clusterStatusMessage <- function(FLAGjobDone, FLAGjobPurged, FLAGjobRecover) {
 #' @param type 
 #' @param n_cores 
 #' @param FLAGreturnPartialResults set to \code{TRUE} if you want to get results even if not all fits are finished
+#' @param FLAG_useCenterFunction DO NOT USE \code{TRUE} unless you know what you are doing
 #'
 #' @return Characters
 #' @export
@@ -1045,7 +1046,11 @@ pd_cluster_mstrust <- function(
     identifier = "mstrust", FLAGforcePurge = FALSE, opt.parameter_startpoints = "sample",
     passwdEnv = NULL, machine = "cluster", FLAGreturnPartialResults = FALSE, FLAGgetResultsAgain = FALSE,
     iterlim = 500, walltime = "12:00:00",
+<<<<<<< Updated upstream
     jobname = "", FLAGcautiousMode = TRUE, FLAGoutput = FALSE, FLAGreturnAllResults = TRUE
+=======
+    jobname = "", FLAGcautiousMode = TRUE, FLAGoutput = FALSE, FLAGreturnAllResults = TRUE, FLAG_useCenterFunction =FALSE, FLAGincludeCurrent = FALSE
+>>>>>>> Stashed changes
 ) {
   if (is.null(pd)) {
     stop("'pd' needs to be defined")
@@ -1075,6 +1080,13 @@ pd_cluster_mstrust <- function(
   assign("FLAGcautiousMode",FLAGcautiousMode,.GlobalEnv)
   assign("FLAGoutput",FLAGoutput,.GlobalEnv)
   assign("FLAGreturnAllResults",FLAGreturnAllResults,.GlobalEnv)
+<<<<<<< Updated upstream
+=======
+  assign("FLAG_useCenterFunction", FLAG_useCenterFunction,.GlobalEnv)
+  assign("FLAGincludeCurrent", FLAGincludeCurrent,.GlobalEnv)
+  
+  
+>>>>>>> Stashed changes
   
   # Start mstrust job
   file.copy(file.path(pd$filenameParts$.currentFolder, pd$filenameParts$.compiledFolder, "/"), ".", recursive = TRUE)
@@ -1098,15 +1110,30 @@ pd_cluster_mstrust <- function(
       
       
       # write.csv2(exportDT, file = paste0(jobname,'_', node_ID,'_',seed, '_seed.csv'))
+<<<<<<< Updated upstream
       if (use_dModCenter == TRUE) {# Python on the cluster is a source of errors, use dMod center instead.
         center <- dMod::msParframe(pd$pars, n = n_startsPerNode, seed=seed)
       }else {
         if (identical(opt.parameter_startpoints, "sample")){
           center <- pepy_sample_parameter_startpoints(pd$pe, n_starts = n_startsPerNode, seed = seed, 
                                                       FLAGincludeCurrent = FLAGincludeCurrent)
+=======
+      if (FLAG_useCenterFunction == TRUE) {
+        if (use_dModCenter == TRUE) {# Python on the cluster is a source of errors, use dMod center instead.
+          center <- dMod::msParframe(pd$pars, n = n_startsPerNode, seed=seed, keepfirst = FLAGincludeCurrent)
+>>>>>>> Stashed changes
         } else {
-          center <- opt.parameter_startpoints
+          if (identical(opt.parameter_startpoints, "sample")){
+            center <- pepy_sample_parameter_startpoints(pd$pe, n_starts = n_startsPerNode, seed = seed, 
+                                                        FLAGincludeCurrent = FLAGincludeCurrent)
+          } else {
+            center <- opt.parameter_startpoints
+          }
         }
+      } else if(identical(opt.parameter_startpoints, "sample")){
+        center <- pd$pars
+      } else {
+        center <- opt.parameter_startpoints
       }
       
       parlower <- petab_getParameterBoundaries(pd$pe, "lower")
@@ -1126,7 +1153,11 @@ pd_cluster_mstrust <- function(
               parlower = parlower, parupper = parupper)
     },
     jobname = jobnm, 
+<<<<<<< Updated upstream
     partition = "single", cores = n_cores, nodes = 1, walltime = walltime,
+=======
+    partition = "cpu-single", cores = n_cores, nodes = 1, walltime = walltime,
+>>>>>>> Stashed changes
     ssh_passwd = passwdEnv, machine = machine, 
     var_values = NULL, no_rep = n_nodes, 
     recover = FLAGjobRecover,
@@ -1989,6 +2020,10 @@ pd_predictAndPlot2 <- function(
     nameOrder = NULL,
     FLAGplotMaxIndicators = FALSE,
     useErrormodel = FALSE,
+<<<<<<< Updated upstream
+=======
+    FLAGminToHour = FALSE,
+>>>>>>> Stashed changes
     ...
 ) {
   
@@ -2229,10 +2264,17 @@ pd_predictAndPlot2 <- function(
     
   }
   
+  if (sqrtX == FLAGminToHour) warning("FLAGminToHour and sqrtX are both set to TRUE, this is weird. First FLAGminToHour is applied, then sqrtX.")
+  if (FLAGminToHour == TRUE) {
+    dplot[, time := time/60]
+    pplot[, time := time/60]
+  }
   if (sqrtX == TRUE) {
     dplot[, time := sqrt(time)]
     pplot[, time := sqrt(time)]
-  }
+  } 
+  
+
   
   if (!is.null(nameOrder)){
     dplot[,observableId := factor(observableId, levels = nameOrder)]
@@ -2243,6 +2285,18 @@ pd_predictAndPlot2 <- function(
     
   }
   
+<<<<<<< Updated upstream
+  if (!is.null(nameOrder)){
+    dplot[,observableId := factor(observableId, levels = nameOrder)]
+    pplot[,observableId := factor(observableId, levels = nameOrder)]
+    # if (FLAGuseErrorModelRibbon == TRUE) {
+    means[,observableId := factor(observableId, levels = nameOrder)]
+    # }
+    
+  }
+  
+=======
+>>>>>>> Stashed changes
   if (FLAGplotMaxIndicators  == TRUE) {
     vlineData <- pplot[, list(conditionId, GAS6, TGFb, time, observableId, measurement)]
     # vlineData[,measurement := 10^measurement]
@@ -2348,8 +2402,16 @@ pd_predictAndPlot2 <- function(
     pl <- pl + ylab(paste0("measurement"))
   }
   if (sqrtX == TRUE) {
-    pl <- pl + xlab("sqrt[time]")
+    pl <- pl + xlab("sqrt(time)")
+    if (FLAGminToHour == TRUE) {
+      pl <- pl + xlab("sqrt(time [h])")
+    }
   }
+  
+  if (FLAGminToHour == TRUE) {
+    pl <- pl + xlab("time [h]")
+  }
+  
   
   if (plotIDs == TRUE) {
     pl <- pl + ggrepel::geom_text_repel(
