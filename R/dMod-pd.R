@@ -1943,6 +1943,7 @@ L1_getModelCandidates <- function(L1Scan) {
 #' @param opt.sim 
 #' @param opt.gg 
 #' @param FLAGuseErrorbars
+#' @param shiftTimeBy shifts time by this value. it is done before FLAGminToHour is applied. default is 0.
 #' @param ... 
 #'
 #' @return ggplot
@@ -2001,6 +2002,7 @@ pd_predictAndPlot2 <- function(
     FLAGplotMaxIndicators = FALSE,
     useErrormodel = FALSE,
     FLAGminToHour = FALSE,
+    shiftTimeBy = 0,
     ...
 ) {
   
@@ -2225,20 +2227,30 @@ pd_predictAndPlot2 <- function(
   }
   
   
+  logtrafos = c("log10" = "10^", "log2" = "2^", "log" = "exp", "lin" = "1*")
+  currTrafo <- unique(dplot$observableTransformation)
   
-  if(FlagPlotLog == TRUE) {
-    logtrafos = c("log10" = "10^", "log2" = "2^", "log" = "exp", "lin" = "1*")
-    currTrafo <- unique(dplot$observableTransformation)
-  } else {
-    logtrafos = c("log10" = "10^", "log2" = "2^", "log" = "exp", "lin" = "1*")
-    currTrafo <- unique(dplot$observableTransformation)
+  
+  if(FlagPlotLog == FALSE) {
+
     if(length(currTrafo)>1) stop("\nmultiple observableTransformation, manual scaling needed\n")
+    if(length(currTrafo)==0){
+      warning("\nno observableTransformation (no data plotted?) assume linear scale is wanted\n")
+      currTrafo <- "lin"
+    } 
+    
     pplot[,`:=`(measurement = eval(parse(text = paste0(logtrafos[currTrafo][[1]], "(", measurement, ")")))), by =1:nrow(pplot)]
+    
     # means[,`:=`(noiseParameters = eval(parse(text = paste0(logtrafos[currTrafo][[1]], "(", noiseParameters, ")")))), by =1:nrow(means)]
     if (FLAGuseErrorModelRibbon == T){
       pplot[,`:=`(noiseParameters = eval(parse(text = paste0(logtrafos[currTrafo][[1]], "(", noiseParameters, ")")))), by =1:nrow(pplot)]
     }
     
+  }
+  
+  if (shiftTimeBy != 0) {
+    dplot[, time := time + shiftTimeBy]
+    pplot[, time := time + shiftTimeBy]
   }
   
   if (sqrtX == FLAGminToHour) warning("FLAGminToHour and sqrtX are both set to TRUE, this is weird. First FLAGminToHour is applied, then sqrtX.")
