@@ -2253,8 +2253,10 @@ pd_predictAndPlot2 <- function(
     pplot[, time := time + shiftTimeBy]
   }
   
-  if (sqrtX == FLAGminToHour) warning("FLAGminToHour and sqrtX are both set to TRUE, this is weird. First FLAGminToHour is applied, then sqrtX.")
+  
   if (FLAGminToHour == TRUE) {
+    if (sqrtX == FLAGminToHour) warning("FLAGminToHour and sqrtX are both set to TRUE, this is weird. First FLAGminToHour is applied, then sqrtX.")
+    
     dplot[, time := time/60]
     pplot[, time := time/60]
   }
