@@ -1944,6 +1944,8 @@ L1_getModelCandidates <- function(L1Scan) {
 #' @param opt.gg 
 #' @param FLAGuseErrorbars
 #' @param shiftTimeBy shifts time by this value. it is done before FLAGminToHour is applied. default is 0.
+#' @param transformObservables transform observables by this function. default is NULL. possible values are "exp", "10^", "2^", "log", "log10", "log2". this is to "counteract" a manual data transformation, use only if you understand this
+#' @param observablesToTransform transform only these observables. default is NULL, which means all observables are transformed
 #' @param ... 
 #'
 #' @return ggplot
@@ -1984,7 +1986,6 @@ pd_predictAndPlot2 <- function(
     parf = NULL,
     FLAGuseErrorbars = FALSE,
     FLAGuseErrorModelRibbon = FALSE,
-    FlagPlotLog = TRUE,
     NFLAGsubsetType = c(none = 0, strict = 1, keepInternal = 2, strict_cutTimes = 3,keepInternal_cutTimes = 3)["strict_cutTimes"],
     FLAGsummarizeProfilePredictions = TRUE,
     FLAGmeanLine = FALSE,
@@ -2003,25 +2004,30 @@ pd_predictAndPlot2 <- function(
     useErrormodel = FALSE,
     FLAGminToHour = FALSE,
     shiftTimeBy = 0,
+    transformObservables = c(NULL, "exp", "10^", "2^", "log", "log10", "log2")[1],
+    observablesToTransform = NULL,
     ...
 ) {
   
   if (F) {
     {
       pd = pd
-      pe = pd$pe
-      NFLAGsubsetType = 0
+      # FLAGuseErrorModelRibbon = F,
+      # i = experimentId %in% useSets,#& inhibDose %in% c(0,100,1000)
+      # i = conditionId %in% c("10_0_NA"),#variaties$subsets[[l]] ,#& inhibDose %in% c(0,100,1000)
+      # i = !(conditionId %in%c("ASE2_0_DMSO_0_NA_0", "0_0_NA", "ASE2_10_DMSO_0.001_Capivasertib_100", "ASE2_10_DMSO_0.001_Trametinib_100")) & inhibDose != 100,#variaties$subsets[[l]] ,#& inhibDose %in% c(0,100,1000)
+      # i = !(conditionId %in%c("ASE2_0_DMSO_0_NA_0", "SteadyState"))
+      NFLAGsubsetType = 1
       opt.base = pd_parf_opt.base(FALSE)
-      opt.mstrust = pd_parf_opt.mstrust(fitrankRange = 1:3)
-      opt.profile = pd_parf_opt.profile(FALSE)
-      opt.L1 = pd_parf_opt.L1(FALSE)
-      # opt.sim = list(Ntimes_gt5ParSetIds = 100, predtimes = seq(1,300, length.out = 600))
-      opt.gg = list(ribbonAlpha = 0.2)
-      parf = NULL
-      filename = file.path(currentFitPlotpath, "001-mstrust.pdf")
+      opt.mstrust = pd_parf_opt.mstrust(fitrankRange = fitRankFrom:fitRankTo)
+      filename = file.path(currentFitPlotpath, paste0("000_Overview",sufsuf,"_TEST.pdf"))
       FLAGmeanLine = FALSE
-      FLAGmeanPoints = TRUE
-      aeslist = petab_plotHelpers_aeslist()
+      FLAGmeanPoints = F
+      # FLAGuseErrorbars = F,
+      # FLAGuseErrorModelRibbon = useRibbons,
+      FLAGuseErrorModelRibbon = F
+      sqrtX = F
+      plotIDs = F
       ggCallback = list(
         theme(
           plot.title = element_text(hjust = 0.5, color="black", size=18, face="bold"),
@@ -2031,37 +2037,24 @@ pd_predictAndPlot2 <- function(
           strip.text.x = element_text(size = 14, face = "bold"), # remove axis labels of facet plots
           axis.line = element_line(colour="black"),
           #legend.title = element_text("Gas6 [ug/ml]"),
-          legend.position = "bottom"
+          legend.position = "bottom",
+          # legend.box = "vertical"
         ),
-        # scale_color_manual(values = myColors),
+        scale_color_manual(values = myColors),
+        scale_fill_manual(values = myColors),
         labs(caption = captionText),
-        facet_wrap_paginate(~observableId, nrow = 1, ncol = 1, scales = "free")
+        facet_wrap_paginate(~observableId, nrow = 1, ncol = 1, scales = "free"),
+        guides(fill=guide_legend(nrow=LegendRows,byrow=TRUE), color=guide_legend(nrow=LegendRows,byrow=TRUE))
       )
-      nrow = 4
-      ncol = 5
-      # width = 29.7, height = 21, scale = 1, units = "cm"
-      # height = 7
-      # width = 7.5
-      # scale = 1
-      # unit = 'in'
-      # title = ""
-      parf = NULL
-      mi <- T
-      si <- NULL
-      mj <- T
-      sj <- NULL
-      FLAGsummarizeProfilePredictions = F
-      FLAGuseErrorbars = F
-      FLAGuseErrorModelRibbon = T
-      FLAGreturnPlotData = F
-      FlagPlotLog = F
-      sqrtX = F
-      plotIDs = T
-      simplestErrorModel = T
-      nameOrder = nameOrder
-      rm(i)
-      rm(j)
-      FLAGplotMaxIndicators = T
+      width = plotWidth
+      height = plotHeight
+      scale = plotScale
+      units = plotSizeUnit
+      # height = 7, width = 7.5, scale = plotScale, unit = 'in',
+      title = ""
+      useErrormodel = FALSE
+      FLAGuseErrorbars = T
+      transformObservables = list(NULL, "exp", "10^", "2^", "log", "log10", "log2")[3]
     }
   }
   
@@ -2079,13 +2072,7 @@ pd_predictAndPlot2 <- function(
   # .. Data -----
   # observableTransformation
   dplot <- petab_joinDCO(pe)
-  if (FlagPlotLog == TRUE) {
-    if (FLAGuseErrorbars == T) {
-      dplot[,`:=`(noiseParameters = as.numeric(noiseParameters)/measurement), by =1:nrow(dplot)]
-    }
-    
-    dplot[,`:=`(measurement = eval(parse(text = paste0(observableTransformation, "(", measurement, ")")))), by = 1:nrow(dplot)]
-  }
+  
   
   dplot[,`:=`(observableId=factor(observableId, petab_plotHelpers_variableOrder(pd)))]
   
@@ -2154,6 +2141,7 @@ pd_predictAndPlot2 <- function(
       means <- copy(dplot)
       means <- means[,list(observableId, time,measurement,conditionId, observableTransformation,noiseParameters)]
       means[, noiseParameters := as.numeric(as.data.frame(parf[1])[noiseParameters]), by =  1:nrow(means)]
+      means[, `:=`(s_min = measurement - noiseParameters, s_max = measurement + noiseParameters)]
       means <- unique(means[, measurement := mean(measurement), by =c("time","observableId", "conditionId")])
     } else {
       means <- NA
@@ -2227,26 +2215,71 @@ pd_predictAndPlot2 <- function(
   }
   
   
-  logtrafos = c("log10" = "10^", "log2" = "2^", "log" = "exp", "lin" = "1*")
-  currTrafo <- unique(dplot$observableTransformation)
-  
-  
-  if(FlagPlotLog == FALSE) {
-
-    if(length(currTrafo)>1) stop("\nmultiple observableTransformation, manual scaling needed\n")
-    if(length(currTrafo)==0){
-      warning("\nno observableTransformation (no data plotted?) assume linear scale is wanted\n")
-      currTrafo <- "lin"
-    } 
+  if (!is.na(transformObservables)) {
+    cat(paste0("observables will be with ", transformObservables, " transformed: val -> ", transformObservables, "(val), s_min = ", transformObservables, "(value - s), s_max = ", transformObservables, "(val + s). Errors might be asymetrical\n"))
     
-    pplot[,`:=`(measurement = eval(parse(text = paste0(logtrafos[currTrafo][[1]], "(", measurement, ")")))), by =1:nrow(pplot)]
+    # add dummy columns for s_min and s_max
+    dplot[, `:=`(s_min = as.numeric(0), s_max = as.numeric(0))]
     
-    # means[,`:=`(noiseParameters = eval(parse(text = paste0(logtrafos[currTrafo][[1]], "(", noiseParameters, ")")))), by =1:nrow(means)]
-    if (FLAGuseErrorModelRibbon == T){
-      pplot[,`:=`(noiseParameters = eval(parse(text = paste0(logtrafos[currTrafo][[1]], "(", noiseParameters, ")")))), by =1:nrow(pplot)]
+    # = transform data and errors = 
+    
+    if (!is.null(observablesToTransform)) {
+      # exclude observables that should not be transformed
+      dplotNot <- dplot[!(observableId %in% observablesToTransform)]
+      dplot <- dplot[observableId %in% observablesToTransform]
     }
     
+    # apply transformation
+    dplot[
+      ,
+      `:=`(
+        s_min = eval(parse(text = paste0(transformObservables, "(", as.numeric(measurement) - as.numeric(noiseParameters), ")"))), # evaluation of the transformation function of  value - sigma
+        s_max = eval(parse(text = paste0(transformObservables, "(", as.numeric(measurement) + as.numeric(noiseParameters), ")"))) # evaluation of the transformation function of  value + sigma
+      ),
+      by = 1:nrow(dplot)
+    ]
+    
+    # transform the value column of dplot
+    dplot[
+      ,
+      `:=`(
+        measurement = eval(parse(text = paste0(transformObservables, "(", as.numeric(measurement), ")"))) # transform measurements
+      ),
+      by = 1:nrow(dplot)
+    ]
+    
+    dplot[
+      ,
+      `:=`(
+        noiseParameters = as.numeric(noiseParameters)/ as.numeric(measurement) # apply gaussian error propagation to the noises. THIS IS NOT CORRECT!
+      ),
+      by = 1:nrow(dplot)
+    ]
+    
+    if (!is.null(observablesToTransform)) {
+      # merge the transformed and not transformed observables
+      dplot <- rbind(dplot, dplotNot)
+    }
+    
+    
+    pplot[
+      ,
+      `:=`(
+        measurement = eval(parse(text = paste0(transformObservables, "(", measurement, ")"))) # transform "measurement" (i.e. predicted values)
+      ),
+      by = 1:nrow(pplot)
+    ]
+    
+    
+    
+    
+    
+  } else {
+    dplot[, `:=`(s_min = as.numeric(measurement - as.numeric(noiseParameters)), s_max = as.numeric(measurement + as.numeric(noiseParameters)))]
   }
+  
+  
+  
   
   if (shiftTimeBy != 0) {
     dplot[, time := time + shiftTimeBy]
@@ -2256,7 +2289,6 @@ pd_predictAndPlot2 <- function(
   
   if (FLAGminToHour == TRUE) {
     if (sqrtX == FLAGminToHour) warning("FLAGminToHour and sqrtX are both set to TRUE, this is weird. First FLAGminToHour is applied, then sqrtX.")
-    
     dplot[, time := time/60]
     pplot[, time := time/60]
   }
@@ -2265,7 +2297,7 @@ pd_predictAndPlot2 <- function(
     pplot[, time := sqrt(time)]
   } 
   
-
+  
   
   if (!is.null(nameOrder)){
     dplot[,observableId := factor(observableId, levels = nameOrder)]
@@ -2356,7 +2388,7 @@ pd_predictAndPlot2 <- function(
     } else {
       useErrorbarData <- dplot
     }
-    pl <- pl + geom_errorbar(data = useErrorbarData, aes(x = time, ymin = measurement - as.numeric(noiseParameters), ymax = measurement + as.numeric(noiseParameters), color = conditionId,width = 0.0))
+    pl <- pl + geom_errorbar(data = useErrorbarData, aes(x = time, ymin = s_min, ymax = s_max, color = conditionId,width = 0.0))
   }
   if (FLAGuseErrorModelRibbon == TRUE) {
     pl <- pl+ geom_ribbon(
@@ -2375,11 +2407,9 @@ pd_predictAndPlot2 <- function(
   
   
   
-  if (FlagPlotLog == TRUE) {
-    pl <- pl + ylab(paste0("measurement [",currTrafo,"]"))
-  } else {
-    pl <- pl + ylab(paste0("measurement"))
-  }
+  
+  pl <- pl + ylab(paste0("measurement"))
+  
   if (sqrtX == TRUE) {
     pl <- pl + xlab("sqrt(time)")
     if (FLAGminToHour == TRUE) {
