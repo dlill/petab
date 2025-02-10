@@ -2659,7 +2659,7 @@ petab_alignReplicates <- function(
     allPars <- as.data.table(blotitResult$parameter)
     
     # sanity check: does exactly one parameter per observableId contain the errorParName?
-    if (length(grep(errorParName, allPars$name)) != lenth(unique(as.character(allPars$name)))) {
+    if (length(grep(errorParName, allPars$name)) != length(unique(as.character(allPars$name)))) {
       stop("Exactly one parameter per observableId must contain the errorParName.")
     }
     
