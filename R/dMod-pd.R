@@ -2004,7 +2004,7 @@ pd_predictAndPlot2 <- function(
     useErrormodel = FALSE,
     FLAGminToHour = FALSE,
     shiftTimeBy = 0,
-    transformObservables = c(NA, "exp", "10^", "2^", "log", "log10", "log2")[1],
+    transformObservables = c(NA, "exp", "10^", "2^")[1],
     observablesToTransform = NULL,
     plotGaussianErrors = FALSE,
     ...
@@ -2240,10 +2240,16 @@ pd_predictAndPlot2 <- function(
       by = 1:nrow(dplot)
     ]
     
+    correctionFactor = c(
+      "exp" = 1,
+      "10^" = log(10),
+      "2^" = log(2)
+    )
+    
     dplot[
       ,
       `:=`(
-        noiseParameters = as.numeric(noiseParameters)/ as.numeric(measurement) # apply gaussian error propagation to the noises. THIS IS NOT CORRECT!
+        noiseParameters = eval(parse(text = paste0(transformObservables, "(", as.numeric(measurement),  ")"))) * correctionFactor[transformObservables][[1]] * as.numeric(noiseParameters) # apply gaussian error propagation to the noises. THIS IS NOT CORRECT!
       ),
       by = 1:nrow(dplot)
     ]
@@ -2391,7 +2397,7 @@ pd_predictAndPlot2 <- function(
     } else {
       
       if (plotGaussianErrors == TRUE) {
-        dplot[, `:=`(s_min = measurement - noiseParameter, s_min = measurement + noiseParameter), by = 1:nrow(dplot)]
+        dplot[, `:=`(s_min = as.numeric(measurement) - as.numeric(noiseParameters), s_max = as.numeric(measurement) + as.numeric(noiseParameters)), by = 1:nrow(dplot)]
       }
       useErrorbarData <- dplot
     }
