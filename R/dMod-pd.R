@@ -2413,7 +2413,6 @@ pd_predictAndPlot2 <- function(
     pl <- pl + ylab("signal, observabels transformed")
   }
   
-  pl <- pl + ylab(paste0("measurement"))
   
   if (sqrtX == TRUE) {
     pl <- pl + xlab("sqrt(time)")
