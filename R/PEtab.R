@@ -2492,6 +2492,10 @@ pe_L1_createL1Problem <- function(pe, parameterId_base, conditionSpecL1_referenc
 #' @param plotWidth plot width
 #' @param plotScale plot scale, the highter the number the smaler the plot elements will be
 #' @param plotSizeUnit unit for 'plotHeight' and 'plotWidth'
+#' @param useDataset either the "scaled" or set "aligned" of \link{blotIt::alignReplicates}
+#' @param FLAGFuture parameter given to \link{conveniencefunctions::cf_outputFigure} for delayed plotting
+#' @param useErrorParForAligned if set to TRUE, the errorParName is used as the error parameter for the aligned data set. Do only apply if you know what you are doing.
+#' @param errorParName name of the error parameter.
 #' @param ... parameters for \link{blotIt::alignReplicates}
 #'
 #' @return [petab()] with scaled replicates
@@ -2515,6 +2519,8 @@ petab_alignReplicates <- function(
     plotSizeUnit = "in", 
     useDataset = c("scaled", "aligned")[1],
     FLAGFuture = FALSE,
+    useErrorParForAligned = FALSE,
+    errorParName = NULL,
     ...
 ) {
   dco <- petab_joinDCO(pe)
@@ -2643,6 +2649,36 @@ petab_alignReplicates <- function(
     
   }
   
+  
+  if (useErrorParForAligned == TRUE) {
+    if (is.null(errorParName)) {
+      stop("If 'useErrorParForAligned' is TRUE, 'errorParName' must be specified.")
+    }
+    
+    # retrieve all parameters from the result
+    allPars <- as.data.table(blotitResult$parameter)
+    
+    # sanity check: does exactly one parameter per observableId contain the errorParName?
+    if (length(grep(errorParName, allPars$name)) != lenth(unique(as.character(allPars$name)))) {
+      stop("Exactly one parameter per observableId must contain the errorParName.")
+    }
+    
+    # construct a named vector where the values are the errorParameter values and the names are the corresponding observableIds
+    errorPars <- setNames(allPars[grep(errorParName, parameter)]$value, allPars[grep(errorParName, parameter)]$name)
+    
+    alignedSet <- as.data.table(blotitResult$aligned)
+    
+    # use the values of errorPars for each matching name in alignedSet
+    
+    alignedSet[, `:=`(sigma = errorPars[as.character(name)]), by = seq_len(nrow(alignedSet))]
+    
+    # update lower and upper
+    alignedSet[, `:=`(lower = value - sigma, upper = value + sigma), by = seq_len(nrow(alignedSet))]
+    
+    # update the aligned data in the blotitResult
+    blotitResult$aligned <- as.data.frame(alignedSet)
+    
+  }
   
   
   
@@ -2791,6 +2827,7 @@ petab_alignReplicates <- function(
   
   return(pe_export)
 }
+
 
 
 # -------------------------------------------------------------------------#
