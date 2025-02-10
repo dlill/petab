@@ -2006,6 +2006,7 @@ pd_predictAndPlot2 <- function(
     shiftTimeBy = 0,
     transformObservables = c(NA, "exp", "10^", "2^", "log", "log10", "log2")[1],
     observablesToTransform = NULL,
+    plotGaussianErrors = FALSE,
     ...
 ) {
   
@@ -2239,6 +2240,14 @@ pd_predictAndPlot2 <- function(
       by = 1:nrow(dplot)
     ]
     
+    dplot[
+      ,
+      `:=`(
+        noiseParameters = as.numeric(noiseParameters)/ as.numeric(measurement) # apply gaussian error propagation to the noises. THIS IS NOT CORRECT!
+      ),
+      by = 1:nrow(dplot)
+    ]
+    
     # transform the value column of dplot
     dplot[
       ,
@@ -2248,13 +2257,7 @@ pd_predictAndPlot2 <- function(
       by = 1:nrow(dplot)
     ]
     
-    dplot[
-      ,
-      `:=`(
-        noiseParameters = as.numeric(noiseParameters)/ as.numeric(measurement) # apply gaussian error propagation to the noises. THIS IS NOT CORRECT!
-      ),
-      by = 1:nrow(dplot)
-    ]
+
     
     if (!is.null(observablesToTransform)) {
       # merge the transformed and not transformed observables
@@ -2386,6 +2389,10 @@ pd_predictAndPlot2 <- function(
     if (FLAGmeanPoints == TRUE) {
       useErrorbarData <- means
     } else {
+      
+      if (plotGaussianErrors == TRUE) {
+        dplot[, `:=`(s_min = measurement - noiseParameter, s_min = measurement + noiseParameter), by = 1:nrow(dplot)]
+      }
       useErrorbarData <- dplot
     }
     pl <- pl + geom_errorbar(data = useErrorbarData, aes(x = time, ymin = s_min, ymax = s_max, color = conditionId,width = 0.0))
