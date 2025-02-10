@@ -2514,6 +2514,7 @@ petab_alignReplicates <- function(
     plotScale = 1, 
     plotSizeUnit = "in", 
     useDataset = c("scaled", "aligned")[1],
+    FLAGFuture = FALSE,
     ...
 ) {
   dco <- petab_joinDCO(pe)
@@ -2573,7 +2574,7 @@ petab_alignReplicates <- function(
           file = file.path(plotBlotItPaths, paste0(plotSuffix, "plotA_",i,"_",j,".pdf")),
           height = plotHeight, width = plotWidth, scale = plotScale, unit = plotSizeUnit,
           title = "",
-          FLAGFuture =T
+          FLAGFuture = FLAGFuture
         )
       }
     }
@@ -2601,7 +2602,7 @@ petab_alignReplicates <- function(
           file = file.path(plotBlotItPaths, paste0(plotSuffix, "plotB_",i,"_",j,".pdf")),
           height = plotHeight, width = plotWidth, scale = plotScale, unit = plotSizeUnit,
           title = "",
-          FLAGFuture =T
+          FLAGFuture = FLAGFuture
         )
       }
     }
@@ -2629,7 +2630,7 @@ petab_alignReplicates <- function(
           file = file.path(plotBlotItPaths, paste0(plotSuffix, "plotC_",i,"_",j,".pdf")),
           height = plotHeight, width = plotWidth, scale = plotScale, unit = plotSizeUnit,
           title = "",
-          FLAGFuture =T
+          FLAGFuture = FLAGFuture
         )
       }
     }
