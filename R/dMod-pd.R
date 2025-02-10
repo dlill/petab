@@ -2004,7 +2004,7 @@ pd_predictAndPlot2 <- function(
     useErrormodel = FALSE,
     FLAGminToHour = FALSE,
     shiftTimeBy = 0,
-    transformObservables = c(NULL, "exp", "10^", "2^", "log", "log10", "log2")[1],
+    transformObservables = c(NA, "exp", "10^", "2^", "log", "log10", "log2")[1],
     observablesToTransform = NULL,
     ...
 ) {
@@ -2407,6 +2407,11 @@ pd_predictAndPlot2 <- function(
   
   
   
+  if (is.na(transformObservables)) {
+    pl <- pl + ylab(paste0("signal on modelscale"))
+  } else {
+    pl <- pl + ylab("signal, observabels transformed")
+  }
   
   pl <- pl + ylab(paste0("measurement"))
   
