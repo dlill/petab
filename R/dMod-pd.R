@@ -1307,7 +1307,7 @@ pd_cluster_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfi
                  path = file.path("~", paste0(jobnm, "_folder")))
     },
     jobname = jobnm, 
-    partition = "single", cores = n_cores, nodes = 1, walltime = walltime,
+    partition = "cpu-single", cores = n_cores, nodes = 1, walltime = walltime,
     ssh_passwd = passwdEnv, machine = machine, 
     var_values = var_list, no_rep = NULL, 
     recover = FLAGjobRecover,
