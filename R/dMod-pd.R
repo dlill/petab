@@ -1326,7 +1326,7 @@ pd_cluster_profile <- function(pd, .outputFolder, FLAGforcePurge = FALSE, FLAGfi
   
   # Get results
   if (!FLAGjobDone & !FLAGjobPurged) {
-    if (job$check()) {
+    if (job$check() | FLAGreturnPartialResults) {
       job$get()
       # Copy profiles
       prof_files <- list.files(file.path(paste0(jobnm, "_folder"),  "results", "Results", "profile"),
