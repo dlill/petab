@@ -1176,21 +1176,38 @@ pd_cluster_mstrust <- function(
       cat(" Returning partial results...\n")
       Sys.sleep(1) # avoid being blocked
       try(job$get(),silent = TRUE)
-      fitFolderList <- list.dirs(file.path(paste0(jobnm, "_folder"), "results"), recursive = F)
-      fitFilesList <- do.call(
-        c,
-        lapply(
-          fitFolderList,
-          function(i) {
-            list.files(i, "\\.Rda$", recursive = TRUE, full.names = TRUE)
-          }
+      if (FLAGreturnAllResults ==T) {
+        fitFolderList <- list.dirs(file.path(paste0(jobnm, "_folder"), "results"), recursive = F)
+        fitFilesList <- do.call(
+          c,
+          lapply(
+            fitFolderList,
+            function(i) {
+              list.files(i, "\\.Rda$", recursive = TRUE, full.names = TRUE)
+            }
+          )
         )
-      )
-      fitFilesList <- fitFilesList[!grepl("parameterList.Rda", fitFilesList)]
-      # fitlist <- lapply(fitlist, function(x) try(local(load(x))))
-      # fitlist <- do.call(rbind, lapply(fitFilesList, function(x) try(as.parframe(parlist((readRDS(x)))))))
+        fitFilesList <- fitFilesList[!grepl("parameterList.Rda", fitFilesList)]
+        # fitlist <- lapply(fitlist, function(x) try(local(load(x))))
+        # fitlist <- do.call(rbind, lapply(fitFilesList, function(x) try(as.parframe(parlist((readRDS(x)))))))
+        
+        fits <- lapply(fitFilesList, function(x) try((((readRDS(x))))))
+      } else {
+        if (exists("cluster_result")) {
+          fitlist <- do.call(c, cluster_result)
+        } else {
+          fitlist <- NULL
+        }
+        fits <- fitlist
+        fits <- fits[vapply(fits, is.list, TRUE)]
+        class(fits) <- "parlist"
+        fits <- conveniencefunctions::cf_as.parframe(fits)
+        conveniencefunctions::dMod_saveMstrust(fit = fits, path = .outputFolder, 
+                                               identifier = identifier, FLAGoverwrite = TRUE)
+        savedFits <- readRDS(fileJobDone)
+      }
       
-      fits <- lapply(fitFilesList, function(x) try((((readRDS(x))))))
+      
       
       # fits <- fitlist[order(fitlist$value)]
       # t <- lapply(fitFilesList, function(x) try(as.parframe(parlist((readRDS(x))))))
